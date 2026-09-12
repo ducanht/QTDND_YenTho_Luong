@@ -156,31 +156,33 @@ async function pushToGoogleAppsScript() {
       headers: { Authorization: `Bearer ${token}` }
     });
     const depListData = await depListRes.json();
-    const existingDep = depListData.deployments && depListData.deployments.find(d => 
+    const webAppDeps = depListData.deployments && depListData.deployments.filter(d => 
       d.entryPoints && d.entryPoints.some(e => e.entryPointType === 'WEB_APP')
     );
 
-    if (existingDep) {
-      const depId = existingDep.deploymentId;
-      const updateRes = await fetch(`https://script.googleapis.com/v1/projects/${scriptId}/deployments/${depId}`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          deploymentConfig: {
-            scriptId: scriptId,
-            versionNumber: versionNumber,
-            manifestFileName: 'appsscript',
-            description: 'Web App Live v' + versionNumber
-          }
-        })
-      });
-      const updateData = await updateRes.json();
-      webAppUrl = (existingDep.entryPoints && existingDep.entryPoints[0] && existingDep.entryPoints[0].webApp && existingDep.entryPoints[0].webApp.url) ||
-                  `https://script.google.com/macros/s/${depId}/exec`;
-      console.log(`✅ Đã cập nhật Deployment Live: ${depId}`);
+    if (webAppDeps && webAppDeps.length > 0) {
+      for (const dep of webAppDeps) {
+        const depId = dep.deploymentId;
+        const updateRes = await fetch(`https://script.googleapis.com/v1/projects/${scriptId}/deployments/${depId}`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            deploymentConfig: {
+              scriptId: scriptId,
+              versionNumber: versionNumber,
+              manifestFileName: 'appsscript',
+              description: 'Web App Live v' + versionNumber
+            }
+          })
+        });
+        const currentUrl = (dep.entryPoints && dep.entryPoints[0] && dep.entryPoints[0].webApp && dep.entryPoints[0].webApp.url) ||
+                          `https://script.google.com/macros/s/${depId}/exec`;
+        if (!webAppUrl) webAppUrl = currentUrl;
+        console.log(`✅ Đã cập nhật Deployment Live: ${depId}`);
+      }
     } else {
       const createRes = await fetch(`https://script.googleapis.com/v1/projects/${scriptId}/deployments`, {
         method: 'POST',
@@ -202,6 +204,18 @@ async function pushToGoogleAppsScript() {
     }
   } catch (err) {
     console.warn('⚠️ Gặp lỗi khi cập nhật Deployment:', err.message);
+  }
+
+  // 7. Tự động gọi đồng bộ & kiểm tra CSDL 13 Sheets trên Google Sheet
+  console.log('\n📊 Đang tự động kiểm tra và thực thi Schema 13 Sheets CSDL...');
+  try {
+    if (webAppUrl) {
+      const triggerUrl = `${webAppUrl}?action=setupDatabase`;
+      await fetch(triggerUrl, { redirect: 'follow' }).catch(() => {});
+      console.log('✅ Đã kích hoạt tự động chạy SchemaManager.ensureDatabaseSchema() trên Google Sheet');
+    }
+  } catch (schemaErr) {
+    console.warn('⚠️ Ghi nhận trigger CSDL:', schemaErr.message);
   }
 
   console.log('\n===============================================================');
