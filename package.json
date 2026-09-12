@@ -1,13 +1,16 @@
 {
   "name": "qtdnd-yentho-luong",
   "version": "2.0.0",
-  "description": "Hệ thống Quản trị Lương, Nhân sự, Chấm công & KPI 2027 - QTDND Yên Thọ",
+  "description": "Hệ thống Quản trị Lương, Nhân sự, Chấm công & KPI 2027 Pro V2 - QTDND Yên Thọ",
   "scripts": {
+    "dev": "cd frontend_vite && npm run dev",
+    "build": "cd frontend_vite && npm run build",
     "push": "node sync_gas.js",
     "clasp:push": "npx @google/clasp push -f",
     "clasp:pull": "npx @google/clasp pull",
     "clasp:status": "npx @google/clasp status",
-    "deploy": "powershell -ExecutionPolicy Bypass -File ./push_code.ps1"
+    "deploy": "powershell -ExecutionPolicy Bypass -File ./push_code.ps1",
+    "deploy:all": "cd frontend_vite && npm run build && cd .. && node sync_gas.js"
   },
   "devDependencies": {
     "@google/clasp": "^3.4.1"
