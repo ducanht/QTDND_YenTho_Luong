@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hệ thống Lương, Chấm công & KPI 2027 – QTDND Yên Thọ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- KHUNG IN BẢNG LƯƠNG TOÀN QUỸ (CHỈ HIỆN KHI IN) -->
+<div id="printAreaFull" class="print-only landscape">
+  <div class="print-header">
+    <div class="print-header-left">
+      <div class="print-agency">NGÂN HÀNG NHÀ NƯỚC VIỆT NAM / LIÊN MINH HTX</div>
+      <div class="print-org">QUỸ TÍN DỤNG NHÂN DÂN YÊN THỌ</div>
+      <div class="print-address">Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá</div>
+    </div>
+    <div class="print-header-right">
+      <div class="print-form-no">Mẫu số: 02-LĐTL</div>
+      <div class="print-form-desc">(Theo quy định quản lý tài chính QTDND)</div>
+    </div>
+  </div>
+
+  <div class="print-title-block">
+    <h2 class="print-main-title">BẢNG THANH TOÁN TIỀN LƯƠNG, THÙ LAO VÀ THU NHẬP</h2>
+    <div class="print-sub-title" id="printFullSubtitle">Kỳ chi trả: Tháng 01 năm 2027 · Ngày công chuẩn: 22 ngày</div>
+  </div>
+
+  <table id="printFullTable" class="print-table">
+    <!-- Nội dung bảng in sẽ được sinh bằng JS -->
+  </table>
+
+  <div class="print-footer-summary" id="printFullSummaryText">
+    <!-- Tổng tiền bằng chữ, tổng chi phí đơn vị -->
+  </div>
+
+  <div class="print-signatures">
+    <div class="sig-box">
+      <div class="sig-role">NGƯỜI LẬP BIỂU</div>
+      <div class="sig-note">(Ký, họ tên)</div>
+      <div class="sig-space"></div>
+      <div class="sig-name" id="sigMaker">Kế toán tiền lương</div>
+    </div>
+    <div class="sig-box">
+      <div class="sig-role">KẾ TOÁN TRƯỞNG</div>
+      <div class="sig-note">(Ký, họ tên)</div>
+      <div class="sig-space"></div>
+      <div class="sig-name" id="sigChief">Kế toán trưởng</div>
+    </div>
+    <div class="sig-box">
+      <div class="sig-role">BAN KIỂM SOÁT</div>
+      <div class="sig-note">(Ký, họ tên)</div>
+      <div class="sig-space"></div>
+      <div class="sig-name" id="sigAudit">Trưởng BKS</div>
+    </div>
+    <div class="sig-box">
+      <div class="sig-date" id="sigDateBlock">Quý Lộc, ngày ... tháng ... năm 2027</div>
+      <div class="sig-role">CHỦ TỊCH HĐQT / GIÁM ĐỐC</div>
+      <div class="sig-note">(Ký tên, đóng dấu)</div>
+      <div class="sig-space"></div>
+      <div class="sig-name" id="sigLeader">Chủ tịch HĐQT</div>
+    </div>
+  </div>
+</div>
+
+<!-- KHUNG IN PHIẾU LƯƠNG CÁ NHÂN (CHỈ HIỆN KHI IN PHIẾU) -->
+<div id="printAreaPayslip" class="print-only portrait">
+  <div class="payslip-box">
+    <div class="print-header">
+      <div class="print-header-left">
+        <div class="print-org">QUỸ TÍN DỤNG NHÂN DÂN YÊN THỌ</div>
+        <div class="print-address">Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá</div>
+      </div>
+      <div class="print-header-right">
+        <div class="print-form-no">PHIẾU LƯƠNG CÁ NHÂN</div>
+      </div>
+    </div>
+
+    <div class="print-title-block">
+      <h3 class="print-main-title" id="slipTitle">PHIẾU BÁO THANH TOÁN THU NHẬP</h3>
+      <div class="print-sub-title" id="slipSubtitle">Tháng 01/2027</div>
+    </div>
+
+    <div class="slip-info-grid" id="slipStaffInfo">
+      <!-- Thông tin nhân viên: Họ tên, Chức vụ, Ngày công, KPI -->
+    </div>
+
+    <table id="slipBreakdownTable" class="print-table">
+      <!-- Bảng kê các khoản nhận & giảm trừ -->
+    </table>
+
+    <div class="slip-net-highlight" id="slipNetText">
+      <!-- Số tiền thực lĩnh và bằng chữ -->
+    </div>
+
+    <div class="print-signatures two-cols">
+      <div class="sig-box">
+        <div class="sig-role">NGƯỜI NHẬN TIỀN</div>
+        <div class="sig-note">(Ký, xác nhận)</div>
+        <div class="sig-space"></div>
+        <div class="sig-name" id="slipStaffSignName">...</div>
+      </div>
+      <div class="sig-box">
+        <div class="sig-date" id="slipDateSign">Quý Lộc, ngày ... tháng ... năm 2027</div>
+        <div class="sig-role">KẾ TOÁN THANH TOÁN</div>
+        <div class="sig-note">(Ký, họ tên)</div>
+        <div class="sig-space"></div>
+        <div class="sig-name">Kế toán viên</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GIAO DIỆN CHÍNH CỦA ỨNG DỤNG (WEBAPP INTERFACE) -->
+<div class="screen-only">
+  <header class="topbar">
+    <div>
+      <div class="brand">QUỸ TÍN DỤNG NHÂN DÂN YÊN THỌ</div>
+      <h1>Quản Trị Lương, Chấm Công & KPI 2027 <span>PRO V2</span></h1>
+      <div class="sub">Mô phỏng phương án · Chốt khung lương chính thức · Chấm công & KPI hàng tháng · In bảng lương chuẩn A4 · CSDL Online</div>
+    </div>
+    <div class="top-status-badges">
+      <div id="badgeFramework" class="status-badge warn">Khung: Chưa chốt</div>
+      <div id="badgeCloud" class="status-badge offline">CSDL: Cục bộ (Local)</div>
+    </div>
+    <div class="top-actions">
+      <button id="btnQuickSave" class="btn primary">💾 Lưu dữ liệu</button>
+      <button id="btnQuickPrint" class="btn success">🖨️ In Bảng lương</button>
+      <button id="btnReset" class="btn danger-outline">Khôi phục mẫu</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="dashboard" class="active">📊 Tổng quan</button>
+    <button data-tab="scenarios">⚖️ So sánh 3 Phương án</button>
+    <button data-tab="lock_framework" class="highlight-tab">🔒 Chốt khung lương</button>
+    <button data-tab="timesheet_kpi" class="highlight-tab">📅 Chấm công & KPI tháng</button>
+    <button data-tab="payroll_monthly" class="highlight-tab">💰 Bảng lương & In ấn</button>
+    <button data-tab="positions">📋 Vị trí & Hệ số</button>
+    <button data-tab="governance">🏛️ HĐQT / BKS</button>
+    <button data-tab="staff">👥 Danh sách CBNV</button>
+    <button data-tab="parameters">⚙️ Tham số chung</button>
+    <button data-tab="compliance">🛡️ BHXH / PIT & Chi phí</button>
+    <button data-tab="cloud_sync" class="cloud-tab">☁️ Đồng bộ CSDL Online</button>
+  </nav>
+
+  <main>
+    <!-- TAB 1: TỔNG QUAN / DASHBOARD -->
+    <section id="dashboard" class="tab active">
+      <div class="toolbar">
+        <div>
+          <label>Ngày áp dụng</label>
+          <input id="effectiveDate" type="date">
+        </div>
+        <div>
+          <label>Phương án mô phỏng đang xem</label>
+          <select id="selectedScenario">
+            <option value="PA1">PA1 – Phương án Tiết kiệm / Thận trọng</option>
+            <option value="PA2" selected>PA2 – Phương án Đề xuất Chuẩn 2027</option>
+            <option value="PA3">PA3 – Phương án Tăng trưởng Cao</option>
+          </select>
+        </div>
+        <div>
+          <label>% hoàn thành KPI chung</label>
+          <div class="input-with-suffix">
+            <input id="kpiCompletion" type="number" min="0" max="150" step="1" value="100">
+            <span>%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cards" id="summaryCards"></div>
+
+      <div class="grid two">
+        <div class="panel">
+          <div class="panel-title">Thu nhập theo vị trí (Tháng)</div>
+          <div id="positionChart" class="chart"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">So sánh Tổng quỹ lương 3 phương án (Năm)</div>
+          <div id="scenarioChart" class="chart"></div>
+        </div>
+      </div>
+
+      <div class="grid two">
+        <div class="panel">
+          <div class="panel-title">Cơ cấu chi phí quỹ lương & thu nhập</div>
+          <div id="costChart" class="chart"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Khoảng cách thu nhập các vị trí chủ chốt</div>
+          <div id="gapChart" class="chart"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Tổng hợp cơ cấu chi phí toàn Quỹ</div>
+        <div class="table-wrap"><table id="summaryTable"></table></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: SO SÁNH 3 PHƯƠNG ÁN -->
+    <section id="scenarios" class="tab">
+      <div class="panel">
+        <div class="panel-title">Ma trận So sánh 3 Phương án (PA1 / PA2 / PA3)</div>
+        <div class="note">
+          <b>Ý nghĩa:</b> Giúp Ban Lãnh đạo so sánh chi tiết chênh lệch thu nhập tuyệt đối (₫) và tương đối (%) giữa 3 kịch bản trước khi ra quyết định chốt khung lương chính thức cho năm 2027.
+        </div>
+        <div class="table-wrap"><table id="scenarioTable"></table></div>
+      </div>
+    </section>
+
+    <!-- TAB 3: CHỐT KHUNG LƯƠNG CHÍNH THỨC -->
+    <section id="lock_framework" class="tab">
+      <div class="panel">
+        <div class="panel-title">Quyết định Chốt Khung Lương Chính Thức 2027</div>
+        <div class="note info">
+          <b>Quy trình phê duyệt:</b> Sau khi thẩm định và so sánh 3 phương án, HĐQT ra Nghị quyết chốt phương án chính thức làm căn cứ tính lương, chấm công và chi trả thực tế hàng tháng cho toàn bộ cán bộ nhân viên.
+        </div>
+        
+        <div class="framework-lock-card" id="frameworkLockCard">
+          <!-- Bảng điều khiển chốt khung lương -->
+        </div>
+
+        <div class="mt-4">
+          <h4 class="sub-heading">Biểu Khung Lương & Hệ Số Chính Thức Đang Áp Dụng</h4>
+          <div class="table-wrap"><table id="officialPositionsTable"></table></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: CHẤM CÔNG & KPI HÀNG THÁNG -->
+    <section id="timesheet_kpi" class="tab">
+      <div class="panel">
+        <div class="panel-title">Quản Lý Chấm Công & Đánh Giá KPI Hàng Tháng</div>
+        
+        <div class="month-selector-bar">
+          <div class="control-group">
+            <label>Kỳ chi trả lương (Tháng/Năm)</label>
+            <input type="month" id="selectPayrollPeriod" value="2027-01">
+          </div>
+          <div class="control-group">
+            <label>Ngày công chuẩn trong tháng</label>
+            <input type="number" id="inputStandardDays" min="15" max="31" value="22">
+          </div>
+          <div class="control-actions">
+            <button id="btnFillStandardDays" class="btn">⚡ Điền đủ công (22 ngày)</button>
+            <button id="btnSaveTimesheet" class="btn primary">💾 Lưu Chấm công & KPI tháng</button>
+          </div>
+        </div>
+
+        <div class="note">
+          <b>Hướng dẫn:</b> Nhập số ngày công thực tế, ngày phép hưởng lương, % hoàn thành KPI và các khoản thưởng/trừ đặc thù của từng cán bộ. Hệ thống sẽ tự động cập nhật sang Bảng thanh toán lương.
+        </div>
+
+        <div class="table-wrap">
+          <table id="timesheetTable"></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: BẢNG LƯƠNG THÁNG & IN ẤN -->
+    <section id="payroll_monthly" class="tab">
+      <div class="panel">
+        <div class="panel-title-row">
+          <div class="panel-title">Bảng Thanh Toán Lương & Thu Nhập Hàng Tháng</div>
+          <div class="actions-row-inline">
+            <button id="btnPrintFullPayroll" class="btn success">🖨️ In Bảng lương toàn Quỹ (A4 Ngang)</button>
+            <button id="btnExportMonthlyCsv" class="btn">📥 Xuất file CSV</button>
+          </div>
+        </div>
+
+        <div class="month-payroll-summary-cards" id="monthlySummaryCards">
+          <!-- Cards tổng kết tháng -->
+        </div>
+
+        <div class="note success">
+          <b>Kiểm soát tài chính:</b> Bảng lương tự động phân tách: Lương cơ bản theo ngày công, Lương hiệu quả KPI, Tiền thưởng, Phụ cấp công việc, Thù lao quản trị, các khoản trích nộp BHXH (10.5% NLĐ và 21.5% Đơn vị) và Thuế TNCN tạm tính.
+        </div>
+
+        <div class="table-wrap">
+          <table id="monthlyPayrollTable"></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: VỊ TRÍ & HỆ SỐ -->
+    <section id="positions" class="tab">
+      <div class="panel">
+        <div class="panel-title">Khung 10 Vị Trí Công Việc – Ma Trận Hệ Số PA1 / PA2 / PA3</div>
+        <div class="table-wrap"><table id="positionsTable"></table></div>
+      </div>
+    </section>
+
+    <!-- TAB 7: HĐQT / BKS -->
+    <section id="governance" class="tab">
+      <div class="panel">
+        <div class="panel-title">HĐQT / BKS – Phụ Cấp Trách Nhiệm & Thù Lao Quản Trị</div>
+        <div class="note">
+          <b>Tách lớp quản trị:</b> Tiền lương toàn thời gian theo dõi qua mã vị trí công việc. Phụ cấp chức vụ và Thù lao HĐQT/BKS được hạch toán riêng theo quy định của Luật Các TCTD và Điều lệ Quỹ.
+        </div>
+        <div class="table-wrap"><table id="governanceTable"></table></div>
+      </div>
+    </section>
+
+    <!-- TAB 8: DANH SÁCH CBNV -->
+    <section id="staff" class="tab">
+      <div class="panel">
+        <div class="panel-title-row">
+          <div class="panel-title">Danh Sách Cán Bộ Nhân Viên (Biên Chế Thực Tế)</div>
+          <div class="actions-row-inline">
+            <button id="addStaff" class="btn primary">+ Thêm CBNV</button>
+            <button id="exportCsv" class="btn">Xuất danh sách CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap"><table id="staffTable"></table></div>
+      </div>
+    </section>
+
+    <!-- TAB 9: THAM SỐ CHUNG -->
+    <section id="parameters" class="tab">
+      <div class="panel">
+        <div class="panel-title">Tham Số Lương Cơ Bản & Các Khoản Định Mức Công Vụ</div>
+        <div id="parameterForm" class="form-grid"></div>
+      </div>
+      <div class="note warning">
+        <b>Nguyên tắc:</b> Các khoản chi công việc (ăn giữa ca, điện thoại, xăng xe, trang phục) phải đúng bản chất công tác, có điều kiện chi và hóa đơn chứng từ hợp lệ. Không đổi tên tiền lương thành phụ cấp/chi phí để né tránh nghĩa vụ BHXH hoặc PIT.
+      </div>
+    </section>
+
+    <!-- TAB 10: BHXH / PIT -->
+    <section id="compliance" class="tab">
+      <div class="panel">
+        <div class="panel-title">Mô Phỏng Nghĩa Vụ BHXH (21.5% Đơn Vị, 10.5% NLĐ) & Thuế PIT</div>
+        <div class="grid two">
+          <div id="insuranceForm" class="form-grid"></div>
+          <div class="note">
+            <b>Căn cứ pháp lý:</b><br>
+            - Đơn vị gánh chịu: BHXH 17.5%, BHYT 3.0%, BHTN 1.0% (Tổng 21.5%).<br>
+            - Người lao động trừ lương: BHXH 8.0%, BHYT 1.5%, BHTN 1.0% (Tổng 10.5%).<br>
+            - Mức giảm trừ gia cảnh mô phỏng: Bản thân 15.500.000 ₫/tháng, Người phụ thuộc 6.200.000 ₫/người/tháng.<br>
+            - Đánh dấu các khoản tính vào căn cứ đóng BHXH và chịu thuế PIT tương ứng.
+          </div>
+        </div>
+
+        <h4 class="sub-heading mt-4">Phân Loại Căn Cứ Đóng BHXH & Tính Thuế Thu Nhập Cá Nhân</h4>
+        <div class="table-wrap"><table id="complianceTable"></table></div>
+
+        <h4 class="sub-heading mt-4">Bảng Tổng Hợp Chi Phí Bảo Hiểm Đơn Vị (21.5%) & NLĐ (10.5%) Toàn Quỹ</h4>
+        <div class="table-wrap"><table id="insuranceSummaryTable"></table></div>
+      </div>
+    </section>
+
+    <!-- TAB 11: ĐỒNG BỘ CSDL ONLINE -->
+    <section id="cloud_sync" class="tab">
+      <div class="panel">
+        <div class="panel-title">Kết Nối Cơ Sở Dữ Liệu Online Lâu Dài (Google Sheets)</div>
+        <div class="note info">
+          <b>Lưu trữ vĩnh cửu & 100% Miễn phí:</b> Dữ liệu được đồng bộ trực tiếp lên tệp Google Sheets nằm trên Google Drive của Quỹ tín dụng nhân dân Yên Thọ. Không lo mất mát dữ liệu khi đổi máy tính hay xóa cache trình duyệt.
+        </div>
+
+        <div class="cloud-config-box">
+          <div class="form-group-full">
+            <label><b>URL Google Apps Script Web App (API Endpoint)</b></label>
+            <input type="text" id="cloudEndpointUrl" placeholder="https://script.google.com/macros/s/.../exec" style="width: 100%;">
+            <div class="small mt-1">Dán link triển khai Web App từ file <code>gas_backend/Code.js</code> vào đây.</div>
+          </div>
+
+          <div class="cloud-actions-row">
+            <button id="btnTestCloud" class="btn">🔌 Kiểm tra kết nối (Ping)</button>
+            <button id="btnPushCloud" class="btn primary">⬆️ Đồng bộ toàn bộ lên Google Sheets</button>
+            <button id="btnPullCloud" class="btn">⬇️ Tải dữ liệu từ Google Sheets về</button>
+          </div>
+
+          <div id="cloudStatusMsg" class="cloud-status-msg">Chưa kết nối Cloud. Hiện tại đang lưu cục bộ trên máy.</div>
+        </div>
+
+        <h4 class="sub-heading mt-4">Sao Lưu & Phục Hồi Dữ Liệu Dự Phòng (File JSON)</h4>
+        <div class="backup-box">
+          <p>Xuất toàn bộ kịch bản, chấm công và bảng lương ra tệp tin JSON để lưu trữ trên máy tính hoặc chuyển giao:</p>
+          <div class="actions-row-inline">
+            <button id="btnExportJson" class="btn">💾 Tải file sao lưu (.json)</button>
+            <label class="btn file-upload-btn">
+              📂 Khôi phục từ file (.json)
+              <input type="file" id="fileImportJson" accept=".json" style="display: none;">
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div>
+      <b>Quỹ tín dụng nhân dân Yên Thọ</b> · Hệ thống Quản trị Lương & Chấm công 2027 Pro V2
+    </div>
+    <div id="lastSaved">Khởi tạo sẵn sàng</div>
+  </footer>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
