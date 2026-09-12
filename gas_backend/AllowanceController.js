@@ -49,3 +49,96 @@ function getAllowanceHistory() {
     trangThai: String(r[13] || '').trim()
   }));
 }
+
+function saveAllowances(allowancesList) {
+  if (!Array.isArray(allowancesList) || allowancesList.length === 0) {
+    throw new Error('Dữ liệu phụ cấp không hợp lệ.');
+  }
+
+  const ss = getSpreadsheet();
+  const sh = ss.getSheetByName('DM_PHU_CAP');
+  if (!sh) throw new Error('Không tìm thấy Sheet DM_PHU_CAP');
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+
+  try {
+    const lastRow = sh.getLastRow();
+    const existing = lastRow > 1 ? sh.getRange(2, 1, lastRow - 1, 1).getValues() : [];
+    const rowMap = new Map();
+
+    for (let i = 0; i < existing.length; i++) {
+      rowMap.set(String(existing[i][0]).trim(), i + 2);
+    }
+
+    const appendRows = [];
+    allowancesList.forEach(a => {
+      const maKhoan = String(a.maKhoan || '').trim();
+      const row = [
+        maKhoan,
+        a.tenKhoan || '',
+        a.phanLoaiChi || 'KHOAN_CONG_VU',
+        a.cotBangLuong || '',
+        a.tinhBHXH || 'KHÔNG',
+        a.tinhThueTNCN || 'CÓ',
+        Number(a.mucMienThueToiDa) || 0,
+        a.phuongThucTinh || 'THEO_NGAY_CONG',
+        a.canCuPhapLy || '',
+        a.ghiChu || ''
+      ];
+
+      if (rowMap.has(maKhoan)) {
+        sh.getRange(rowMap.get(maKhoan), 1, 1, row.length).setValues([row]);
+      } else {
+        appendRows.push(row);
+      }
+    });
+
+    if (appendRows.length > 0) {
+      sh.getRange(sh.getLastRow() + 1, 1, appendRows.length, appendRows[0].length).setValues(appendRows);
+    }
+
+    return { status: 'success', message: `Đã lưu cập nhật ${allowancesList.length} khoản phụ cấp thành công.` };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function saveAllowanceHistory(historyRecord) {
+  if (!historyRecord || !historyRecord.maKhoan) {
+    throw new Error('Dữ liệu lịch sử thay đổi định mức khoán không hợp lệ.');
+  }
+
+  const ss = getSpreadsheet();
+  const sh = ss.getSheetByName('LS_KHOAN');
+  if (!sh) throw new Error('Không tìm thấy Sheet LS_KHOAN');
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+
+  try {
+    const maBanGhi = historyRecord.maBanGhi || ('LSK_' + Date.now());
+    const row = [
+      maBanGhi,
+      historyRecord.maKhoan,
+      historyRecord.tenKhoan || '',
+      historyRecord.doiTuong || 'Toàn bộ CBNV',
+      Number(historyRecord.mucCu) || 0,
+      Number(historyRecord.mucMoi) || 0,
+      historyRecord.donViTinh || '₫/tháng',
+      historyRecord.tuNgay || Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy'),
+      historyRecord.denNgay || '31/12/2099',
+      historyRecord.soQuyetDinh || '',
+      historyRecord.ngayQuyetDinh || Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy'),
+      historyRecord.nguoiKy || '',
+      historyRecord.lyDo || '',
+      historyRecord.trangThai || 'ĐANG_HIỆU_LỰC'
+    ];
+
+    sh.appendRow(row);
+    return { status: 'success', message: 'Đã lưu lịch sử thay đổi định mức khoán thành công (SCD-2).' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+

@@ -33,3 +33,66 @@ function getPositions() {
     quyetDinh: String(r[17] || '').trim()
   }));
 }
+
+function savePositions(positionsList) {
+  if (!Array.isArray(positionsList) || positionsList.length === 0) {
+    throw new Error('Dữ liệu chức danh không hợp lệ.');
+  }
+
+  const ss = getSpreadsheet();
+  const sh = ss.getSheetByName('DM_CHUCDANH');
+  if (!sh) throw new Error('Không tìm thấy Sheet DM_CHUCDANH');
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+
+  try {
+    const lastRow = sh.getLastRow();
+    const existing = lastRow > 1 ? sh.getRange(2, 1, lastRow - 1, 1).getValues() : [];
+    const rowMap = new Map();
+
+    for (let i = 0; i < existing.length; i++) {
+      rowMap.set(String(existing[i][0]).trim(), i + 2);
+    }
+
+    const appendRows = [];
+    positionsList.forEach(p => {
+      const maViTri = String(p.maViTri || '').trim();
+      const row = [
+        maViTri,
+        p.tenChucDanh || '',
+        p.khoi || '',
+        Number(p.bac) || 1,
+        Number(p.soLuong) || 1,
+        Number(p.pa1HeSo) || 0,
+        Number(p.pa2HeSo) || 0,
+        Number(p.pa3HeSo) || 0,
+        Number(p.pa1Kpi) || 0,
+        Number(p.pa2Kpi) || 0,
+        Number(p.pa3Kpi) || 0,
+        Number(p.pa1Thuong) || 0,
+        Number(p.pa2Thuong) || 0,
+        Number(p.pa3Thuong) || 0,
+        Number(p.phuCapTN) || 0,
+        Number(p.thuLaoQT) || 0,
+        p.ngayHieuLuc || Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy'),
+        p.quyetDinh || 'Nghị quyết HĐQT'
+      ];
+
+      if (rowMap.has(maViTri)) {
+        sh.getRange(rowMap.get(maViTri), 1, 1, row.length).setValues([row]);
+      } else {
+        appendRows.push(row);
+      }
+    });
+
+    if (appendRows.length > 0) {
+      sh.getRange(sh.getLastRow() + 1, 1, appendRows.length, appendRows[0].length).setValues(appendRows);
+    }
+
+    return { status: 'success', message: `Đã lưu cập nhật ${positionsList.length} chức danh thành công.` };
+  } finally {
+    lock.releaseLock();
+  }
+}
+

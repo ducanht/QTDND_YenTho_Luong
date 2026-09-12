@@ -1,9 +1,19 @@
 import React from 'react';
-import { Building2, User, LogOut, RefreshCw, Database } from 'lucide-react';
+import { Building2, User, LogOut, RefreshCw, Database, Sliders, CreditCard } from 'lucide-react';
 import { APP_CONFIG, ROLE_LABELS } from '../../constants/config';
 import { getRecentPeriods } from '../../utils/date';
 
-export function Navbar({ user, onLogout, period, onPeriodChange, onRefresh, isRefreshing, onSetupDb }) {
+export function Navbar({ 
+  user, 
+  onLogout, 
+  period, 
+  onPeriodChange, 
+  onRefresh, 
+  isRefreshing, 
+  onSetupDb,
+  workspaceMode,
+  onWorkspaceModeChange
+}) {
   const periods = getRecentPeriods(12);
 
   return (
@@ -26,23 +36,53 @@ export function Navbar({ user, onLogout, period, onPeriodChange, onRefresh, isRe
             </div>
           </div>
 
+          {/* Mode Switcher: 2 Phân Hệ Lớn */}
+          {user?.role !== 'NHAN_VIEN' && (
+            <div className="flex items-center bg-black/30 p-1 rounded-xl border border-white/15 shadow-inner">
+              <button
+                onClick={() => onWorkspaceModeChange('SIMULATION')}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  workspaceMode === 'SIMULATION'
+                    ? 'bg-amber-400 text-brand-navy shadow-md'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                <span>🏛️ Mô Phỏng Quy Chế (HĐQT)</span>
+              </button>
+              <button
+                onClick={() => onWorkspaceModeChange('PAYROLL')}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  workspaceMode === 'PAYROLL'
+                    ? 'bg-brand-lime text-brand-navy shadow-md'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                <CreditCard className="w-3.5 h-3.5" />
+                <span>📋 Lương Chính Thức Tháng</span>
+              </button>
+            </div>
+          )}
+
           {/* Controls & Actions */}
           <div className="flex items-center space-x-3">
-            {/* Period Selector */}
-            <div className="flex items-center bg-white/10 rounded-lg px-2.5 py-1 border border-white/20">
-              <span className="text-xs text-slate-300 mr-2 hidden md:inline">Kỳ lương:</span>
-              <select
-                value={period}
-                onChange={(e) => onPeriodChange(e.target.value)}
-                className="bg-transparent text-sm text-white font-semibold focus:outline-none cursor-pointer"
-              >
-                {periods.map(p => (
-                  <option key={p.value} value={p.value} className="bg-slate-800 text-white">
-                    {p.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Period Selector (Chỉ cần khi ở Phân hệ Lương Chính Thức) */}
+            {workspaceMode === 'PAYROLL' && (
+              <div className="flex items-center bg-white/10 rounded-lg px-2.5 py-1 border border-white/20">
+                <span className="text-xs text-slate-300 mr-2 hidden md:inline">Kỳ:</span>
+                <select
+                  value={period}
+                  onChange={(e) => onPeriodChange(e.target.value)}
+                  className="bg-transparent text-sm text-white font-semibold focus:outline-none cursor-pointer"
+                >
+                  {periods.map(p => (
+                    <option key={p.value} value={p.value} className="bg-slate-800 text-white">
+                      {p.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Refresh Button */}
             <button

@@ -6,7 +6,17 @@ export function formatVnd(amount) {
   return Number(amount).toLocaleString('vi-VN') + ' ₫';
 }
 
+export function formatCurrency(amount) {
+  return formatVnd(amount);
+}
+
+export function formatPercent(val) {
+  if (val === null || val === undefined || isNaN(val)) return '0.0%';
+  return Number(val).toFixed(1) + '%';
+}
+
 export function parseVnd(str) {
+
   if (!str) return 0;
   if (typeof str === 'number') return str;
   const cleaned = String(str).replace(/[^\d-]/g, '');

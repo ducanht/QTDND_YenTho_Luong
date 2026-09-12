@@ -11,6 +11,7 @@ import { KpiModule } from './modules/kpi/KpiModule';
 import { AllowancesModule } from './modules/allowances/AllowancesModule';
 import { SelfServiceModule } from './modules/selfservice/SelfServiceModule';
 import { AdminModule } from './modules/admin/AdminModule';
+import { SimulationModule } from './modules/simulation/SimulationModule';
 import { api } from './services/api';
 import { auth } from './services/auth';
 import { getCurrentPeriod } from './utils/date';
@@ -18,7 +19,16 @@ import { APP_CONFIG } from './constants/config';
 
 export function App() {
   const [currentUser, setCurrentUser] = useState(auth.getUser());
-  const [activeTab, setActiveTab] = useState('dashboard');
+  
+  // 2 Không Gian Lớn: 'SIMULATION' (Mô Phỏng HĐQT) hoặc 'PAYROLL' (Lương Chính Thức Tháng)
+  const [workspaceMode, setWorkspaceMode] = useState(
+    currentUser?.role === 'NHAN_VIEN' ? 'PAYROLL' : 'SIMULATION'
+  );
+
+  const [activeTab, setActiveTab] = useState(
+    currentUser?.role === 'NHAN_VIEN' ? 'selfservice' : 'simulation'
+  );
+
   const [period, setPeriod] = useState(getCurrentPeriod());
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,6 +58,15 @@ export function App() {
     loadData(period);
   }, [period]);
 
+  const handleModeChange = (newMode) => {
+    setWorkspaceMode(newMode);
+    if (newMode === 'SIMULATION') {
+      setActiveTab('simulation');
+    } else {
+      setActiveTab('dashboard');
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
@@ -59,9 +78,11 @@ export function App() {
         auth.setUser(res.user);
         setCurrentUser(res.user);
         if (res.user.role === 'NHAN_VIEN') {
+          setWorkspaceMode('PAYROLL');
           setActiveTab('selfservice');
         } else {
-          setActiveTab('dashboard');
+          setWorkspaceMode('SIMULATION');
+          setActiveTab('simulation');
         }
       } else {
         setLoginError(res.message || 'Tài khoản hoặc mật khẩu không chính xác.');
@@ -77,7 +98,8 @@ export function App() {
         };
         auth.setUser(adminUser);
         setCurrentUser(adminUser);
-        setActiveTab('dashboard');
+        setWorkspaceMode('SIMULATION');
+        setActiveTab('simulation');
       } else if (username.startsWith('NV')) {
         const staffUser = {
           username: username,
@@ -87,6 +109,7 @@ export function App() {
         };
         auth.setUser(staffUser);
         setCurrentUser(staffUser);
+        setWorkspaceMode('PAYROLL');
         setActiveTab('selfservice');
       } else {
         setLoginError('Không thể kết nối máy chủ xác thực. Vui lòng thử lại.');
@@ -156,7 +179,7 @@ export function App() {
 
             <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-500 space-y-0.5">
               <div><strong>Gợi ý tài khoản trải nghiệm:</strong></div>
-              <div>• Quản trị toàn Quỹ: <span className="font-mono text-brand-navy font-bold">admin / YenTho@2027</span></div>
+              <div>• Quản trị toàn Quỹ / HĐQT: <span className="font-mono text-brand-navy font-bold">admin / YenTho@2027</span></div>
               <div>• Cán bộ nhân viên: <span className="font-mono text-emerald-800 font-bold">NV01 / 123456</span></div>
             </div>
 
@@ -176,7 +199,7 @@ export function App() {
 
   // Màn hình Ứng Dụng Chính
   return (
-    <div className="min-h-screen flex flex-col bg-slate-100">
+    <div className="min-h-screen flex flex-col bg-slate-100 font-sans">
       <Navbar
         user={currentUser}
         onLogout={handleLogout}
@@ -185,6 +208,8 @@ export function App() {
         onRefresh={() => loadData(period)}
         isRefreshing={isRefreshing}
         onSetupDb={() => api.setupDatabase().then(() => alert('✅ Đã kiểm tra CSDL 13 Sheets!'))}
+        workspaceMode={workspaceMode}
+        onWorkspaceModeChange={handleModeChange}
       />
 
       <div className="flex flex-1 max-w-7xl w-full mx-auto">
@@ -192,9 +217,19 @@ export function App() {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           user={currentUser}
+          workspaceMode={workspaceMode}
         />
 
         <main className="flex-1 p-4 md:p-6 overflow-x-hidden">
+          {/* PHÂN HỆ 1: MÔ PHỎNG QUY CHẾ LƯƠNG HĐQT */}
+          {activeTab === 'simulation' && (
+            <SimulationModule
+              data={data}
+              onSaveScenario={(scenario) => api.saveScenario(scenario).then(() => loadData(period))}
+            />
+          )}
+
+          {/* PHÂN HỆ 2: THEO DÕI & CHI TRẢ LƯƠNG CHÍNH THỨC HÀNG THÁNG */}
           {activeTab === 'dashboard' && (
             <DashboardModule
               data={data}
@@ -228,6 +263,7 @@ export function App() {
             />
           )}
 
+          {/* CÁC MODULE DÙNG CHUNG CSDL GIỮA 2 PHÂN HỆ */}
           {activeTab === 'staff' && (
             <StaffModule
               data={data}
@@ -236,7 +272,10 @@ export function App() {
           )}
 
           {activeTab === 'positions' && (
-            <PositionsModule data={data} />
+            <PositionsModule 
+              data={data} 
+              onSavePositions={(pos) => api.savePositions(pos).then(() => loadData(period))}
+            />
           )}
 
           {activeTab === 'kpi' && (
@@ -244,7 +283,11 @@ export function App() {
           )}
 
           {activeTab === 'allowances' && (
-            <AllowancesModule data={data} />
+            <AllowancesModule 
+              data={data}
+              onSaveAllowances={(al) => api.saveAllowances(al).then(() => loadData(period))}
+              onSaveHistory={(lh) => api.saveAllowanceHistory(lh).then(() => loadData(period))}
+            />
           )}
 
           {activeTab === 'admin' && (
