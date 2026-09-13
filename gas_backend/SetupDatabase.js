@@ -11,8 +11,8 @@
  *    cố định hàng/cột (Freeze), định dạng số tiền, ngày tháng, phần trăm và nạp sẵn dữ liệu mẫu.
  */
 
-// >>>>> ID GOOGLE SHEET CHÍNH THỨC CỦA QUỸ TÍN DỤNG NHÂN DÂN YÊN THỌ <<<<<
-const SPREADSHEET_ID = "1izLMpdJem2Hn4SH62SomExx8RaLjCRRLoiaS2u_IVi8";
+// ID GOOGLE SHEET CHÍNH THỨC ĐÃ ĐƯỢC KHAI BÁO TẬP TRUNG TẠI Code.js:
+// SPREADSHEET_ID = "1izLMpdJem2Hn4SH62SomExx8RaLjCRRLoiaS2u_IVi8"
 
 // BẢNG MÀU CHUẨN THƯƠNG HIỆU NGÂN QUỸ / QTDND YÊN THỌ
 const STYLES = {
@@ -79,10 +79,7 @@ function khoiTaoHeThongCSDL() {
  * Hàm lấy đối tượng Spreadsheet từ ID hoặc Sheet đang hoạt động
  */
 function laySpreadsheet() {
-  if (SPREADSHEET_ID && SPREADSHEET_ID.trim() !== "" && SPREADSHEET_ID !== "YOUR_SPREADSHEET_ID_HERE") {
-    return SpreadsheetApp.openById(SPREADSHEET_ID.trim());
-  }
-  return SpreadsheetApp.getActiveSpreadsheet();
+  return getSpreadsheet();
 }
 
 /**
