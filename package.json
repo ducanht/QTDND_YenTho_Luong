@@ -1,7 +1,7 @@
 {
   "name": "qtdnd-yentho-luong",
-  "version": "2.0.0",
-  "description": "Hệ thống Quản trị Lương, Nhân sự, Chấm công & KPI 2027 Pro V2 - QTDND Yên Thọ",
+  "version": "3.0.0",
+  "description": "Hệ thống Quản trị Lương, Nhân sự, Chấm công & KPI 2027 Pro V3 - QTDND Yên Thọ",
   "scripts": {
     "dev": "cd frontend_vite && npm run dev",
     "build": "cd frontend_vite && npm run build",

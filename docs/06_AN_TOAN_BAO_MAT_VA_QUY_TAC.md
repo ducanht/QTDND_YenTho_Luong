@@ -1,5 +1,5 @@
 # 🛡️ AN TOÀN, BẢO MẬT & QUY TẮC PHÁT TRIỂN CỐT LÕI
-## Dự Án: Hệ Thống Quản Trị Lương, Nhân Sự, Chấm Công & KPI 2027 Pro V2
+## Dự Án: Hệ Thống Quản Trị Lương, Nhân Sự, Chấm Công & KPI 2027 Pro V3
 ### Đơn Vị: Quỹ Tín Dụng Nhân Dân Yên Thọ
 
 ---

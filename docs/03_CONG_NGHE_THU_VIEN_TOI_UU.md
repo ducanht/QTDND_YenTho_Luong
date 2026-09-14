@@ -1,5 +1,5 @@
 # ⚡ CÔNG NGHỆ, THƯ VIỆN & TỐI ƯU HÓA HIỆU NĂNG
-## Dự Án: Hệ Thống Quản Trị Lương, Nhân Sự, Chấm Công & KPI 2027 Pro V2
+## Dự Án: Hệ Thống Quản Trị Lương, Nhân Sự, Chấm Công & KPI 2027 Pro V3
 ### Đơn Vị: Quỹ Tín Dụng Nhân Dân Yên Thọ
 
 ---
@@ -61,3 +61,7 @@
 ### 4. Đóng Gói Nhúng Toàn Phần Trong Single-File Bundle
 - Plugin `vite-plugin-singlefile` tự động chuyển đổi toàn bộ mã CSS, JavaScript và ảnh SVG thành inline Base64 / inline scripts nhúng trực tiếp trong file `Index.html`.
 - Kết quả: Khi mở ứng dụng trong Google Workspace, trình duyệt chỉ cần tải **duy nhất 1 request HTTP**, không phát sinh hàng chục request lẻ tẻ tải tài nguyên bên ngoài.
+
+### 5. Tối Ưu Xuất Báo Cáo High-DPI 2x & In Chuẩn Khổ A4 Ngang
+- **Xuất ảnh Canvas 2x**: Áp dụng hệ số tỷ lệ `window.devicePixelRatio * 2` để kết xuất ảnh bảng lương có độ phân giải cao gấp 2 lần màn hình thường, đảm bảo khi phóng to hoặc in ấn số liệu không bị vỡ hạt hay mờ nét.
+- **In ấn & PDF A4 ngang**: Nhúng cấu hình CSS `@page { size: landscape; margin: 10mm; }` và `@media print` loại bỏ hoàn toàn các nút thao tác, căn chỉnh độ rộng cột theo tỷ lệ chuẩn thể thức văn bản hành chính Quỹ tín dụng, kết xuất hoàn hảo khối 3 chữ ký cuối trang.

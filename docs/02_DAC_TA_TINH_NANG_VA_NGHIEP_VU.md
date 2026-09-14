@@ -1,130 +1,132 @@
-# 📋 ĐẶC TẢ TÍNH NĂNG & NGHIỆP VỤ HỆ THỐNG LƯƠNG 2027 PRO V2
-## Đơn Vị: Quỹ Tín Dụng Nhân Dân Yên Thọ
+# 📋 ĐẶC TẢ TÍNH NĂNG & NGHIỆP VỤ HỆ THỐNG LƯƠNG 2027 PRO V3
+## Đơn Vị: Quỹ Tín Dụng Nhân Dân Yên Thọ (Thôn Tân Lộc, Xã Quý Lộc, Tỉnh Thanh Hoá)
 
 ---
 
-## 1. Bản Đồ 9 Phân Hệ Nghiệp Vụ Cốt Lõi
+## 1. Bản Đồ 7 Phân Hệ Nghiệp Vụ Cốt Lõi (Kiến Trúc V3.0)
+
+Hệ thống được thiết kế tường minh theo 7 phân hệ nghiệp vụ chính, đáp ứng đầy đủ yêu cầu quản trị lương hiện đại của Quỹ tín dụng nhân dân Yên Thọ:
 
 ```
-HỆ THỐNG QUẢN TRỊ LƯƠNG & NHÂN SỰ QTDND YÊN THỌ
+HỆ THỐNG QUẢN TRỊ LƯƠNG, NHÂN SỰ, CHẤM CÔNG & KPI 2027 PRO V3
 │
-├── 1. QUẢN LÝ HỒ SƠ NHÂN SỰ 360° (DM_NS & LS_CONGTAC)
-│   ├── Hồ sơ cá nhân, CCCD 12 số, tài khoản NH, MST, sổ BHXH, số người phụ thuộc
-│   ├── Lịch sử diễn biến công tác & quyết định bổ nhiệm/nâng bậc
-│   └── Bộ lọc đa năng theo Khối phòng ban, trạng thái làm việc
+├── 1. MÔ PHỎNG LƯƠNG ĐỘNG (DYNAMIC SIMULATION)
+│   ├── Cấu hình linh hoạt Lương cơ sở, tỷ lệ thâm niên, vượt khung, trần BHXH, giảm trừ thuế
+│   ├── Bảng lương theo chức danh và 5 bậc ngạch (Bậc 1 đến 5, chu kỳ nâng bậc 3 năm)
+│   ├── Bỏ hoàn toàn các phương án cố định PA1/PA2/PA3 cứng nhắc; cho phép tạo kịch bản mới tùy biến
+│   ├── Nhập tay toàn bộ tham số, phản ánh kết quả tức thì (Real-time recalculation)
+│   └── Bộ 3 công cụ xuất báo cáo: Xuất Excel (.xls), Xuất Ảnh 2x Canvas, In PDF A4 kèm 3 chữ ký
 │
-├── 2. KHUNG VỊ TRÍ, CHỨC DANH & HỆ SỐ LƯƠNG (DM_CHUCDANH)
-│   ├── Khung 10 chức danh chuẩn hóa (Chủ tịch HĐQT, GĐ, KTT, CB Tín dụng, Thủ quỹ...)
-│   ├── 3 Phương án hệ số: PA1 (Thử nghiệm), PA2 (Đề xuất chuẩn), PA3 (Đột phá)
-│   └── Phụ cấp trách nhiệm & thù lao quản trị theo chức danh
+├── 2. QUẢN LÝ NHÂN SỰ 360° (STAFF 360)
+│   ├── Hồ sơ 12 CBNV đầy đủ: Họ tên, CCCD 12 số, MST, sổ BHXH, số NPT, số tài khoản Agribank
+│   ├── Ngày đảm nhiệm chức vụ, thâm niên chức vụ thực tế và số năm quy đổi tương đương
+│   ├── Bậc ngạch lương hiện hưởng (1-5), số năm vượt khung tích lũy sau bậc 5
+│   ├── Mức đóng BHXH cá nhân hóa (tự chọn mức đóng, hoàn trả tiền thừa BHXH)
+│   └── Quản lý số hóa tài liệu Google Drive: Link HĐLĐ, Link Phụ lục hợp đồng, Link Quyết định
 │
-├── 3. QUẢN LÝ CHỈ SỐ & ĐÁNH GIÁ KPI THÁNG (DM_KPI & DG_KPI)
-│   ├── Từ điển KPI nghiệp vụ Quỹ tín dụng nhân dân (Dư nợ, Huy động, Nợ xấu, Kế toán)
-│   ├── Đánh giá theo trọng số (%) và chấm điểm thực hiện thực tế
-│   └── Tự động tính tỷ lệ hoàn thành KPI tổng hợp cho từng CBNV
-│
-├── 4. BẢNG CHẤM CÔNG & QUẢN LÝ NGHỈ PHÉP (CHAM_CONG)
+├── 3. BẢNG CHẤM CÔNG HÀNG THÁNG (CHAM_CONG)
 │   ├── Chấm công theo tháng: Ngày công chuẩn (22 ngày), ngày công thực tế
-│   ├── Quản lý ngày nghỉ phép hưởng lương, nghỉ ốm, nghỉ không hưởng lương
-│   └── Tự động tính hệ số ngày công hưởng lương thời gian: (Công thực + Công phép) / Công chuẩn
+│   ├── Quản lý ngày nghỉ phép năm hưởng lương, nghỉ ốm chế độ, nghỉ không hưởng lương
+│   └── Tự động tính hệ số ngày công: (Công thực + Công phép) / Công chuẩn
 │
-├── 5. PHỤ CẤP KHOÁN & LỊCH SỬ THAY ĐỔI SCD-2 (DM_PHU_CAP & LS_KHOAN)
-│   ├── Danh mục 10 khoản khoán & phụ cấp (Ăn ca, Xăng xe, Điện thoại, Trang phục, Công tác phí...)
-│   ├── Quy tắc bóc tách căn cứ tính BHXH và Thuế TNCN theo luật định
-│   └── Lưu vết lịch sử thay đổi định mức (SCD Type 2: Từ ngày - Đến ngày, Quyết định, Lý do)
+├── 4. ĐÁNH GIÁ CHỈ SỐ KPI THÁNG (DM_KPI & DG_KPI)
+│   ├── Từ điển KPI nghiệp vụ Quỹ tín dụng nhân dân (Dư nợ, Huy động, Nợ xấu, Kế toán, Kho quỹ)
+│   ├── Đánh giá theo trọng số (%) và chấm điểm thực hiện thực tế (Thang điểm 0 - 120%)
+│   └── Tự động tính tỷ lệ hoàn thành KPI tổng hợp cho từng CBNV và khối phòng ban
 │
-├── 6. ĐỘNG CƠ TÍNH LƯƠNG 4 TẦNG & KHÓA SỔ (BL_LICHSU)
-│   ├── Tầng 1: Lương ngạch bậc thời gian (Lương cơ sở × Hệ số × Tỷ lệ công)
-│   ├── Tầng 2: Lương hiệu quả công việc KPI & Tiền thưởng
-│   ├── Tầng 3: Phụ cấp trách nhiệm, thù lao quản trị & Các khoản khoán công vụ
-│   ├── Tầng 4: Trích đóng BHXH/BHYT/BHTN (10.5% NLĐ, 21.5% Đơn vị) & Thuế TNCN lũy tiến từng phần
-│   └── Quy trình Chốt sổ & Khóa bảng lương bất biến vĩnh viễn (LockService chống xung đột)
+├── 5. TÍNH TOÁN BẢNG LƯƠNG CHI TIẾT (PAYROLL ENGINE)
+│   ├── Động cơ tính lương 4 tầng đọc tham số từ CSDL `DM_THAM_SO_LUONG` (Zero-hardcode)
+│   ├── Bóc tách chi tiết 22 chỉ tiêu tài chính, lưu vào `KQ_LUONG_THANG` (Dự thảo/Chốt)
+│   └── Khóa sổ bảng lương vĩnh viễn (Lock Payroll) vào `BL_LICHSU` bọc `LockService` atomicity
 │
-├── 7. CỔNG TỰ PHỤC VỤ CBNV (EMPLOYEE SELF-SERVICE)
-│   ├── Tra cứu phiếu lương chi tiết từng tháng bằng tài khoản cá nhân
-│   ├── Xem biểu đồ diễn biến thu nhập, tỷ lệ KPI và các khoản giảm trừ
-│   └── Gửi câu hỏi / Phản hồi trực tiếp tới Kế toán - Lãnh đạo khi có thắc mắc lương
+├── 6. BỘ CÔNG CỤ BÁO CÁO & XUẤT DỮ LIỆU ĐA PHƯƠNG THỨC
+│   ├── Xuất Excel (.xls): Định dạng chuẩn bảng tính, đầy đủ màu sắc, tiêu đề và số liệu
+│   ├── Xuất Ảnh Canvas High-DPI (2x scale): Sắc nét, tối ưu gửi nhanh qua Zalo và trình chiếu
+│   └── In Báo Cáo / Xuất PDF (A4 Ngang): Chuẩn thể thức văn bản hành chính Quỹ tín dụng,
+│       đầy đủ Quốc hiệu, Tiêu ngữ, Tên đơn vị và Khối 3 chữ ký:
+│       * Người lập biểu (Kế toán tiền lương)
+│       * Kế toán trưởng
+│       * Chủ tịch HĐQT / Giám đốc
 │
-├── 8. PHÂN QUYỀN TRUY CẬP RBAC 4 CẤP ĐỘ (TAIKHOAN)
-│   ├── Cấp 1 (SUPER_ADMIN): Quản trị toàn hệ thống, sao lưu CSDL, quản lý tài khoản
-│   ├── Cấp 2 (KE_TOAN): Quản lý hồ sơ nhân sự, chấm công, tính lương, điều chỉnh phụ cấp
-│   ├── Cấp 3 (LANH_DAO): Xem toàn bộ bảng lương, báo cáo quỹ lương, phê duyệt khóa sổ
-│   └── Cấp 4 (NHAN_VIEN): Chỉ xem thông tin cá nhân và phiếu lương của chính mình (Read-only)
-│
-└── 9. NHẬT KÝ KIỂM TOÁN & HỘP THƯ PHẢN HỒI (AUDIT_LOG & PHAN_HOI)
-    ├── Ghi vết tự động mọi lượt đăng nhập, tính lương, chốt lương, sửa hồ sơ (Audit Trail)
-    ├── Quản lý trạng thái giải quyết thắc mắc lương: MỚI -> ĐANG XỬ LÝ -> ĐÃ GIẢI QUYẾT
-    └── Đảm bảo tính minh bạch, dân chủ cơ sở trong Quỹ tín dụng nhân dân.
+└── 7. CỔNG TỰ PHỤC VỤ CBNV & QUẢN TRỊ HỆ THỐNG
+    ├── Tra cứu phiếu lương chi tiết từng tháng bằng tài khoản riêng
+    ├── Hộp thư phản hồi thắc mắc lương 2 chiều giữa CBNV và Kế toán (Sheet `PHAN_HOI`)
+    ├── Phân quyền RBAC 4 cấp: `SUPER_ADMIN`, `KE_TOAN`, `LANH_DAO`, `NHAN_VIEN`
+    └── Nhật ký kiểm toán an toàn thông tin bất biến (`AUDIT_LOG`)
 ```
 
 ---
 
-## 2. Chi Tiết Thuật Toán Tính Lương 4 Tầng & Thuế / BHXH
+## 2. Chi Tiết Thuật Toán Tính Lương 4 Tầng V3.0 (Không Hardcode)
 
-### A. Tầng 1: Lương Ngạch Bậc Theo Ngày Công (Thời gian)
-$$\text{Lương ngạch bậc} = \text{Lương cơ sở} \times \text{Hệ số lương} \times \left( \frac{\text{Ngày công thực tế} + \text{Ngày nghỉ phép}}{\text{Ngày công chuẩn của tháng}} \right)$$
-- *Trong đó*:
-  - Lương cơ sở áp dụng theo Nghị định Chính phủ hoặc mức lương tối thiểu nội bộ do HĐQT phê duyệt (Ví dụ: `2.340.000 ₫`).
-  - Ngày công chuẩn mặc định: `22` ngày/tháng (trừ Thứ Bảy, Chủ Nhật).
+### A. Tầng 1: Lương Vị Trí & Ngạch Bậc (5 Bậc)
+$$\text{Lương ngạch bậc} = \text{Lương cơ sở} \times \text{Hệ số bậc} \times \left( \frac{\text{Ngày công thực tế} + \text{Ngày nghỉ phép}}{\text{Ngày công chuẩn của tháng}} \right)$$
+- **Lương cơ sở**: Đọc từ tham số `LUONG_CO_SO` trong `DM_THAM_SO_LUONG` (Mặc định `2.340.000 ₫/tháng`).
+- **Hệ số bậc**: Được xác định theo Bậc ngạch của chức danh (Bậc 1 đến Bậc 5) cấu hình trong `DM_CHUCDANH` và `DM_BAC_LUONG`.
+- **Chu kỳ nâng bậc**: 3 năm/bậc.
 
-### B. Tầng 2: Lương Hiệu Quả KPI & Tiền Thưởng
-$$\text{Lương KPI} = \text{Hệ số KPI} \times \text{Lương cơ sở} \times \text{Tỷ lệ hoàn thành KPI (\%)} \times \left( \frac{\text{Ngày công thực tế}}{\text{Ngày công chuẩn}} \right)$$
-$$\text{Tiền thưởng} = \text{Mức thưởng chức danh} \times \text{Tỷ lệ thưởng \%} + \text{Thưởng thi đua thêm ₫}$$
+### B. Chế Độ Thâm Niên & Vượt Khung Chuẩn Quỹ
+1. **Thâm niên công tác**:
+   $$\text{Tỷ lệ thâm niên CT} = \min(\text{Số năm công tác} \times 5\%, 40\%)$$
+   $$\text{Tiền thâm niên CT} = \text{Lương ngạch bậc} \times \text{Tỷ lệ thâm niên CT}$$
+2. **Thâm niên chức vụ**:
+   - Được tính từ **Ngày đảm nhiệm chức vụ** thực tế kết hợp với **Số năm thâm niên quy đổi** ghi nhận trong hồ sơ cán bộ.
+3. **Cơ chế Vượt khung chung toàn Quỹ**:
+   - Sau khi cán bộ đã đạt kịch trần **Bậc 5**, cứ mỗi chu kỳ **3 năm** giữ bậc 5 sẽ được hưởng thêm **5% vượt khung**.
+   - Cơ chế này áp dụng thống nhất chung cho toàn thể cán bộ Quỹ, tối đa lên tới 8 lần (40%).
+   $$\text{Tiền vượt khung} = \text{Lương ngạch bậc} \times (\text{Số lần vượt khung} \times 5\%)$$
 
-### C. Tầng 3: Phụ Cấp Trách Nhiệm, Thù Lao & Các Khoản Khoán Công Vụ
-- **Phụ cấp trách nhiệm**: Áp dụng cho Chủ tịch HĐQT, Giám đốc, Trưởng BKS, Kế toán trưởng... (Tính đóng BHXH và chịu Thuế TNCN).
-- **Thù lao quản trị**: Áp dụng cho thành viên HĐQT, BKS (Không đóng BHXH, chịu Thuế TNCN).
-- **Các khoản khoán công vụ**:
-  - *Ăn trưa (ăn ca)*: Định mức tối đa theo TT 111/2013 là `730.000 ₫/tháng` được miễn thuế TNCN. Phần vượt mức (nếu có) tính vào thu nhập chịu thuế. Miễn hoàn toàn BHXH.
-  - *Xăng xe, Điện thoại, Trang phục*: Chi theo quy chế khoán công tác, được miễn Thuế TNCN và BHXH nếu có đầy đủ quy chế và quyết định của HĐQT.
-  - *Công tác phí*: Thanh toán theo chi phí thực tế phát sinh hoặc khoán ngày lưu trú có giấy đi đường.
+$$\text{Lương vị trí cố định (L1)} = \text{Lương ngạch bậc} + \text{Tiền thâm niên CT} + \text{Tiền vượt khung}$$
 
-### D. Tầng 4: Trích Đóng BHXH/BHYT/BHTN & Thuế TNCN
-#### 1. Trích nộp BHXH bắt buộc:
-- **Tỷ lệ trừ vào lương người lao động (10.5%)**:
-  - BHXH: `8.0%`
-  - BHYT: `1.5%`
-  - BHTN: `1.0%`
-- **Tỷ lệ đơn vị sử dụng lao động đóng thay (21.5%)**:
-  - BHXH: `17.0%` (trong đó hưu trí tử tuất 14%, ốm đau thai sản 3%)
-  - BHYT: `3.0%`
-  - BHTN: `1.0%`
-  - BHTNLĐ-BNN: `0.5%`
-- **Tiền lương làm căn cứ đóng BHXH**:
-  $$\text{Lương đóng BHXH} = \text{Lương ngạch bậc} + \text{Phụ cấp trách nhiệm/chức vụ}$$
-  *(Áp dụng mức trần tối đa bằng 20 lần mức lương cơ sở theo Luật BHXH 2024)*.
+### C. Tầng 2: Lương Hiệu Quả KPI & Tiền Thưởng
+$$\text{Lương KPI} = \text{Lương vị trí (L1)} \times \text{Hệ số quỹ thưởng KPI chức danh} \times \left( \frac{\text{Điểm KPI tháng \%}}{100} \right) \times \left( \frac{\text{Công thực tế}}{\text{Công chuẩn}} \right)$$
+- Điểm KPI tháng nằm trong dải từ 0% đến 120% dựa trên kết quả hoàn thành chỉ tiêu tại `DG_KPI`.
+- Tiền thưởng thi đua/định mức được tính riêng và cộng trực tiếp vào thu nhập.
 
-#### 2. Thuế Thu Nhập Cá Nhân (TNCN):
-- **Thu nhập chịu thuế** = Tổng Gross - Các khoản khoán công vụ miễn thuế.
-- **Các khoản giảm trừ**:
-  - Giảm trừ bản thân người nộp thuế: `11.000.000 ₫/tháng`.
-  - Giảm trừ người phụ thuộc: `4.400.000 ₫/người/tháng` (tính theo số NPT tại `DM_NS`).
-  - Các khoản bảo hiểm bắt buộc đã trừ vào lương (10.5%).
-- **Thu nhập tính thuế (TNTT)** = Thu nhập chịu thuế - Các khoản giảm trừ.
-- Nếu $\text{TNTT} \le 0$: Thuế TNCN = `0 ₫`.
-- Nếu $\text{TNTT} > 0$: Áp dụng biểu thuế lũy tiến từng phần 7 bậc theo Luật Thuế TNCN:
-  - Bậc 1 (Đến 5 triệu ₫): `5%`
-  - Bậc 2 (Trên 5 đến 10 triệu ₫): `10% - 250.000 ₫`
-  - Bậc 3 (Trên 10 đến 18 triệu ₫): `15% - 750.000 ₫`
-  - Bậc 4 (Trên 18 đến 32 triệu ₫): `20% - 1.650.000 ₫`
-  - Bậc 5 (Trên 32 đến 52 triệu ₫): `25% - 3.250.000 ₫`
-  - Bậc 6 (Trên 52 đến 80 triệu ₫): `30% - 5.850.000 ₫`
-  - Bậc 7 (Trên 80 triệu ₫): `35% - 9.850.000 ₫`
+### D. Tầng 3: Phụ Cấp Trách Nhiệm & Các Khoản Khoán Công Vụ
+- **Phụ cấp trách nhiệm**: Định mức theo chức danh quản lý (Chủ tịch HĐQT, Giám đốc, Trưởng BKS, KTT...).
+- **Các khoản khoán công vụ** (Đọc quy tắc từ `DM_PHU_CAP`):
+  - *Ăn trưa (ăn ca)*: `1.000.000 ₫/tháng` (Miễn thuế tối đa `730.000 ₫/tháng` theo TT 111/2013; phần chênh lệch `270.000 ₫` chịu thuế TNCN; miễn 100% BHXH).
+  - *Xăng xe*: Khoán theo chức danh (`300.000 ₫` - `500.000 ₫`), miễn thuế và BHXH.
+  - *Điện thoại*: Khoán theo nhu cầu liên lạc (`200.000 ₫` - `400.000 ₫`), miễn thuế và BHXH.
+  - *Trang phục*: Khoán `500.000 ₫/tháng`, miễn thuế trong hạn mức quy chế.
 
-#### 3. Thực Lĩnh (Lương Net):
-$$\text{Thực Lĩnh} = \text{Tổng Gross} - \text{BHXH NLĐ (10.5\%)} - \text{Thuế TNCN} - \text{Trừ phạt/Thu hồi khác}$$
+### E. Tầng 4: BHXH Cá Nhân Hóa & Hoàn Trả Tiền Thừa BHXH
+1. **Căn cứ đóng BHXH chuẩn (L1)**:
+   $$\text{Căn cứ chuẩn L1} = \min(\text{Lương ngạch bậc} + \text{Phụ cấp trách nhiệm}, 20 \times \text{Lương cơ sở})$$
+2. **Mức đóng cá nhân hóa**:
+   - Cán bộ được phép đăng ký mức đóng BHXH riêng (`mucDongBhxh`) phù hợp nguyện vọng cá nhân.
+   - Nếu đăng ký thấp hơn căn cứ chuẩn L1:
+     $$\text{Chi phí BH Quỹ định mức} = \text{Căn cứ chuẩn L1} \times (10.5\% + 21.5\%) = \text{Căn cứ chuẩn L1} \times 32\%$$
+     $$\text{Chi phí BH Quỹ thực tế} = \text{Mức đóng cá nhân} \times 21.5\%$$
+     $$\text{Tiền thừa BHXH hoàn trả} = \text{Phần chênh lệch định mức Quỹ chi trả}$$
+     *Khoản tiền thừa này được cộng trực tiếp vào Tổng Gross để chi trả lại cho cán bộ, đảm bảo quyền lợi tài chính tối đa.*
+3. **Trích trừ bảo hiểm vào lương NLĐ (10.5%)**:
+   - BHXH 8% + BHYT 1.5% + BHTN 1% tính trên Mức đóng cá nhân lựa chọn.
+4. **Chi phí Quỹ nộp cơ quan bảo hiểm (21.5%)**:
+   - BHXH 17.5% + BHYT 3% + BHTN 1%.
+
+### F. Thuế Thu Nhập Cá Nhân (TNCN Lũy Tiến 7 Bậc)
+- **Thu nhập chịu thuế** = Tổng Gross - Các khoản khoán miễn thuế theo quy chế.
+- **Giảm trừ gia cảnh**:
+  - Bản thân: `11.000.000 ₫/tháng` (Đọc từ tham số `TNCN_GIAM_TRU_BAN_THAN`).
+  - Người phụ thuộc: `4.400.000 ₫/người/tháng` $\times$ Số NPT ghi nhận tại `DM_NS`.
+- **Thu nhập tính thuế (TNTT)** = Thu nhập chịu thuế - Giảm trừ gia cảnh - Khấu trừ BHXH NLĐ (10.5%).
+- Biểu thuế lũy tiến từng phần 7 bậc theo quy định pháp luật (TT 111/2013/TT-BTC).
+
+### G. Thực Lĩnh (Lương Net Chuyển Khoản)
+$$\text{Thực Lĩnh Net} = \text{Tổng Gross} - \text{Tổng Khấu Trừ BH (10.5\%)} - \text{Thuế TNCN}$$
 
 ---
 
-## 3. Quy Trình Nghiệp Vụ Khóa Sổ & Chống Sửa Đổi Lịch Sử
+## 3. Quy Trình Nghiệp Vụ Khóa Sổ & Bảo Toàn Dữ Liệu
 
-1. **Giai đoạn Dự thảo (Draft)**:
-   - Kế toán nhập công, cập nhật KPI, kiểm tra số liệu.
-   - Có thể bấm tính toán và điều chỉnh nhiều lần mà không ảnh hưởng CSDL chính thức.
-2. **Giai đoạn Phê duyệt (Approval)**:
-   - Giám đốc / Chủ tịch HĐQT kiểm tra bảng lương tổng hợp và các chỉ số toàn Quỹ.
-3. **Giai đoạn Khóa sổ vĩnh viễn (Lock Payroll)**:
-   - Khi bấm "Khóa sổ bảng lương tháng YYYY-MM", hệ thống kích hoạt `PayrollController.lockPayroll()`.
-   - Sử dụng `LockService.getScriptLock()` chờ tối đa 15 giây để chống xung đột race condition.
-   - Ghi toàn bộ dữ liệu đã chốt vào bảng `BL_LICHSU`. Dòng lương đã khóa trở thành bản ghi **BẤT BIẾN (Immutable)**, cấm ghi đè hoặc xóa trực tiếp từ giao diện thông thường.
-   - Mọi điều chỉnh sau khi đã khóa sổ bắt buộc phải ghi bút toán điều chỉnh ở kỳ lương tiếp theo kèm lý do giải trình.
+1. **Giai đoạn Dự thảo & Mô phỏng (Simulation & Draft)**:
+   - Kế toán và Lãnh đạo tự do điều chỉnh các tham số, thử nghiệm các kịch bản mô phỏng.
+   - Kết quả dự thảo được lưu vào sheet `KQ_LUONG_THANG` với trạng thái `DRAFT`.
+   - Xuất file Excel, Ảnh Canvas hoặc in bản thảo PDF để họp Ban Giám đốc và HĐQT biểu quyết.
+2. **Giai đoạn Khóa sổ vĩnh viễn (Lock Payroll)**:
+   - Sau khi HĐQT thông qua, Kế toán trưởng kích hoạt chức năng "Khóa sổ bảng lương".
+   - Hệ thống kích hoạt `lockMonthlyPayroll()` trên Google Apps Script, bọc `LockService.getScriptLock()` 15 giây.
+   - Ghi dữ liệu đã chốt vào bảng `BL_LICHSU` và cập nhật `KQ_LUONG_THANG` sang trạng thái `LOCKED`.
+   - Dòng lương đã khóa trở thành bản ghi **BẤT BIẾN (Immutable)**, bảo toàn 100% dữ liệu lịch sử để phục vụ kiểm toán Ngân hàng Nhà nước và Cơ quan Thuế.
