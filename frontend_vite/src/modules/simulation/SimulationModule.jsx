@@ -1290,10 +1290,15 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
           {/* Card 2: % Kết Cấu Lương KPI Theo 4 Khối Nghiệp Vụ */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-sm flex items-center space-x-2">
-                <Percent className="w-4 h-4 text-emerald-700" />
-                <span>2. % Kết Cấu Lương KPI Theo Khối</span>
-              </h3>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm flex items-center space-x-2">
+                  <Percent className="w-4 h-4 text-emerald-700" />
+                  <span>2. % Kết Cấu Lương KPI Theo 4 Khối (Nhập Tay 100%)</span>
+                </h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Nhập số % trực tiếp bằng tay hoặc dùng nút bước nhảy. Tuyệt đối không dùng thanh kéo trượt (slider).
+                </p>
+              </div>
               <div className="inline-flex rounded-lg bg-slate-100 p-0.5 text-[10px]">
                 <button
                   onClick={() => setKpiCalcMethod('DEPT_RATIO')}
@@ -1317,7 +1322,7 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
             {kpiCalcMethod === 'DEPT_RATIO' ? (
               <div className="space-y-3.5">
                 <div className="p-2.5 bg-blue-50/60 border border-blue-200 rounded-xl text-[11px] text-blue-900 leading-relaxed">
-                  💡 <strong>Cơ cấu lương mục tiêu:</strong> Ở mức 100% KPI, tỷ lệ Lương KPI (L2) trên Lương vị trí (L1) = %KPI / (100 - %KPI).
+                  💡 <strong>Cơ cấu lương mục tiêu:</strong> Ở mức 100% KPI, tỷ lệ Lương KPI (L2) trên Lương vị trí (L1) = %KPI / (100 - %KPI). Toàn bộ tỷ lệ được nhập tay trực tiếp.
                 </div>
 
                 {/* Khối Lãnh đạo */}
@@ -1345,6 +1350,7 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
                         value={deptKpiRatios.LANH_DAO}
                         onChange={(e) => setDeptKpiRatios(prev => ({ ...prev, LANH_DAO: Math.min(80, Math.max(5, Number(e.target.value) || 0)) }))}
                         className="w-full percent-input text-sm py-1.5 pr-7 font-bold text-brand-navy"
+                        placeholder="Nhập % Lãnh đạo"
                       />
                       <span className="absolute right-2.5 top-2 text-xs text-slate-400 font-semibold pointer-events-none">%</span>
                     </div>
@@ -1356,8 +1362,30 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
                       + 5%
                     </button>
                   </div>
-                  <div className="text-[10px] text-slate-500 font-medium">
-                    Lương KPI chuẩn = {((deptKpiRatios.LANH_DAO / (100 - deptKpiRatios.LANH_DAO))).toFixed(2)}x Lương Vị trí
+                  <div className="flex flex-wrap items-center justify-between gap-1 text-[10px]">
+                    <span className="text-slate-500 font-medium">
+                      Lương KPI chuẩn = {((deptKpiRatios.LANH_DAO / (100 - deptKpiRatios.LANH_DAO))).toFixed(2)}x Lương Vị trí
+                    </span>
+                    <div className="flex items-center space-x-1">
+                      {[
+                        { val: 30, label: '30%' },
+                        { val: 40, label: '40% (Chuẩn)' },
+                        { val: 50, label: '50%' }
+                      ].map(opt => (
+                        <button
+                          key={opt.val}
+                          type="button"
+                          onClick={() => setDeptKpiRatios(prev => ({ ...prev, LANH_DAO: opt.val }))}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-all ${
+                            deptKpiRatios.LANH_DAO === opt.val
+                              ? 'bg-brand-navy text-white border-brand-navy'
+                              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -1386,6 +1414,7 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
                         value={deptKpiRatios.TIN_DUNG}
                         onChange={(e) => setDeptKpiRatios(prev => ({ ...prev, TIN_DUNG: Math.min(85, Math.max(10, Number(e.target.value) || 0)) }))}
                         className="w-full percent-input text-sm py-1.5 pr-7 font-bold text-emerald-800"
+                        placeholder="Nhập % Tín dụng"
                       />
                       <span className="absolute right-2.5 top-2 text-xs text-slate-400 font-semibold pointer-events-none">%</span>
                     </div>
@@ -1397,8 +1426,30 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
                       + 5%
                     </button>
                   </div>
-                  <div className="text-[10px] text-emerald-700 font-medium">
-                    Lương KPI chuẩn = {((deptKpiRatios.TIN_DUNG / (100 - deptKpiRatios.TIN_DUNG))).toFixed(2)}x Lương Vị trí (Kinh doanh)
+                  <div className="flex flex-wrap items-center justify-between gap-1 text-[10px]">
+                    <span className="text-emerald-700 font-medium">
+                      Lương KPI chuẩn = {((deptKpiRatios.TIN_DUNG / (100 - deptKpiRatios.TIN_DUNG))).toFixed(2)}x Lương Vị trí (Kinh doanh)
+                    </span>
+                    <div className="flex items-center space-x-1">
+                      {[
+                        { val: 40, label: '40%' },
+                        { val: 50, label: '50% (Chuẩn)' },
+                        { val: 60, label: '60%' }
+                      ].map(opt => (
+                        <button
+                          key={opt.val}
+                          type="button"
+                          onClick={() => setDeptKpiRatios(prev => ({ ...prev, TIN_DUNG: opt.val }))}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-all ${
+                            deptKpiRatios.TIN_DUNG === opt.val
+                              ? 'bg-emerald-700 text-white border-emerald-800'
+                              : 'bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-50'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -1427,6 +1478,7 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
                         value={deptKpiRatios.KE_TOAN}
                         onChange={(e) => setDeptKpiRatios(prev => ({ ...prev, KE_TOAN: Math.min(70, Math.max(5, Number(e.target.value) || 0)) }))}
                         className="w-full percent-input text-sm py-1.5 pr-7 font-bold text-blue-800"
+                        placeholder="Nhập % Kế toán"
                       />
                       <span className="absolute right-2.5 top-2 text-xs text-slate-400 font-semibold pointer-events-none">%</span>
                     </div>
@@ -1438,8 +1490,30 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
                       + 5%
                     </button>
                   </div>
-                  <div className="text-[10px] text-blue-700 font-medium">
-                    Lương KPI chuẩn = {((deptKpiRatios.KE_TOAN / (100 - deptKpiRatios.KE_TOAN))).toFixed(2)}x Lương Vị trí (Tác nghiệp quầy)
+                  <div className="flex flex-wrap items-center justify-between gap-1 text-[10px]">
+                    <span className="text-blue-700 font-medium">
+                      Lương KPI chuẩn = {((deptKpiRatios.KE_TOAN / (100 - deptKpiRatios.KE_TOAN))).toFixed(2)}x Lương Vị trí (Tác nghiệp quầy)
+                    </span>
+                    <div className="flex items-center space-x-1">
+                      {[
+                        { val: 25, label: '25%' },
+                        { val: 35, label: '35% (Chuẩn)' },
+                        { val: 45, label: '45%' }
+                      ].map(opt => (
+                        <button
+                          key={opt.val}
+                          type="button"
+                          onClick={() => setDeptKpiRatios(prev => ({ ...prev, KE_TOAN: opt.val }))}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-all ${
+                            deptKpiRatios.KE_TOAN === opt.val
+                              ? 'bg-blue-700 text-white border-blue-800'
+                              : 'bg-white text-blue-800 border-blue-200 hover:bg-blue-50'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -1468,6 +1542,7 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
                         value={deptKpiRatios.HO_TRO}
                         onChange={(e) => setDeptKpiRatios(prev => ({ ...prev, HO_TRO: Math.min(60, Math.max(5, Number(e.target.value) || 0)) }))}
                         className="w-full percent-input text-sm py-1.5 pr-7 font-bold text-purple-800"
+                        placeholder="Nhập % Hỗ trợ"
                       />
                       <span className="absolute right-2.5 top-2 text-xs text-slate-400 font-semibold pointer-events-none">%</span>
                     </div>
@@ -1479,8 +1554,30 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
                       + 5%
                     </button>
                   </div>
-                  <div className="text-[10px] text-purple-700 font-medium">
-                    Lương KPI chuẩn = {((deptKpiRatios.HO_TRO / (100 - deptKpiRatios.HO_TRO))).toFixed(2)}x Lương Vị trí (Phục vụ)
+                  <div className="flex flex-wrap items-center justify-between gap-1 text-[10px]">
+                    <span className="text-purple-700 font-medium">
+                      Lương KPI chuẩn = {((deptKpiRatios.HO_TRO / (100 - deptKpiRatios.HO_TRO))).toFixed(2)}x Lương Vị trí (Phục vụ)
+                    </span>
+                    <div className="flex items-center space-x-1">
+                      {[
+                        { val: 15, label: '15%' },
+                        { val: 20, label: '20% (Chuẩn)' },
+                        { val: 25, label: '25%' }
+                      ].map(opt => (
+                        <button
+                          key={opt.val}
+                          type="button"
+                          onClick={() => setDeptKpiRatios(prev => ({ ...prev, HO_TRO: opt.val }))}
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-all ${
+                            deptKpiRatios.HO_TRO === opt.val
+                              ? 'bg-purple-700 text-white border-purple-800'
+                              : 'bg-white text-purple-800 border-purple-200 hover:bg-purple-50'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
