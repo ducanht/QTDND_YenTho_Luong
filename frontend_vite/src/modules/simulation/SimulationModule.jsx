@@ -22,7 +22,7 @@ import {
   Percent
 } from 'lucide-react';
 import { formatCurrency, formatPercent } from '../../utils/currency';
-import { simulateStaffCompensation } from '../../utils/taxEngine';
+import { simulateStaffCompensation, detectDepartmentKey } from '../../utils/taxEngine';
 
 export function SimulationModule({ data, onSaveScenario }) {
   // Lấy dữ liệu 12 CBNV và Chức danh từ CSDL
@@ -40,6 +40,40 @@ export function SimulationModule({ data, onSaveScenario }) {
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
+
+  // Cấu hình % Kết cấu Lương KPI theo 4 Khối Nghiệp Vụ
+  const [kpiCalcMethod, setKpiCalcMethod] = useState('DEPT_RATIO'); // 'DEPT_RATIO' (% kết cấu) | 'FIXED_PRICE'
+  const [deptKpiRatios, setDeptKpiRatios] = useState({
+    LANH_DAO: 40, // 40% KPI (60% Lương Vị Trí)
+    TIN_DUNG: 50, // 50% KPI (50% Lương Vị Trí)
+    KE_TOAN: 35,  // 35% KPI (65% Lương Vị Trí)
+    HO_TRO: 20    // 20% KPI (80% Lương Vị Trí)
+  });
+
+  // Cấu hình Mức Đóng BHXH Tùy Biến & Hưởng Tiền Thừa Doanh Nghiệp Trả
+  // { [maNV]: { mode: 'STANDARD' | 'MIN' | 'CUSTOM', customAmount: number } }
+  const [staffBhxhCustom, setStaffBhxhCustom] = useState({});
+  const [bulkBhxhOption, setBulkBhxhOption] = useState('STANDARD'); // 'STANDARD' | 'MIN_ZONE' | 'CUSTOM'
+
+  const handleUpdateStaffBhxh = (maNV, mode, customAmount = 5000000) => {
+    setStaffBhxhCustom(prev => ({
+      ...prev,
+      [maNV]: { mode, customAmount: Number(customAmount) || 5000000 }
+    }));
+  };
+
+  const handleApplyBulkBhxh = (option) => {
+    setBulkBhxhOption(option);
+    if (option === 'STANDARD') {
+      setStaffBhxhCustom({});
+    } else if (option === 'MIN_ZONE') {
+      const updated = {};
+      staffList.forEach(s => {
+        updated[s.maNV] = { mode: 'MIN', customAmount: 5000000 };
+      });
+      setStaffBhxhCustom(updated);
+    }
+  };
 
   // Tham số mô phỏng có thể tùy chỉnh
   const [luongCoSo, setLuongCoSo] = useState(2340000);
@@ -76,6 +110,19 @@ export function SimulationModule({ data, onSaveScenario }) {
 
     return staffList.map(emp => {
       const pos = positions.find(p => p.tenChucDanh === emp.chucDanh || p.maViTri === emp.chucDanh);
+      const deptKey = detectDepartmentKey(emp, pos);
+      const deptRatio = deptKpiRatios[deptKey] ?? 40;
+
+      // Xác định mức đóng BHXH cá nhân
+      const empBhxhConfig = staffBhxhCustom[emp.maNV];
+      let customBhxhSalary = null;
+      if (empBhxhConfig?.mode === 'MIN') {
+        customBhxhSalary = 5000000;
+      } else if (empBhxhConfig?.mode === 'CUSTOM' && empBhxhConfig?.customAmount > 0) {
+        customBhxhSalary = empBhxhConfig.customAmount;
+      } else if (bulkBhxhOption === 'MIN_ZONE') {
+        customBhxhSalary = 5000000;
+      }
 
       // 1. Tính toán Phương Án Hiện Tại (Cơ sở PA1, lương cơ sở 2.340.000, trần KPI 100%)
       const hienTai = simulateStaffCompensation({
@@ -83,9 +130,11 @@ export function SimulationModule({ data, onSaveScenario }) {
         pos,
         scenario: 'PA1',
         luongCoSo: 2340000,
+        kpiCalcMethod: 'FIXED_PRICE',
         tranKpi: 100,
         donGiaKpiCoBan: 3500000,
         kpiPerformanceRatio: 1.0,
+        customBhxhSalary: null,
         anTrua: 730000,
         xangXe: 400000,
         dienThoai: 300000,
@@ -101,9 +150,12 @@ export function SimulationModule({ data, onSaveScenario }) {
         pos,
         scenario: selectedScenarioId,
         luongCoSo,
+        kpiCalcMethod,
+        deptKpiRatio: deptRatio,
         tranKpi,
         donGiaKpiCoBan,
         kpiPerformanceRatio: sensitivityFactor / 100,
+        customBhxhSalary,
         anTrua,
         xangXe,
         dienThoai,
@@ -124,6 +176,8 @@ export function SimulationModule({ data, onSaveScenario }) {
         hoTen: emp.hoTen,
         chucDanh: emp.chucDanh,
         phongBan: emp.phongBan || 'Nghiệp vụ',
+        deptKey,
+        deptRatio,
         soNPT: moPhong.soNPT,
         hienTai,
         moPhong,
@@ -139,6 +193,10 @@ export function SimulationModule({ data, onSaveScenario }) {
     positions, 
     selectedScenarioId, 
     luongCoSo, 
+    kpiCalcMethod,
+    deptKpiRatios,
+    staffBhxhCustom,
+    bulkBhxhOption,
     tranKpi, 
     donGiaKpiCoBan, 
     anTrua, 
@@ -174,6 +232,7 @@ export function SimulationModule({ data, onSaveScenario }) {
     const tongNetThangHienTai = simulationResults.reduce((sum, r) => sum + r.hienTai.thucLinhNet, 0);
     const tongNetThangMoPhong = simulationResults.reduce((sum, r) => sum + r.moPhong.thucLinhNet, 0);
     const tongThueTncnThangMoPhong = simulationResults.reduce((sum, r) => sum + r.moPhong.thueTncn, 0);
+    const tongTienThuaBhxhThangMoPhong = simulationResults.reduce((sum, r) => sum + (r.moPhong.tienThuaBhxhHuong || 0), 0);
 
     const tongChiPhiThangHienTai = simulationResults.reduce((sum, r) => sum + r.hienTai.tongChiPhiQuy, 0);
     const tongChiPhiThangMoPhong = simulationResults.reduce((sum, r) => sum + r.moPhong.tongChiPhiQuy, 0);
@@ -205,6 +264,7 @@ export function SimulationModule({ data, onSaveScenario }) {
       tongNetThangHienTai,
       tongNetThangMoPhong,
       tongThueTncnThangMoPhong,
+      tongTienThuaBhxhThangMoPhong,
       heSoKhoangCach,
       tongBhxhDonViNamMoPhong: tongBhxhDonViThangMoPhong * 12
     };
@@ -218,6 +278,9 @@ export function SimulationModule({ data, onSaveScenario }) {
         id: selectedScenarioId.startsWith('PA') ? `SCENARIO_${Date.now()}` : selectedScenarioId,
         name: selectedScenarioId.startsWith('PA') ? `Kịch bản HĐQT tùy chỉnh (${new Date().toLocaleDateString('vi-VN')})` : `Kịch bản ${selectedScenarioId}`,
         luongCoSo,
+        kpiCalcMethod,
+        deptKpiRatios,
+        bulkBhxhOption,
         tranKpi,
         donGiaKpiCoBan,
         anTrua,
@@ -239,6 +302,12 @@ export function SimulationModule({ data, onSaveScenario }) {
       setIsSaving(false);
     }
   };
+
+  // Đồng bộ số liệu tương tác tức thì cho modal chi tiết 1 CBNV
+  const activeInspectingRecord = useMemo(() => {
+    if (!inspectingStaff) return null;
+    return simulationResults.find(r => r.maNV === inspectingStaff.maNV) || inspectingStaff;
+  }, [simulationResults, inspectingStaff]);
 
   return (
     <div className="space-y-6">
@@ -482,30 +551,61 @@ export function SimulationModule({ data, onSaveScenario }) {
               ))}
             </div>
 
-            {/* Toggle Chế độ xem: Tóm Tắt vs Chi Tiết 4 Tầng */}
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-semibold text-slate-600">Chế độ hiển thị:</span>
-              <div className="inline-flex rounded-xl bg-slate-200/80 p-0.5 text-xs">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Bộ Chọn Nhanh Mức Đóng BHXH Toàn Cơ Quan */}
+              <div className="flex items-center space-x-1.5 bg-emerald-50/80 px-2.5 py-1 rounded-xl border border-emerald-200 text-xs">
+                <span className="font-bold text-emerald-900 flex items-center text-[11px]">
+                  <ShieldAlert className="w-3.5 h-3.5 mr-1 text-emerald-700" />
+                  BHXH Toàn Quỹ:
+                </span>
                 <button
-                  onClick={() => setDisplayMode('SUMMARY')}
-                  className={`px-3 py-1 rounded-lg font-medium transition-all ${
-                    displayMode === 'SUMMARY'
-                      ? 'bg-white text-slate-900 font-bold shadow'
-                      : 'text-slate-600 hover:text-slate-900'
+                  onClick={() => handleApplyBulkBhxh('STANDARD')}
+                  className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all ${
+                    bulkBhxhOption === 'STANDARD'
+                      ? 'bg-emerald-700 text-white shadow-sm'
+                      : 'text-emerald-800 hover:bg-emerald-200/60'
                   }`}
+                  title="Tất cả đóng theo chuẩn chức danh L1"
                 >
-                  Tổng Hợp Đối Soát
+                  Chuẩn (L1)
                 </button>
                 <button
-                  onClick={() => setDisplayMode('DETAILED')}
-                  className={`px-3 py-1 rounded-lg font-medium transition-all ${
-                    displayMode === 'DETAILED'
-                      ? 'bg-brand-navy text-white font-bold shadow'
-                      : 'text-slate-600 hover:text-slate-900'
+                  onClick={() => handleApplyBulkBhxh('MIN_ZONE')}
+                  className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all ${
+                    bulkBhxhOption === 'MIN_ZONE'
+                      ? 'bg-emerald-700 text-white shadow-sm'
+                      : 'text-emerald-800 hover:bg-emerald-200/60'
                   }`}
+                  title="Tất cả đóng sàn 5Tr, Quỹ hoàn trả tiền thừa vào lương"
                 >
-                  Chi Tiết 4 Tầng Lương
+                  Sàn 5Tr (Hưởng thừa)
                 </button>
+              </div>
+
+              {/* Toggle Chế độ xem: Tóm Tắt vs Chi Tiết 4 Tầng */}
+              <div className="flex items-center space-x-2">
+                <div className="inline-flex rounded-xl bg-slate-200/80 p-0.5 text-xs">
+                  <button
+                    onClick={() => setDisplayMode('SUMMARY')}
+                    className={`px-3 py-1 rounded-lg font-medium transition-all ${
+                      displayMode === 'SUMMARY'
+                        ? 'bg-white text-slate-900 font-bold shadow'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Tổng Hợp Đối Soát
+                  </button>
+                  <button
+                    onClick={() => setDisplayMode('DETAILED')}
+                    className={`px-3 py-1 rounded-lg font-medium transition-all ${
+                      displayMode === 'DETAILED'
+                        ? 'bg-brand-navy text-white font-bold shadow'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Chi Tiết 4 Tầng Lương
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -518,13 +618,14 @@ export function SimulationModule({ data, onSaveScenario }) {
                   <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 uppercase tracking-wider text-[11px]">
                     <th className="p-3">Mã NV</th>
                     <th className="p-3">Họ Và Tên</th>
-                    <th className="p-3">Chức Vụ</th>
-                    <th className="p-3 text-center">Hệ Số PA</th>
-                    <th className="p-3 text-right bg-slate-200/60">Gross Hiện Tại</th>
+                    <th className="p-3">Chức Vụ & Khối</th>
+                    <th className="p-3 text-center">Hệ Số</th>
+                    <th className="p-3 text-right bg-slate-200/60">Gross Cũ</th>
                     <th className="p-3 text-right bg-blue-50 text-blue-900">Lương Vị Trí (T1)</th>
                     <th className="p-3 text-right bg-blue-50 text-blue-900">Lương KPI (T2)</th>
                     <th className="p-3 text-right bg-blue-50 text-blue-900">Khoán & PC (T3)</th>
-                    <th className="p-3 text-right font-bold bg-amber-50 text-amber-900">Gross Mô Phỏng</th>
+                    <th className="p-3 text-right bg-emerald-50 text-emerald-950">Đóng BHXH & Thừa</th>
+                    <th className="p-3 text-right font-bold bg-amber-50 text-amber-900">Gross Đề Xuất</th>
                     <th className="p-3 text-right font-bold bg-emerald-50 text-emerald-900">Net Thực Lĩnh</th>
                     <th className="p-3 text-right font-bold">Chênh Lệch</th>
                     <th className="p-3 text-center">Chi Tiết</th>
@@ -535,7 +636,10 @@ export function SimulationModule({ data, onSaveScenario }) {
                     <tr key={r.maNV} className={`hover:bg-slate-50/80 transition-colors ${idx % 2 === 1 ? 'bg-slate-50/30' : ''}`}>
                       <td className="p-3 font-mono text-slate-500 font-medium">{r.maNV}</td>
                       <td className="p-3 font-bold text-slate-900">{r.hoTen}</td>
-                      <td className="p-3 text-slate-600">{r.chucDanh}</td>
+                      <td className="p-3 text-slate-600">
+                        <div>{r.chucDanh}</div>
+                        <div className="text-[10px] text-slate-400 font-sans">{r.phongBan}</div>
+                      </td>
                       <td className="p-3 text-center font-mono">
                         <span className="px-2 py-0.5 bg-slate-100 rounded text-slate-700 font-semibold">
                           {r.moPhong.heSoLuong.toFixed(2)}
@@ -548,10 +652,21 @@ export function SimulationModule({ data, onSaveScenario }) {
                         {formatCurrency(r.moPhong.luongViTri)}
                       </td>
                       <td className="p-3 text-right font-mono text-blue-900 bg-blue-50/30">
-                        {formatCurrency(r.moPhong.luongKpi)}
+                        <div>{formatCurrency(r.moPhong.luongKpi)}</div>
+                        <div className="text-[10px] text-blue-600 font-sans font-medium">({r.deptRatio}% KPI)</div>
                       </td>
                       <td className="p-3 text-right font-mono text-blue-900 bg-blue-50/30">
-                        {formatCurrency(r.moPhong.tongKhoanChi + r.moPhong.khoanTrachNhiem + r.moPhong.thuLaoQtChucDanh)}
+                        {formatCurrency(r.moPhong.tongKhoanChi + r.moPhong.khoanTrachNhiem)}
+                      </td>
+                      <td className="p-3 text-right font-mono bg-emerald-50/20">
+                        <div className="font-semibold text-slate-800">{formatCurrency(r.moPhong.luongDongBhxhThucTe)}</div>
+                        {r.moPhong.tienThuaBhxhHuong > 0 ? (
+                          <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                            +{formatCurrency(r.moPhong.tienThuaBhxhHuong)} (Thừa)
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 font-sans">Đủ chuẩn L1</span>
+                        )}
                       </td>
                       <td className="p-3 text-right font-mono font-bold text-amber-900 bg-amber-50/40">
                         {formatCurrency(r.moPhong.tongGross)}
@@ -588,7 +703,18 @@ export function SimulationModule({ data, onSaveScenario }) {
                     <td className="p-3 text-right font-mono text-slate-800">
                       {formatCurrency(macroMetrics.tongGrossThangHienTai)}
                     </td>
-                    <td colSpan={3} className="p-3"></td>
+                    <td className="p-3 text-right font-mono text-blue-900">
+                      {formatCurrency(simulationResults.reduce((s, r) => s + r.moPhong.luongViTri, 0))}
+                    </td>
+                    <td className="p-3 text-right font-mono text-blue-900">
+                      {formatCurrency(simulationResults.reduce((s, r) => s + r.moPhong.luongKpi, 0))}
+                    </td>
+                    <td className="p-3 text-right font-mono text-blue-900">
+                      {formatCurrency(simulationResults.reduce((s, r) => s + r.moPhong.tongKhoanChi + r.moPhong.khoanTrachNhiem, 0))}
+                    </td>
+                    <td className="p-3 text-right font-mono text-emerald-800">
+                      {macroMetrics.tongTienThuaBhxhThangMoPhong > 0 && `+${formatCurrency(macroMetrics.tongTienThuaBhxhThangMoPhong)}`}
+                    </td>
                     <td className="p-3 text-right font-mono text-amber-900">
                       {formatCurrency(macroMetrics.tongGrossThangMoPhong)}
                     </td>
@@ -614,7 +740,7 @@ export function SimulationModule({ data, onSaveScenario }) {
                     <th colSpan={3} className="p-2.5 text-center border-r border-slate-600">HỒ SƠ CBNV</th>
                     <th colSpan={3} className="p-2.5 text-center border-r border-slate-600 bg-blue-900">TẦNG 1 & 2 (LƯƠNG & KPI)</th>
                     <th colSpan={5} className="p-2.5 text-center border-r border-slate-600 bg-slate-800">TẦNG 3 (PHỤ CẤP KHOÁN CHI)</th>
-                    <th colSpan={4} className="p-2.5 text-center border-r border-slate-600 bg-rose-950">TẦNG 4 (TRÍCH NỘP & THUẾ)</th>
+                    <th colSpan={6} className="p-2.5 text-center border-r border-slate-600 bg-rose-950">TẦNG 4 (BHXH, TIỀN THỪA & THUẾ)</th>
                     <th colSpan={3} className="p-2.5 text-center bg-emerald-950">KẾT QUẢ THỰC CHI</th>
                   </tr>
                   <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-300 uppercase text-[10px]">
@@ -635,6 +761,8 @@ export function SimulationModule({ data, onSaveScenario }) {
                     <th className="p-2 text-right border-r">Độc Hại</th>
 
                     {/* Tầng 4 */}
+                    <th className="p-2 text-right border-r bg-emerald-50 text-emerald-900 font-bold">Lương Đóng BH</th>
+                    <th className="p-2 text-right border-r bg-emerald-50 text-emerald-800 font-bold">Thừa Quỹ Trả</th>
                     <th className="p-2 text-right border-r font-bold bg-amber-50">Gross</th>
                     <th className="p-2 text-right border-r text-rose-700">BHXH NLĐ (10.5%)</th>
                     <th className="p-2 text-right border-r text-slate-600">Đoàn Phí (1%)</th>
@@ -655,7 +783,10 @@ export function SimulationModule({ data, onSaveScenario }) {
 
                       {/* Tầng 1 & 2 */}
                       <td className="p-2 text-right font-mono bg-blue-50/30 border-r">{formatCurrency(r.moPhong.luongViTri)}</td>
-                      <td className="p-2 text-right font-mono bg-blue-50/30 border-r">{formatCurrency(r.moPhong.luongKpi)}</td>
+                      <td className="p-2 text-right font-mono bg-blue-50/30 border-r">
+                        <div>{formatCurrency(r.moPhong.luongKpi)}</div>
+                        <div className="text-[9px] text-blue-600 font-sans">({r.deptRatio}%)</div>
+                      </td>
                       <td className="p-2 text-right font-mono bg-blue-50/30 border-r">{formatCurrency(r.moPhong.khoanTrachNhiem)}</td>
 
                       {/* Tầng 3 */}
@@ -666,6 +797,10 @@ export function SimulationModule({ data, onSaveScenario }) {
                       <td className="p-2 text-right font-mono border-r">{formatCurrency(r.moPhong.khoanDocHai)}</td>
 
                       {/* Tầng 4 */}
+                      <td className="p-2 text-right font-mono bg-emerald-50/30 border-r font-semibold text-slate-800">{formatCurrency(r.moPhong.luongDongBhxhThucTe)}</td>
+                      <td className="p-2 text-right font-mono bg-emerald-50/40 border-r font-bold text-emerald-800">
+                        {r.moPhong.tienThuaBhxhHuong > 0 ? `+${formatCurrency(r.moPhong.tienThuaBhxhHuong)}` : '-'}
+                      </td>
                       <td className="p-2 text-right font-mono font-bold bg-amber-50/50 border-r text-amber-900">{formatCurrency(r.moPhong.tongGross)}</td>
                       <td className="p-2 text-right font-mono text-rose-700 border-r">{formatCurrency(r.moPhong.bhxhNld)}</td>
                       <td className="p-2 text-right font-mono text-slate-600 border-r">{formatCurrency(r.moPhong.doanPhiNld)}</td>
@@ -684,7 +819,11 @@ export function SimulationModule({ data, onSaveScenario }) {
                     <td className="p-2 text-right font-mono text-blue-900">{formatCurrency(simulationResults.reduce((s, r) => s + r.moPhong.luongViTri, 0))}</td>
                     <td className="p-2 text-right font-mono text-blue-900">{formatCurrency(simulationResults.reduce((s, r) => s + r.moPhong.luongKpi, 0))}</td>
                     <td className="p-2 text-right font-mono text-blue-900">{formatCurrency(simulationResults.reduce((s, r) => s + r.moPhong.khoanTrachNhiem, 0))}</td>
-                    <td colSpan={5} className="p-2 text-center text-slate-500 italic">5 Khoản phụ cấp khoán</td>
+                    <td colSpan={5} className="p-2 text-center text-slate-500 italic">5 Khoản phụ cấp khoán công vụ</td>
+                    <td className="p-2 text-right font-mono text-slate-800">-</td>
+                    <td className="p-2 text-right font-mono text-emerald-800 font-bold">
+                      {macroMetrics.tongTienThuaBhxhThangMoPhong > 0 && `+${formatCurrency(macroMetrics.tongTienThuaBhxhThangMoPhong)}`}
+                    </td>
                     <td className="p-2 text-right font-mono text-amber-900">{formatCurrency(macroMetrics.tongGrossThangMoPhong)}</td>
                     <td className="p-2 text-right font-mono text-rose-800">{formatCurrency(simulationResults.reduce((s, r) => s + r.moPhong.bhxhNld, 0))}</td>
                     <td className="p-2 text-right font-mono text-slate-700">{formatCurrency(simulationResults.reduce((s, r) => s + r.moPhong.doanPhiNld, 0))}</td>
@@ -700,14 +839,14 @@ export function SimulationModule({ data, onSaveScenario }) {
         </div>
       )}
 
-      {/* SUB-TAB 2: BỘ ĐIỀU KHIỂN THAM SỐ (TUNER) */}
+      {/* SUB-TAB 2: BỘ ĐIỀU KHIỂN THAM SỐ TOÀN DIỆN (TUNER) */}
       {activeSubTab === 'tuner' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Cột 1: Lương Cơ Sở & Quỹ KPI */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Card 1: Lương Cơ Sở & Quỹ Thưởng Năm */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
             <h3 className="font-bold text-slate-900 text-sm flex items-center space-x-2 border-b border-slate-100 pb-3">
               <Sliders className="w-4 h-4 text-brand-navy" />
-              <span>1. Lương Cơ Sở & Quỹ Thưởng KPI</span>
+              <span>1. Lương Cơ Sở & Quỹ Thưởng Năm</span>
             </h3>
 
             {/* Lương cơ sở nội bộ */}
@@ -754,23 +893,6 @@ export function SimulationModule({ data, onSaveScenario }) {
               </div>
             </div>
 
-            {/* Đơn giá KPI cơ bản */}
-            <div>
-              <div className="flex justify-between text-xs mb-1.5">
-                <span className="font-semibold text-slate-700">Đơn Giá Lương KPI Cơ Bản (Hệ số 1.0):</span>
-                <span className="font-mono font-bold text-blue-700">{formatCurrency(donGiaKpiCoBan)}/tháng</span>
-              </div>
-              <input
-                type="range"
-                min="2000000"
-                max="8000000"
-                step="200000"
-                value={donGiaKpiCoBan}
-                onChange={(e) => setDonGiaKpiCoBan(Number(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-            </div>
-
             {/* Quỹ Khen thưởng năm */}
             <div>
               <div className="flex justify-between text-xs mb-1.5">
@@ -789,16 +911,198 @@ export function SimulationModule({ data, onSaveScenario }) {
             </div>
           </div>
 
-          {/* Cột 2: Định Mức 5 Khoản Phụ Cấp Khoán Chi */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+          {/* Card 2: % Kết Cấu Lương KPI Theo 4 Khối Nghiệp Vụ */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-slate-900 text-sm flex items-center space-x-2">
+                <Percent className="w-4 h-4 text-emerald-700" />
+                <span>2. % Kết Cấu Lương KPI Theo Khối</span>
+              </h3>
+              <div className="inline-flex rounded-lg bg-slate-100 p-0.5 text-[10px]">
+                <button
+                  onClick={() => setKpiCalcMethod('DEPT_RATIO')}
+                  className={`px-2 py-0.5 rounded font-semibold transition-all ${
+                    kpiCalcMethod === 'DEPT_RATIO' ? 'bg-brand-navy text-white shadow-sm' : 'text-slate-600'
+                  }`}
+                >
+                  % Kết cấu khối
+                </button>
+                <button
+                  onClick={() => setKpiCalcMethod('FIXED_PRICE')}
+                  className={`px-2 py-0.5 rounded font-semibold transition-all ${
+                    kpiCalcMethod === 'FIXED_PRICE' ? 'bg-brand-navy text-white shadow-sm' : 'text-slate-600'
+                  }`}
+                >
+                  Đơn giá cố định
+                </button>
+              </div>
+            </div>
+
+            {kpiCalcMethod === 'DEPT_RATIO' ? (
+              <div className="space-y-3.5">
+                <div className="p-2.5 bg-blue-50/60 border border-blue-200 rounded-xl text-[11px] text-blue-900 leading-relaxed">
+                  💡 <strong>Cơ cấu lương mục tiêu:</strong> Ở mức 100% KPI, tỷ lệ giữa Lương KPI (L2) và Lương vị trí (L1) = %KPI / (100 - %KPI).
+                </div>
+
+                {/* Khối Lãnh đạo */}
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="font-semibold text-slate-700">1. Khối Lãnh Đạo & Điều Hành:</span>
+                    <span className="font-mono font-bold text-brand-navy">{deptKpiRatios.LANH_DAO}% KPI ({100 - deptKpiRatios.LANH_DAO}% Vị trí)</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="60"
+                    step="5"
+                    value={deptKpiRatios.LANH_DAO}
+                    onChange={(e) => setDeptKpiRatios(prev => ({ ...prev, LANH_DAO: Number(e.target.value) }))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-navy"
+                  />
+                  <div className="text-[10px] text-slate-400">Lương KPI chuẩn = {((deptKpiRatios.LANH_DAO / (100 - deptKpiRatios.LANH_DAO))).toFixed(2)}x Lương Vị trí</div>
+                </div>
+
+                {/* Khối Tín dụng */}
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="font-semibold text-slate-700">2. Khối Tín Dụng & Khai Thác:</span>
+                    <span className="font-mono font-bold text-emerald-700">{deptKpiRatios.TIN_DUNG}% KPI ({100 - deptKpiRatios.TIN_DUNG}% Vị trí)</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="20"
+                    max="70"
+                    step="5"
+                    value={deptKpiRatios.TIN_DUNG}
+                    onChange={(e) => setDeptKpiRatios(prev => ({ ...prev, TIN_DUNG: Number(e.target.value) }))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                  />
+                  <div className="text-[10px] text-slate-400">Lương KPI chuẩn = {((deptKpiRatios.TIN_DUNG / (100 - deptKpiRatios.TIN_DUNG))).toFixed(2)}x Lương Vị trí (Lực lượng kinh doanh)</div>
+                </div>
+
+                {/* Khối Kế toán */}
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="font-semibold text-slate-700">3. Khối Kế Toán & Ngân Quỹ:</span>
+                    <span className="font-mono font-bold text-blue-700">{deptKpiRatios.KE_TOAN}% KPI ({100 - deptKpiRatios.KE_TOAN}% Vị trí)</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="10"
+                    max="50"
+                    step="5"
+                    value={deptKpiRatios.KE_TOAN}
+                    onChange={(e) => setDeptKpiRatios(prev => ({ ...prev, KE_TOAN: Number(e.target.value) }))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  />
+                  <div className="text-[10px] text-slate-400">Lương KPI chuẩn = {((deptKpiRatios.KE_TOAN / (100 - deptKpiRatios.KE_TOAN))).toFixed(2)}x Lương Vị trí (Tác nghiệp quầy)</div>
+                </div>
+
+                {/* Khối Hỗ trợ */}
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="font-semibold text-slate-700">4. Khối Văn Phòng & Hỗ Trợ:</span>
+                    <span className="font-mono font-bold text-purple-700">{deptKpiRatios.HO_TRO}% KPI ({100 - deptKpiRatios.HO_TRO}% Vị trí)</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5"
+                    max="40"
+                    step="5"
+                    value={deptKpiRatios.HO_TRO}
+                    onChange={(e) => setDeptKpiRatios(prev => ({ ...prev, HO_TRO: Number(e.target.value) }))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                  />
+                  <div className="text-[10px] text-slate-400">Lương KPI chuẩn = {((deptKpiRatios.HO_TRO / (100 - deptKpiRatios.HO_TRO))).toFixed(2)}x Lương Vị trí (Phục vụ nội bộ)</div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4 pt-2">
+                <div>
+                  <div className="flex justify-between text-xs mb-1.5">
+                    <span className="font-semibold text-slate-700">Đơn Giá Lương KPI Cơ Bản (Hệ số 1.0):</span>
+                    <span className="font-mono font-bold text-blue-700">{formatCurrency(donGiaKpiCoBan)}/tháng</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="2000000"
+                    max="8000000"
+                    step="200000"
+                    value={donGiaKpiCoBan}
+                    onChange={(e) => setDonGiaKpiCoBan(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Card 3: Chính Sách Đóng BHXH & Hưởng Tiền Thừa Doanh Nghiệp Trả */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <h3 className="font-bold text-slate-900 text-sm flex items-center space-x-2 border-b border-slate-100 pb-3">
+              <ShieldAlert className="w-4 h-4 text-emerald-700" />
+              <span>3. Chính Sách BHXH & Quyền Hưởng Tiền Thừa DN Trả</span>
+            </h3>
+
+            <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl text-xs text-emerald-950 leading-relaxed">
+              <div className="font-bold flex items-center mb-1 text-emerald-900">
+                <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-700" />
+                Cơ chế tài chính minh bạch:
+              </div>
+              Quỹ xác định định mức bảo hiểm chuẩn 23.5% theo Lương vị trí ($L_1$). Cán bộ có quyền chọn mức đóng BHXH thực tế thấp hơn. 
+              Phần chênh lệch 23.5% Quỹ không phải nộp cho cơ quan BHXH được chuyển trả thẳng vào thu nhập của người lao động.
+              <div className="mt-1 font-semibold text-emerald-800">
+                👉 Tổng chi phí Quỹ bảo toàn 100%, không phát sinh vượt ngân sách!
+              </div>
+            </div>
+
+            <div>
+              <div className="text-xs font-semibold text-slate-700 mb-2">Áp dụng chính sách cho toàn cơ quan:</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                <button
+                  onClick={() => handleApplyBulkBhxh('STANDARD')}
+                  className={`p-3 rounded-xl border text-left transition-all ${
+                    bulkBhxhOption === 'STANDARD'
+                      ? 'bg-brand-navy text-white border-brand-navy shadow-sm'
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  <div className="font-bold text-xs">100% Đóng Theo Lương Vị Trí</div>
+                  <div className="text-[10px] mt-0.5 opacity-80">Đóng đủ để hưởng lương hưu tối đa</div>
+                </button>
+
+                <button
+                  onClick={() => handleApplyBulkBhxh('MIN_ZONE')}
+                  className={`p-3 rounded-xl border text-left transition-all ${
+                    bulkBhxhOption === 'MIN_ZONE'
+                      ? 'bg-emerald-700 text-white border-emerald-800 shadow-sm'
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  <div className="font-bold text-xs">100% Đóng Mức Sàn 5.000.000 ₫</div>
+                  <div className="text-[10px] mt-0.5 opacity-80">Tối đa hóa tiền mặt nhận về tài khoản</div>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center text-xs">
+              <span className="font-medium text-slate-600">Tổng tiền thừa Quỹ hoàn trả cho NLĐ:</span>
+              <span className="font-mono font-bold text-emerald-700 text-sm">
+                +{formatCurrency(macroMetrics.tongTienThuaBhxhThangMoPhong)}/tháng
+              </span>
+            </div>
+          </div>
+
+          {/* Card 4: Định Mức 5 Khoản Phụ Cấp Khoán Công Vụ */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <h3 className="font-bold text-slate-900 text-sm flex items-center space-x-2 border-b border-slate-100 pb-3">
               <DollarSign className="w-4 h-4 text-brand-lime" />
-              <span>2. Định Mức 5 Khoản Phụ Cấp Khoán Chi</span>
+              <span>4. Định Mức 5 Khoản Phụ Cấp Khoán Công Vụ</span>
             </h3>
 
             {/* Ăn ca */}
             <div>
-              <div className="flex justify-between text-xs mb-1.5">
+              <div className="flex justify-between text-xs mb-1">
                 <span className="font-semibold text-slate-700">Tiền Ăn Giữa Ca (Ăn trưa):</span>
                 <span className="font-mono font-bold text-slate-800">{formatCurrency(anTrua)}</span>
               </div>
@@ -811,14 +1115,14 @@ export function SimulationModule({ data, onSaveScenario }) {
                 onChange={(e) => setAnTrua(Number(e.target.value))}
                 className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
               />
-              <div className="text-[10px] text-slate-400 mt-1">
-                Trần miễn thuế TNCN: 730.000 ₫/tháng (Phần thừa chịu thuế TNCN; Không đóng BHXH)
+              <div className="text-[10px] text-slate-400">
+                Trần miễn thuế TNCN: 730.000 ₫/tháng (Phần vượt chịu thuế TNCN; Không đóng BHXH)
               </div>
             </div>
 
             {/* Xăng xe */}
             <div>
-              <div className="flex justify-between text-xs mb-1.5">
+              <div className="flex justify-between text-xs mb-1">
                 <span className="font-semibold text-slate-700">Khoán Xăng Xe Công Tác (Cơ bản):</span>
                 <span className="font-mono font-bold text-slate-800">{formatCurrency(xangXe)}</span>
               </div>
@@ -831,14 +1135,14 @@ export function SimulationModule({ data, onSaveScenario }) {
                 onChange={(e) => setXangXe(Number(e.target.value))}
                 className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
               />
-              <div className="text-[10px] text-slate-400 mt-1">
-                Cán bộ Tín dụng đi cơ sở tự động nhân hệ số 1.5; Lãnh đạo nhân 1.2
+              <div className="text-[10px] text-slate-400">
+                Cán bộ Tín dụng tự động nhân hệ số 1.5; Lãnh đạo nhân 1.2
               </div>
             </div>
 
             {/* Điện thoại */}
             <div>
-              <div className="flex justify-between text-xs mb-1.5">
+              <div className="flex justify-between text-xs mb-1">
                 <span className="font-semibold text-slate-700">Khoán Cước Điện Thoại:</span>
                 <span className="font-mono font-bold text-slate-800">{formatCurrency(dienThoai)}</span>
               </div>
@@ -855,7 +1159,7 @@ export function SimulationModule({ data, onSaveScenario }) {
 
             {/* Trang phục */}
             <div>
-              <div className="flex justify-between text-xs mb-1.5">
+              <div className="flex justify-between text-xs mb-1">
                 <span className="font-semibold text-slate-700">Khoán Trang Phục Công Tác:</span>
                 <span className="font-mono font-bold text-slate-800">{formatCurrency(trangPhuc)}</span>
               </div>
@@ -868,7 +1172,7 @@ export function SimulationModule({ data, onSaveScenario }) {
                 onChange={(e) => setTrangPhuc(Number(e.target.value))}
                 className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
               />
-              <div className="text-[10px] text-slate-400 mt-1">
+              <div className="text-[10px] text-slate-400">
                 Trần miễn thuế bằng tiền mặt: 5.000.000 ₫/năm (~416.666 ₫/tháng)
               </div>
             </div>
@@ -1061,14 +1365,17 @@ export function SimulationModule({ data, onSaveScenario }) {
       )}
 
       {/* MODAL XEM CHI TIẾT PHIẾU LƯƠNG MÔ PHỎNG 4 TẦNG TỪNG CÁN BỘ */}
-      {inspectingStaff && (
+      {activeInspectingRecord && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-200">
             {/* Header Modal */}
             <div className="bg-brand-navy p-5 text-white flex justify-between items-center">
               <div>
                 <div className="text-xs text-brand-lime font-bold uppercase tracking-wider">Phiếu Mô Phỏng Thu Nhập Cá Nhân 4 Tầng</div>
-                <h3 className="text-base font-bold mt-0.5">{inspectingStaff.hoTen} - {inspectingStaff.chucDanh}</h3>
+                <h3 className="text-base font-bold mt-0.5">{activeInspectingRecord.hoTen} - {activeInspectingRecord.chucDanh}</h3>
+                <div className="text-[11px] text-slate-300">
+                  {activeInspectingRecord.phongBan || 'Nghiệp vụ'} • Kết cấu KPI bộ phận: <strong className="text-amber-300">{activeInspectingRecord.deptRatio}%</strong>
+                </div>
               </div>
               <button 
                 onClick={() => setInspectingStaff(null)} 
@@ -1083,12 +1390,76 @@ export function SimulationModule({ data, onSaveScenario }) {
               <div className="grid grid-cols-2 gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
                 <div>
                   <div className="text-[11px] text-slate-500 font-semibold">TỔNG THU NHẬP GROSS:</div>
-                  <div className="text-lg font-bold font-mono text-amber-900">{formatCurrency(inspectingStaff.moPhong.tongGross)}</div>
+                  <div className="text-lg font-bold font-mono text-amber-900">{formatCurrency(activeInspectingRecord.moPhong.tongGross)}</div>
                 </div>
                 <div>
                   <div className="text-[11px] text-slate-500 font-semibold">THỰC LĨNH NET (VỀ TÀI KHOẢN):</div>
-                  <div className="text-lg font-bold font-mono text-emerald-700">{formatCurrency(inspectingStaff.moPhong.thucLinhNet)}</div>
+                  <div className="text-lg font-bold font-mono text-emerald-700">{formatCurrency(activeInspectingRecord.moPhong.thucLinhNet)}</div>
                 </div>
+              </div>
+
+              {/* TÙY CHỌN MỨC ĐÓNG BHXH CÁ NHÂN & HƯỞNG TIỀN THỪA DOANH NGHIỆP TRẢ */}
+              <div className="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-1">
+                  <span className="font-bold text-emerald-950 text-xs flex items-center">
+                    <ShieldAlert className="w-4 h-4 mr-1 text-emerald-700" />
+                    Đăng Ký Đóng BHXH & Quyền Hưởng Tiền Thừa
+                  </span>
+                  <span className="text-[11px] text-emerald-800">
+                    Định mức Quỹ trả (23.5% L1): <strong className="font-mono font-bold">{formatCurrency(activeInspectingRecord.moPhong.bhxhDonViDinhMuc)}</strong>
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <button
+                    onClick={() => handleUpdateStaffBhxh(activeInspectingRecord.maNV, 'STANDARD')}
+                    className={`p-2 rounded-lg border text-left transition-all ${
+                      !staffBhxhCustom[activeInspectingRecord.maNV] || staffBhxhCustom[activeInspectingRecord.maNV]?.mode === 'STANDARD'
+                        ? 'bg-emerald-700 text-white border-emerald-800 font-bold shadow-sm'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="text-[10px] opacity-80">1. Theo Vị Trí (Chuẩn)</div>
+                    <div className="font-mono font-bold mt-0.5">{formatCurrency(activeInspectingRecord.moPhong.luongDongBhxhChuan)}</div>
+                    <div className="text-[9px] opacity-80">Thừa hưởng: 0 ₫</div>
+                  </button>
+
+                  <button
+                    onClick={() => handleUpdateStaffBhxh(activeInspectingRecord.maNV, 'MIN', 5000000)}
+                    className={`p-2 rounded-lg border text-left transition-all ${
+                      staffBhxhCustom[activeInspectingRecord.maNV]?.mode === 'MIN'
+                        ? 'bg-emerald-700 text-white border-emerald-800 font-bold shadow-sm'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="text-[10px] opacity-80">2. Mức Sàn Cơ Sở (5Tr)</div>
+                    <div className="font-mono font-bold mt-0.5">5.000.000 ₫</div>
+                    <div className="text-[9px] opacity-80">Hưởng tối đa tiền thừa</div>
+                  </button>
+
+                  <div className="p-2 rounded-lg border bg-white border-slate-200">
+                    <div className="text-[10px] text-slate-500">3. Mức thỏa thuận riêng (₫)</div>
+                    <input
+                      type="number"
+                      step="500000"
+                      placeholder="VD: 7000000"
+                      value={staffBhxhCustom[activeInspectingRecord.maNV]?.customAmount || ''}
+                      onChange={(e) => handleUpdateStaffBhxh(activeInspectingRecord.maNV, 'CUSTOM', e.target.value)}
+                      className="w-full mt-0.5 px-2 py-0.5 text-xs border border-slate-300 rounded font-mono font-bold"
+                    />
+                  </div>
+                </div>
+
+                {activeInspectingRecord.moPhong.tienThuaBhxhHuong > 0 ? (
+                  <div className="p-2 bg-emerald-100 border border-emerald-300 rounded-lg text-emerald-900 flex justify-between items-center text-xs">
+                    <span>🎉 Cán bộ chọn đóng thấp hơn định mức, Quỹ chi trả thêm:</span>
+                    <span className="font-bold font-mono text-emerald-800 text-sm">+{formatCurrency(activeInspectingRecord.moPhong.tienThuaBhxhHuong)}/tháng</span>
+                  </div>
+                ) : (
+                  <div className="text-[10px] text-slate-500 italic">
+                    Cán bộ đóng đủ bảo hiểm theo Lương vị trí để hưởng tối đa chế độ hưu trí sau này.
+                  </div>
+                )}
               </div>
 
               {/* Chi tiết 4 tầng */}
@@ -1096,11 +1467,11 @@ export function SimulationModule({ data, onSaveScenario }) {
                 {/* Tầng 1 */}
                 <div className="p-3 bg-blue-50/40">
                   <div className="font-bold text-blue-900 flex justify-between">
-                    <span>TẦNG 1: LƯƠNG VỊ TRÍ CHỨC DANH (ĐÓNG BHXH)</span>
-                    <span className="font-mono">{formatCurrency(inspectingStaff.moPhong.luongViTri)}</span>
+                    <span>TẦNG 1: LƯƠNG VỊ TRÍ CHỨC DANH (ĐỊNH MỨC BHXH)</span>
+                    <span className="font-mono">{formatCurrency(activeInspectingRecord.moPhong.luongViTri)}</span>
                   </div>
                   <div className="text-[11px] text-slate-500 mt-0.5">
-                    Hệ số: {inspectingStaff.moPhong.heSoLuong.toFixed(2)} × Mức lương cơ sở: {formatCurrency(luongCoSo)}
+                    Hệ số chức danh: {activeInspectingRecord.moPhong.heSoLuong.toFixed(2)} × Mức lương cơ sở: {formatCurrency(luongCoSo)}
                   </div>
                 </div>
 
@@ -1108,50 +1479,63 @@ export function SimulationModule({ data, onSaveScenario }) {
                 <div className="p-3 bg-emerald-50/40">
                   <div className="font-bold text-emerald-900 flex justify-between">
                     <span>TẦNG 2: LƯƠNG NĂNG SUẤT HIỆU QUẢ KPI</span>
-                    <span className="font-mono">{formatCurrency(inspectingStaff.moPhong.luongKpi)}</span>
+                    <span className="font-mono">{formatCurrency(activeInspectingRecord.moPhong.luongKpi)}</span>
                   </div>
                   <div className="text-[11px] text-slate-500 mt-0.5">
-                    Hệ số KPI: {inspectingStaff.moPhong.heSoKpi.toFixed(2)} × Đơn giá KPI: {formatCurrency(donGiaKpiCoBan)} × Trần: {tranKpi}% × Tỷ lệ HT: {sensitivityFactor}%
+                    Tỷ lệ KPI khối: {activeInspectingRecord.deptRatio}% • Trần: {tranKpi}% • Hiệu suất: {sensitivityFactor}%
                   </div>
                 </div>
 
                 {/* Tầng 3 */}
                 <div className="p-3 bg-slate-50">
                   <div className="font-bold text-slate-900 flex justify-between">
-                    <span>TẦNG 3: PHỤ CẤP KHOÁN CHI & THÙ LAO</span>
-                    <span className="font-mono">{formatCurrency(inspectingStaff.moPhong.tongKhoanChi + inspectingStaff.moPhong.khoanTrachNhiem)}</span>
+                    <span>TẦNG 3: PHỤ CẤP KHOÁN CÔNG TÁC PHÍ</span>
+                    <span className="font-mono">{formatCurrency(activeInspectingRecord.moPhong.tongKhoanChi + activeInspectingRecord.moPhong.khoanTrachNhiem)}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 mt-2 text-[11px] text-slate-600 font-mono">
-                    <div>• Ăn trưa: {formatCurrency(inspectingStaff.moPhong.khoanAnTrua)}</div>
-                    <div>• Xăng xe: {formatCurrency(inspectingStaff.moPhong.khoanXangXe)}</div>
-                    <div>• Điện thoại: {formatCurrency(inspectingStaff.moPhong.khoanDienThoai)}</div>
-                    <div>• Trang phục: {formatCurrency(inspectingStaff.moPhong.khoanTrangPhuc)}</div>
-                    {inspectingStaff.moPhong.khoanDocHai > 0 && <div>• Độc hại kho quỹ: {formatCurrency(inspectingStaff.moPhong.khoanDocHai)}</div>}
-                    {inspectingStaff.moPhong.khoanTrachNhiem > 0 && <div>• Phụ cấp trách nhiệm: {formatCurrency(inspectingStaff.moPhong.khoanTrachNhiem)}</div>}
+                    <div>• Ăn trưa: {formatCurrency(activeInspectingRecord.moPhong.khoanAnTrua)}</div>
+                    <div>• Xăng xe: {formatCurrency(activeInspectingRecord.moPhong.khoanXangXe)}</div>
+                    <div>• Điện thoại: {formatCurrency(activeInspectingRecord.moPhong.khoanDienThoai)}</div>
+                    <div>• Trang phục: {formatCurrency(activeInspectingRecord.moPhong.khoanTrangPhuc)}</div>
+                    {activeInspectingRecord.moPhong.khoanDocHai > 0 && <div>• Độc hại kho quỹ: {formatCurrency(activeInspectingRecord.moPhong.khoanDocHai)}</div>}
+                    {activeInspectingRecord.moPhong.khoanTrachNhiem > 0 && <div>• Phụ cấp trách nhiệm: {formatCurrency(activeInspectingRecord.moPhong.khoanTrachNhiem)}</div>}
                   </div>
                 </div>
+
+                {/* Khoản tiền thừa BHXH hưởng thêm (nếu có) */}
+                {activeInspectingRecord.moPhong.tienThuaBhxhHuong > 0 && (
+                  <div className="p-3 bg-emerald-50">
+                    <div className="font-bold text-emerald-900 flex justify-between">
+                      <span>KHOẢN THỪA BHXH DO QUỸ CHI TRẢ (CỘNG VÀO LƯƠNG)</span>
+                      <span className="font-mono text-emerald-700">+{formatCurrency(activeInspectingRecord.moPhong.tienThuaBhxhHuong)}</span>
+                    </div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">
+                      (Quỹ chuẩn trả 23.5%: {formatCurrency(activeInspectingRecord.moPhong.bhxhDonViDinhMuc)} - Thực nộp: {formatCurrency(activeInspectingRecord.moPhong.bhxhDonVi)})
+                    </div>
+                  </div>
+                )}
 
                 {/* Tầng 4 */}
                 <div className="p-3 bg-rose-50/40">
                   <div className="font-bold text-rose-900 flex justify-between">
                     <span>TẦNG 4: NGHĨA VỤ TRÍCH NỘP & THUẾ TNCN</span>
-                    <span className="font-mono text-rose-700">-{formatCurrency(inspectingStaff.moPhong.bhxhNld + inspectingStaff.moPhong.doanPhiNld + inspectingStaff.moPhong.thueTncn)}</span>
+                    <span className="font-mono text-rose-700">-{formatCurrency(activeInspectingRecord.moPhong.bhxhNld + activeInspectingRecord.moPhong.doanPhiNld + activeInspectingRecord.moPhong.thueTncn)}</span>
                   </div>
                   <div className="space-y-1 mt-2 text-[11px] text-slate-600 font-mono">
                     <div className="flex justify-between">
-                      <span>• BHXH, BHYT, BHTN NLĐ đóng (10.5%):</span>
-                      <span className="text-rose-700">-{formatCurrency(inspectingStaff.moPhong.bhxhNld)}</span>
+                      <span>• BHXH, BHYT, BHTN NLĐ đóng (10.5% trên mức đóng {formatCurrency(activeInspectingRecord.moPhong.luongDongBhxhThucTe)}):</span>
+                      <span className="text-rose-700">-{formatCurrency(activeInspectingRecord.moPhong.bhxhNld)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>• Đoàn phí công đoàn (1%):</span>
-                      <span className="text-rose-700">-{formatCurrency(inspectingStaff.moPhong.doanPhiNld)}</span>
+                      <span className="text-rose-700">-{formatCurrency(activeInspectingRecord.moPhong.doanPhiNld)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>• Thuế TNCN (Biểu lũy tiến 7 bậc):</span>
-                      <span className="text-rose-700">-{formatCurrency(inspectingStaff.moPhong.thueTncn)}</span>
+                      <span className="text-rose-700">-{formatCurrency(activeInspectingRecord.moPhong.thueTncn)}</span>
                     </div>
                     <div className="text-[10px] text-slate-500 italic pt-1 border-t border-rose-200/60">
-                      (Thu nhập chịu thuế: {formatCurrency(inspectingStaff.moPhong.tongGross - inspectingStaff.moPhong.tongMienThue)} - Giảm trừ gia cảnh {inspectingStaff.moPhong.soNPT} NPT: {formatCurrency(inspectingStaff.moPhong.giamTruGiaCanh)} - BHXH: {formatCurrency(inspectingStaff.moPhong.bhxhNld)})
+                      (Thu nhập chịu thuế: {formatCurrency(activeInspectingRecord.moPhong.tongGross - activeInspectingRecord.moPhong.tongMienThue)} - Giảm trừ gia cảnh {activeInspectingRecord.moPhong.soNPT} NPT: {formatCurrency(activeInspectingRecord.moPhong.giamTruGiaCanh)} - BHXH: {formatCurrency(activeInspectingRecord.moPhong.bhxhNld)})
                     </div>
                   </div>
                 </div>
@@ -1161,15 +1545,18 @@ export function SimulationModule({ data, onSaveScenario }) {
               <div className="p-3.5 bg-amber-50/60 border border-amber-200 rounded-xl space-y-1">
                 <div className="font-bold text-amber-900 flex justify-between">
                   <span>CHI PHÍ QUỸ GÁNH CHỊU CHO CÁN BỘ NÀY:</span>
-                  <span className="font-mono">{formatCurrency(inspectingStaff.moPhong.tongChiPhiQuy)}/tháng</span>
+                  <span className="font-mono">{formatCurrency(activeInspectingRecord.moPhong.tongChiPhiQuy)}/tháng</span>
                 </div>
                 <div className="text-[11px] text-slate-600 flex justify-between font-mono">
                   <span>• Gross trả người lao động:</span>
-                  <span>{formatCurrency(inspectingStaff.moPhong.tongGross)}</span>
+                  <span>{formatCurrency(activeInspectingRecord.moPhong.tongGross)}</span>
                 </div>
                 <div className="text-[11px] text-slate-600 flex justify-between font-mono">
-                  <span>• Quỹ đóng bảo hiểm (23.5% lương vị trí):</span>
-                  <span>{formatCurrency(inspectingStaff.moPhong.bhxhDonVi)}</span>
+                  <span>• Quỹ thực nộp cơ quan BHXH:</span>
+                  <span>{formatCurrency(activeInspectingRecord.moPhong.bhxhDonVi)}</span>
+                </div>
+                <div className="text-[10px] text-amber-800 italic pt-1 border-t border-amber-200">
+                  (Tổng ngân sách chi trả của Quỹ luôn được bảo toàn đúng bằng định mức ban đầu: {formatCurrency(activeInspectingRecord.moPhong.tongChiPhiQuy)})
                 </div>
               </div>
             </div>
