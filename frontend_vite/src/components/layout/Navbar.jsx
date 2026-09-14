@@ -1,78 +1,57 @@
 import React from 'react';
-import { Building2, User, LogOut, RefreshCw, Database, Sliders, CreditCard } from 'lucide-react';
+import { Building2, User, LogOut, RefreshCw, Database } from 'lucide-react';
 import { APP_CONFIG, ROLE_LABELS } from '../../constants/config';
 import { getRecentPeriods } from '../../utils/date';
 
-export function Navbar({ 
-  user, 
-  onLogout, 
-  period, 
-  onPeriodChange, 
-  onRefresh, 
-  isRefreshing, 
+/**
+ * Navbar V3.0 — Bỏ toggle SIMULATION/PAYROLL, giữ bộ chọn kỳ tháng, refresh, user info
+ */
+export function Navbar({
+  user,
+  onLogout,
+  period,
+  onPeriodChange,
+  onRefresh,
+  isRefreshing,
   onSetupDb,
-  workspaceMode,
-  onWorkspaceModeChange
+  activeSection,
 }) {
   const periods = getRecentPeriods(12);
+  // Hiển thị selector kỳ tháng khi ở các section cần kỳ tháng
+  const showPeriodSelector = ['timesheets', 'kpi', 'payroll', 'reports', 'dashboard'].includes(activeSection);
 
   return (
     <header className="bg-brand-navy text-white shadow-md sticky top-0 z-30 border-b border-brand-navy-dark">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
+        <div className="flex justify-between h-16 items-center gap-4">
           {/* Brand Identity */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 shrink-0">
             <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center border border-white/20">
               <Building2 className="w-6 h-6 text-brand-lime" />
             </div>
-            <div>
-              <div className="font-bold text-base tracking-wide flex items-center space-x-2">
+            <div className="hidden sm:block">
+              <div className="font-bold text-sm tracking-wide flex items-center space-x-2">
                 <span>{APP_CONFIG.TITLE}</span>
-                <span className="text-xs bg-brand-lime/20 text-brand-lime px-2 py-0.5 rounded font-medium border border-brand-lime/30">2027 Pro</span>
+                <span className="text-xs bg-brand-lime/20 text-brand-lime px-2 py-0.5 rounded font-medium border border-brand-lime/30">
+                  V3.0
+                </span>
               </div>
-              <p className="text-xs text-slate-300 font-normal hidden sm:block">
-                {APP_CONFIG.SUBTITLE}
-              </p>
+              <p className="text-[10px] text-slate-300 font-normal">{APP_CONFIG.SUBTITLE}</p>
             </div>
           </div>
 
-          {/* Mode Switcher: 2 Phân Hệ Lớn */}
-          {user?.role !== 'NHAN_VIEN' && (
-            <div className="flex items-center bg-black/30 p-1 rounded-xl border border-white/15 shadow-inner">
-              <button
-                onClick={() => onWorkspaceModeChange('SIMULATION')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  workspaceMode === 'SIMULATION'
-                    ? 'bg-amber-400 text-brand-navy shadow-md'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                <Sliders className="w-3.5 h-3.5" />
-                <span>🏛️ Mô Phỏng Quy Chế (HĐQT)</span>
-              </button>
-              <button
-                onClick={() => onWorkspaceModeChange('PAYROLL')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  workspaceMode === 'PAYROLL'
-                    ? 'bg-brand-lime text-brand-navy shadow-md'
-                    : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                <CreditCard className="w-3.5 h-3.5" />
-                <span>📋 Lương Chính Thức Tháng</span>
-              </button>
-            </div>
-          )}
+          {/* Spacer */}
+          <div className="flex-1" />
 
-          {/* Controls & Actions */}
-          <div className="flex items-center space-x-3">
-            {/* Period Selector (Chỉ cần khi ở Phân hệ Lương Chính Thức) */}
-            {workspaceMode === 'PAYROLL' && (
-              <div className="flex items-center bg-white/10 rounded-lg px-2.5 py-1 border border-white/20">
+          {/* Controls */}
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            {/* Bộ chọn kỳ tháng */}
+            {showPeriodSelector && (
+              <div className="flex items-center bg-white/10 rounded-lg px-2.5 py-1.5 border border-white/20">
                 <span className="text-xs text-slate-300 mr-2 hidden md:inline">Kỳ:</span>
                 <select
                   value={period}
-                  onChange={(e) => onPeriodChange(e.target.value)}
+                  onChange={e => onPeriodChange(e.target.value)}
                   className="bg-transparent text-sm text-white font-semibold focus:outline-none cursor-pointer"
                 >
                   {periods.map(p => (
@@ -84,7 +63,7 @@ export function Navbar({
               </div>
             )}
 
-            {/* Refresh Button */}
+            {/* Refresh */}
             <button
               onClick={onRefresh}
               disabled={isRefreshing}
@@ -94,15 +73,15 @@ export function Navbar({
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-brand-lime' : ''}`} />
             </button>
 
-            {/* DB Setup Button (Admin only) */}
+            {/* DB Setup (Admin only) */}
             {user?.role === 'SUPER_ADMIN' && (
               <button
                 onClick={onSetupDb}
-                title="Khởi tạo / Kiểm tra cấu trúc 13 Sheets CSDL"
+                title="Khởi tạo / Kiểm tra 17 Sheets CSDL V3"
                 className="p-2 rounded-lg bg-emerald-600/80 hover:bg-emerald-600 text-white transition-colors text-xs font-medium flex items-center space-x-1"
               >
                 <Database className="w-4 h-4" />
-                <span className="hidden lg:inline">CSDL 13 Sheets</span>
+                <span className="hidden lg:inline">CSDL 17 Sheets</span>
               </button>
             )}
 

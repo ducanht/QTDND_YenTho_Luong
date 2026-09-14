@@ -200,6 +200,44 @@ class ApiService {
   async setupDatabase() {
     return this.request('setupDatabase', {});
   }
+
+  // ── V3.0: Tính Lương Engine ──
+
+  async calculatePayroll(period, scenario = 'PA2') {
+    return this.request('calculatePayroll', { period, scenario });
+  }
+
+  async saveMonthlyPayroll(period, rows) {
+    return this.request('saveMonthlyPayroll', { period, rows });
+  }
+
+  async lockPayrollV3(period, rows) {
+    return this.request('lockPayrollV3', { period, rows });
+  }
+
+  // ── V3.0: Tham Số Lương (DM_THAM_SO_LUONG) ──
+
+  async getSalaryParams() {
+    return this.request('getSalaryParams', {});
+  }
+
+  async saveSalaryParams(paramsList) {
+    return this.request('saveSalaryParams', { params: paramsList });
+  }
+
+  // ── V3.0: Bảng Lương Bậc (DM_BAC_LUONG) ──
+
+  async getSalaryScale() {
+    return this.request('getSalaryScale', {});
+  }
+
+  async saveSalaryScale(scaleList) {
+    return this.request('saveSalaryScale', { scale: scaleList });
+  }
+
+  async autoGenerateSalaryScale(luongCoSo) {
+    return this.request('autoGenerateSalaryScale', { luongCoSo });
+  }
 }
 
 export const api = new ApiService();

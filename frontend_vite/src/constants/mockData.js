@@ -384,10 +384,51 @@ export const MOCK_ALLOWANCES = [
   { maKhoan: 'PHU_CAP_TN', tenKhoan: 'Phụ cấp chức vụ, trách nhiệm', mucTieuChuan: 0, mienThueToiDa: 0, tinhBHXH: true, tinhThue: true }
 ];
 
+export const MOCK_SALARY_PARAMS = {
+  LUONG_CO_SO: 2340000,
+  BHXH_NLD: 0.08,
+  BHYT_NLD: 0.015,
+  BHTN_NLD: 0.01,
+  BHXH_DON_VI: 0.175,
+  BHYT_DON_VI: 0.03,
+  BHTN_DON_VI: 0.01,
+  BHXH_TRAN_LAN: 20,
+  TNCN_GIAM_TRU_BAN_THAN: 11000000,
+  TNCN_GIAM_TRU_NPT: 4400000,
+  THAM_NIEN_CT_PHAN_TRAM: 5,
+  THAM_NIEN_CT_TOI_DA: 40,
+  VUOT_KHUNG_PHAN_TRAM: 5,
+  VUOT_KHUNG_TOI_DA_LAN: 8,
+  KY_NANG_BAC: 3,
+};
+
+export const MOCK_SALARY_SCALE = [
+  // P01 — Chủ tịch HĐQT
+  { maViTri: 'P01', tenChucDanh: 'Chủ tịch HĐQT', bac: 1, loaiBac: 'BAC_THUONG', heSo: 4.80, luongNgachBac: 11232000 },
+  { maViTri: 'P01', tenChucDanh: 'Chủ tịch HĐQT', bac: 2, loaiBac: 'BAC_THUONG', heSo: 5.00, luongNgachBac: 11700000 },
+  { maViTri: 'P01', tenChucDanh: 'Chủ tịch HĐQT', bac: 3, loaiBac: 'BAC_THUONG', heSo: 5.20, luongNgachBac: 12168000 },
+  { maViTri: 'P01', tenChucDanh: 'Chủ tịch HĐQT', bac: 4, loaiBac: 'BAC_THUONG', heSo: 5.40, luongNgachBac: 12636000 },
+  { maViTri: 'P01', tenChucDanh: 'Chủ tịch HĐQT', bac: 5, loaiBac: 'BAC_THUONG', heSo: 5.60, luongNgachBac: 13104000 },
+  // P02 — Giám đốc
+  { maViTri: 'P02', tenChucDanh: 'Giám đốc', bac: 1, loaiBac: 'BAC_THUONG', heSo: 4.40, luongNgachBac: 10296000 },
+  { maViTri: 'P02', tenChucDanh: 'Giám đốc', bac: 2, loaiBac: 'BAC_THUONG', heSo: 4.60, luongNgachBac: 10764000 },
+  { maViTri: 'P02', tenChucDanh: 'Giám đốc', bac: 3, loaiBac: 'BAC_THUONG', heSo: 4.80, luongNgachBac: 11232000 },
+  { maViTri: 'P02', tenChucDanh: 'Giám đốc', bac: 4, loaiBac: 'BAC_THUONG', heSo: 5.00, luongNgachBac: 11700000 },
+  { maViTri: 'P02', tenChucDanh: 'Giám đốc', bac: 5, loaiBac: 'BAC_THUONG', heSo: 5.20, luongNgachBac: 12168000 },
+  // P08 — Cán bộ tín dụng
+  { maViTri: 'P08', tenChucDanh: 'Cán bộ tín dụng', bac: 1, loaiBac: 'BAC_THUONG', heSo: 2.60, luongNgachBac: 6084000 },
+  { maViTri: 'P08', tenChucDanh: 'Cán bộ tín dụng', bac: 2, loaiBac: 'BAC_THUONG', heSo: 2.85, luongNgachBac: 6669000 },
+  { maViTri: 'P08', tenChucDanh: 'Cán bộ tín dụng', bac: 3, loaiBac: 'BAC_THUONG', heSo: 3.10, luongNgachBac: 7254000 },
+  { maViTri: 'P08', tenChucDanh: 'Cán bộ tín dụng', bac: 4, loaiBac: 'BAC_THUONG', heSo: 3.30, luongNgachBac: 7722000 },
+  { maViTri: 'P08', tenChucDanh: 'Cán bộ tín dụng', bac: 5, loaiBac: 'BAC_THUONG', heSo: 3.50, luongNgachBac: 8190000 },
+];
+
 export const MOCK_FULL_BUNDLE = {
   staffList: MOCK_STAFF_LIST,
   positions: MOCK_POSITIONS,
   params: MOCK_PARAMS,
+  salaryParams: MOCK_SALARY_PARAMS,
+  salaryScale: MOCK_SALARY_SCALE,
   allowances: MOCK_ALLOWANCES,
   timesheets: [],
   kpiDictionary: [],
@@ -398,9 +439,9 @@ export const MOCK_FULL_BUNDLE = {
   scenarios: [
     {
       id: 'SCENARIO_STANDARD_2027',
-      name: 'Kịch bản Chuẩn HĐQT 2027 (PA2 - 2.5Tr)',
+      name: 'Kịch bản Chuẩn HĐQT 2027 (PA2 - 2.34Tr)',
       targetOption: 'PA2',
-      customBaseSalary: 2500000,
+      customBaseSalary: 2340000,
       kpiBonusPoolRatio: 100,
       allowances: {
         lunch: 1200000,
@@ -413,3 +454,4 @@ export const MOCK_FULL_BUNDLE = {
   ],
   serverTime: '14/09/2026 08:00:00'
 };
+

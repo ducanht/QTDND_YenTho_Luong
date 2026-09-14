@@ -37,6 +37,8 @@ function getAllDataBundle(period = '', maNV = '') {
     payrollHistory: getPayrollHistory(period),
     feedbacks: getFeedbacks(maNV),
     params: getSystemParams(),
+    salaryParams: getSalaryParams(),
+    salaryScale: getSalaryScale(),
     scenarios: getScenarios(),
     serverTime: Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy HH:mm:ss')
   };
@@ -136,6 +138,49 @@ function executeGasAction(action, payload) {
       const res = saveScenario(payload.payload || payload);
       logAuditAction(payload.user || 'Thành viên HĐQT', 'Web Client', 'LƯU_KỊCH_BẢN_MÔ_PHỎNG', (payload.payload || payload).name);
       return res;
+    }
+
+    case 'calculatePayroll': {
+      const rows = calculateMonthlyPayroll(payload.period || '', payload.scenario || 'PA2');
+      return { status: 'success', data: rows, count: rows.length };
+    }
+
+    case 'saveMonthlyPayroll': {
+      const res = saveMonthlyPayrollResults(payload.period, payload.rows || payload.payload, payload.user || 'System');
+      logAuditAction(payload.user || 'Kế toán', 'Web Client', 'LƯU_KẾT_QUẢ_LƯƠNG_THÁNG', payload.period);
+      return res;
+    }
+
+    case 'lockPayrollV3': {
+      const res = lockMonthlyPayroll(payload.period, payload.rows || payload.payload);
+      logAuditAction(payload.user || 'Lãnh đạo', 'Web Client', 'KHÓA_SỔ_V3', payload.period);
+      return res;
+    }
+
+    case 'getSalaryParams': {
+      const sp = getSalaryParams();
+      return { status: 'success', data: sp };
+    }
+
+    case 'saveSalaryParams': {
+      const res = saveSalaryParams(payload.params || payload.payload || []);
+      logAuditAction(payload.user || 'Admin', 'Web Client', 'LƯU_THAM_SỐ_LƯƠNG', 'Số lượng: ' + (payload.params || []).length);
+      return res;
+    }
+
+    case 'getSalaryScale': {
+      return { status: 'success', data: getSalaryScale() };
+    }
+
+    case 'saveSalaryScale': {
+      const res = saveSalaryScale(payload.scale || payload.payload || []);
+      logAuditAction(payload.user || 'Admin', 'Web Client', 'LƯU_BẢNG_BẬC_LƯƠNG', 'Số dòng: ' + (payload.scale || []).length);
+      return res;
+    }
+
+    case 'autoGenerateSalaryScale': {
+      const scale = autoGenerateSalaryScale(payload.luongCoSo || 2340000);
+      return { status: 'success', data: scale, count: scale.length };
     }
 
     default:
