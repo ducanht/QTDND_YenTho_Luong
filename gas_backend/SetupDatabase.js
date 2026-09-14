@@ -69,10 +69,22 @@ function khoiTaoHeThongCSDL() {
   // 13. LS_KHOAN (Lịch sử thay đổi định mức phụ cấp & khoán)
   taoSheet_LS_KHOAN(ss);
 
+  // 14. DM_BAC_LUONG (Bảng lương 5 bậc chức danh theo năm đảm nhiệm)
+  taoSheet_DM_BAC_LUONG(ss);
+
+  // 15. DM_THAM_SO_LUONG (Tham số lương pháp lý & quy chế quỹ)
+  taoSheet_DM_THAM_SO_LUONG(ss);
+
+  // 16. DM_CONG_THUC (Công thức thành phần lương & quy tắc thuế/BHXH)
+  taoSheet_DM_CONG_THUC(ss);
+
+  // 17. KQ_LUONG_THANG (Kết quả tính lương tháng 22 thành phần)
+  taoSheet_KQ_LUONG_THANG(ss);
+
   // Xóa sheet mặc định "Sheet1" hoặc "Trang tính 1" nếu còn trống
   xoaSheetMacDinh(ss);
 
-  Logger.log("✅ HOÀN TẤT KHỞI TẠO 13 SHEETS CSDL CHUẨN HÓA THÀNH CÔNG!");
+  Logger.log("✅ HOÀN TẤT KHỞI TẠO 17 SHEETS CSDL CHUẨN HÓA THÀNH CÔNG!");
 }
 
 /**
@@ -119,25 +131,34 @@ function taoSheet_DM_NS(ss) {
     'Mã NV', 'Họ và tên', 'Chức danh', 'Khối phòng ban', 'Điện thoại', 'Email',
     'Ngày sinh', 'Giới tính', 'Số CCCD', 'Ngày cấp CCCD', 'Nơi cấp CCCD',
     'Địa chỉ thường trú', 'Ngày vào làm', 'Trạng thái', 'Số NPT',
-    'Số tài khoản NH', 'Tên ngân hàng', 'Mã số thuế', 'Số sổ BHXH', 'Link ảnh thẻ', 'Ghi chú'
+    'Số tài khoản NH', 'Tên ngân hàng', 'Mã số thuế', 'Số sổ BHXH', 'Link ảnh thẻ', 'Ghi chú', 'Mức đóng BHXH',
+    'Ngày đảm nhiệm chức vụ', 'Thâm niên CV quy đổi (năm)', 'Bậc lương', 'Năm vượt khung',
+    'Link File HĐLĐ', 'Link File Phụ lục HĐLĐ', 'Link File Quyết định'
   ];
-  const widths = [80, 160, 130, 110, 110, 170, 95, 75, 120, 95, 120, 220, 95, 100, 70, 120, 130, 100, 100, 200, 150];
+  const widths = [
+    80, 160, 130, 110, 110, 170,
+    95, 75, 120, 95, 120,
+    220, 95, 100, 70,
+    120, 130, 100, 100, 160, 150, 120,
+    140, 130, 80, 110,
+    180, 180, 180
+  ];
   formatHeaderAndFreeze(sh, headers, widths, 1, 2);
 
-  // Dữ liệu mẫu 12 CBNV thực tế QTDND Yên Thọ
+  // Dữ liệu mẫu 12 CBNV thực tế QTDND Yên Thọ đầy đủ thông tin hợp đồng, chức vụ & bậc
   const sampleData = [
-    ['NV01', 'Nguyễn Thị Sinh', 'Thẩm định tài sản', 'Tín dụng', '0388232844', 'Sinhtdyt@gmail.com', '09/03/1962', 'Nữ', '038162004401', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '09/03/2005', 'ĐANG LÀM', 0, '10287463801', 'Agribank Quý Lộc', '8012345601', '3809123401', '', 'Chính thức: 09/03/2006. Cán bộ thẩm định tài sản'],
-    ['NV02', 'Nguyễn Thị Mến', 'Kế toán trưởng', 'Kế toán', '0349547779', 'nguyenmen.yt.83@gmail.com', '08/03/1983', 'Nữ', '038183010925', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '09/03/2007', 'ĐANG LÀM', 2, '10287463802', 'Agribank Quý Lộc', '8012345602', '3809123402', '', 'Chính thức: 08/03/2008. Kế toán trưởng'],
-    ['NV03', 'Nguyễn Văn Sơn', 'UV HĐQT - Giám đốc', 'Điều hành', '0941562789', 'nguyenvansontdyt@gmail.com', '09/10/1980', 'Nam', '038080021750', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '09/10/2012', 'ĐANG LÀM', 1, '10287463803', 'Agribank Quý Lộc', '8012345603', '3809123403', '', 'Chính thức: 09/10/2013. UV HĐQT - Giám đốc điều hành'],
-    ['NV04', 'Bùi Thị Thảo', 'Trưởng ban kiểm soát', 'Kiểm soát', '0839062825', 'thao.bui0282@gmail.com', '19/11/1982', 'Nữ', '038182047645', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '19/11/2012', 'ĐANG LÀM', 1, '10287463804', 'Agribank Quý Lộc', '8012345604', '3809123404', '', 'Chính thức: 19/11/2013. Trưởng ban kiểm soát chuyên trách'],
-    ['NV05', 'Nguyễn Hữu Nhân', 'CB tín dụng', 'Tín dụng', '0949116817', 'qtdyentho.huunhan@gmail.com', '30/01/1985', 'Nam', '038085009285', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '30/01/2013', 'ĐANG LÀM', 1, '10287463805', 'Agribank Quý Lộc', '8012345605', '3809123405', '', 'Chính thức: 30/01/2014. Cán bộ tín dụng địa bàn'],
-    ['NV06', 'Trịnh Thị Hiền', 'KST - Kiểm toán nội bộ', 'Kiểm soát', '0948784333', 'qtdyentho.hienha@gmail.com', '21/05/1983', 'Nữ', '038183049074', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '21/05/2014', 'ĐANG LÀM', 1, '10287463806', 'Agribank Quý Lộc', '8012345606', '3809123406', '', 'Chính thức: 21/05/2015. Kiểm soát viên - Kiểm toán nội bộ'],
-    ['NV07', 'Trịnh Đức Anh', 'Chủ tịch HĐQT', 'HĐQT', '0965122111', 'ducanht@gmail.com', '03/06/1986', 'Nam', '038086010115', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '03/06/2016', 'ĐANG LÀM', 1, '10287463807', 'Agribank Quý Lộc', '8012345607', '3809123407', '', 'Chính thức: 03/06/2017. Chủ tịch Hội đồng quản trị'],
-    ['NV08', 'Vũ Thị Hiền', 'UV HĐQT', 'HĐQT', '0983502181', 'qtdyentho.vuhien@gmail.com', '04/06/1986', 'Nữ', '038186037786', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '04/06/2018', 'ĐANG LÀM', 0, '10287463808', 'Agribank Quý Lộc', '8012345608', '3809123408', '', 'Chính thức: 04/06/2019. Ủy viên Hội đồng quản trị'],
-    ['NV09', 'Trần Như Huyền', 'CB tín dụng', 'Tín dụng', '0985709609', 'Huyennhutran@gmail.com', '11/12/1989', 'Nữ', '038189039532', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '11/12/2020', 'ĐANG LÀM', 1, '10287463809', 'Agribank Quý Lộc', '8012345609', '3809123409', '', 'Chính thức: 11/12/2021. Cán bộ tín dụng'],
-    ['NV10', 'Hoàng Thị Lan', 'Kế toán viên', 'Kế toán', '0965178666', 'hoanglan1289@gmail.com', '08/10/1989', 'Nữ', '038189040044', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '08/10/2021', 'ĐANG LÀM', 1, '10287463810', 'Agribank Quý Lộc', '8012345610', '3809123410', '', 'Chính thức: 08/10/2022. Kế toán viên thanh toán'],
-    ['NV11', 'Phạm Thị Thảo', 'Thủ quỹ', 'Kế toán', '0965567596', 'qtdyentho.phamthao@gmail.com', '06/09/1990', 'Nữ', '038190051894', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '06/09/2023', 'ĐANG LÀM', 0, '10287463811', 'Agribank Quý Lộc', '8012345611', '3809123411', '', 'Chính thức: 06/09/2024. Thủ quỹ cơ quan'],
-    ['NV12', 'Lưu Thị Định', 'CB tín dụng', 'Tín dụng', '0961007855', 'qtdyentho.luudinh@gmail.com', '06/09/1989', 'Nữ', '038189028302', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '06/09/2024', 'ĐANG LÀM', 0, '10287463812', 'Agribank Quý Lộc', '8012345612', '3809123412', '', 'Chính thức dự kiến: 06/09/2025. Cán bộ tín dụng']
+    ['NV01', 'Nguyễn Thị Sinh', 'Thẩm định tài sản', 'Tín dụng', '0388232844', 'Sinhtdyt@gmail.com', '09/03/1962', 'Nữ', '038162004401', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '09/03/2005', 'ĐANG LÀM', 0, '10287463801', 'Agribank Quý Lộc', '8012345601', '3809123401', '', 'Chính thức: 09/03/2006. Cán bộ thẩm định tài sản', 6000000, '09/03/2015', 11, 5, 2, 'https://drive.google.com/file/d/HDLD_NV01/view', '', 'https://drive.google.com/file/d/QD_NV01/view'],
+    ['NV02', 'Nguyễn Thị Mến', 'Kế toán trưởng', 'Kế toán', '0349547779', 'nguyenmen.yt.83@gmail.com', '08/03/1983', 'Nữ', '038183010925', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '09/03/2007', 'ĐANG LÀM', 2, '10287463802', 'Agribank Quý Lộc', '8012345602', '3809123402', '', 'Chính thức: 08/03/2008. Kế toán trưởng', 8500000, '09/03/2016', 10, 4, 0, 'https://drive.google.com/file/d/HDLD_NV02/view', '', 'https://drive.google.com/file/d/QD_NV02/view'],
+    ['NV03', 'Nguyễn Văn Sơn', 'UV HĐQT - Giám đốc', 'Điều hành', '0941562789', 'nguyenvansontdyt@gmail.com', '09/10/1980', 'Nam', '038080021750', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '09/10/2012', 'ĐANG LÀM', 1, '10287463803', 'Agribank Quý Lộc', '8012345603', '3809123403', '', 'Chính thức: 09/10/2013. UV HĐQT - Giám đốc điều hành', 10000000, '09/10/2015', 11, 4, 0, 'https://drive.google.com/file/d/HDLD_NV03/view', '', 'https://drive.google.com/file/d/QD_NV03/view'],
+    ['NV04', 'Bùi Thị Thảo', 'Trưởng ban kiểm soát', 'Kiểm soát', '0839062825', 'thao.bui0282@gmail.com', '19/11/1982', 'Nữ', '038182047645', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '19/11/2012', 'ĐANG LÀM', 1, '10287463804', 'Agribank Quý Lộc', '8012345604', '3809123404', '', 'Chính thức: 19/11/2013. Trưởng ban kiểm soát chuyên trách', 8000000, '19/11/2015', 11, 4, 0, 'https://drive.google.com/file/d/HDLD_NV04/view', '', 'https://drive.google.com/file/d/QD_NV04/view'],
+    ['NV05', 'Nguyễn Hữu Nhân', 'CB tín dụng', 'Tín dụng', '0949116817', 'qtdyentho.huunhan@gmail.com', '30/01/1985', 'Nam', '038085009285', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '30/01/2013', 'ĐANG LÀM', 1, '10287463805', 'Agribank Quý Lộc', '8012345605', '3809123405', '', 'Chính thức: 30/01/2014. Cán bộ tín dụng địa bàn', 7000000, '30/01/2016', 10, 4, 0, 'https://drive.google.com/file/d/HDLD_NV05/view', '', 'https://drive.google.com/file/d/QD_NV05/view'],
+    ['NV06', 'Trịnh Thị Hiền', 'KST - Kiểm toán nội bộ', 'Kiểm soát', '0948784333', 'qtdyentho.hienha@gmail.com', '21/05/1983', 'Nữ', '038183049074', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '21/05/2014', 'ĐANG LÀM', 1, '10287463806', 'Agribank Quý Lộc', '8012345606', '3809123406', '', 'Chính thức: 21/05/2015. Kiểm soát viên - Kiểm toán nội bộ', 7000000, '21/05/2017', 9, 3, 0, 'https://drive.google.com/file/d/HDLD_NV06/view', '', 'https://drive.google.com/file/d/QD_NV06/view'],
+    ['NV07', 'Trịnh Đức Anh', 'Chủ tịch HĐQT', 'HĐQT', '0965122111', 'ducanht@gmail.com', '03/06/1986', 'Nam', '038086010115', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '03/06/2016', 'ĐANG LÀM', 1, '10287463807', 'Agribank Quý Lộc', '8012345607', '3809123407', '', 'Chính thức: 03/06/2017. Chủ tịch Hội đồng quản trị', 11000000, '03/06/2017', 9, 3, 0, 'https://drive.google.com/file/d/HDLD_NV07/view', '', 'https://drive.google.com/file/d/QD_NV07/view'],
+    ['NV08', 'Vũ Thị Hiền', 'UV HĐQT', 'HĐQT', '0983502181', 'qtdyentho.vuhien@gmail.com', '04/06/1986', 'Nữ', '038186037786', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '04/06/2018', 'ĐANG LÀM', 0, '10287463808', 'Agribank Quý Lộc', '8012345608', '3809123408', '', 'Chính thức: 04/06/2019. Ủy viên Hội đồng quản trị', 7500000, '04/06/2019', 7, 3, 0, 'https://drive.google.com/file/d/HDLD_NV08/view', '', 'https://drive.google.com/file/d/QD_NV08/view'],
+    ['NV09', 'Trần Như Huyền', 'CB tín dụng', 'Tín dụng', '0985709609', 'Huyennhutran@gmail.com', '11/12/1989', 'Nữ', '038189039532', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '11/12/2020', 'ĐANG LÀM', 1, '10287463809', 'Agribank Quý Lộc', '8012345609', '3809123409', '', 'Chính thức: 11/12/2021. Cán bộ tín dụng', 6500000, '11/12/2021', 5, 2, 0, 'https://drive.google.com/file/d/HDLD_NV09/view', '', 'https://drive.google.com/file/d/QD_NV09/view'],
+    ['NV10', 'Hoàng Thị Lan', 'Kế toán viên', 'Kế toán', '0965178666', 'hoanglan1289@gmail.com', '08/10/1989', 'Nữ', '038189040044', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '08/10/2021', 'ĐANG LÀM', 1, '10287463810', 'Agribank Quý Lộc', '8012345610', '3809123410', '', 'Chính thức: 08/10/2022. Kế toán viên thanh toán', 5800000, '08/10/2022', 4, 2, 0, 'https://drive.google.com/file/d/HDLD_NV10/view', '', 'https://drive.google.com/file/d/QD_NV10/view'],
+    ['NV11', 'Phạm Thị Thảo', 'Thủ quỹ', 'Kế toán', '0965567596', 'qtdyentho.phamthao@gmail.com', '06/09/1990', 'Nữ', '038190051894', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '06/09/2023', 'ĐANG LÀM', 0, '10287463811', 'Agribank Quý Lộc', '8012345611', '3809123411', '', 'Chính thức: 06/09/2024. Thủ quỹ cơ quan', 5250000, '06/09/2024', 2, 1, 0, 'https://drive.google.com/file/d/HDLD_NV11/view', '', 'https://drive.google.com/file/d/QD_NV11/view'],
+    ['NV12', 'Lưu Thị Định', 'CB tín dụng', 'Tín dụng', '0961007855', 'qtdyentho.luudinh@gmail.com', '06/09/1989', 'Nữ', '038189028302', '10/05/2021', 'Cục CSQLHC về TTXH', 'Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá', '06/09/2024', 'ĐANG LÀM', 0, '10287463812', 'Agribank Quý Lộc', '8012345612', '3809123412', '', 'Chính thức dự kiến: 06/09/2025. Cán bộ tín dụng', 6500000, '06/09/2024', 2, 1, 0, 'https://drive.google.com/file/d/HDLD_NV12/view', '', 'https://drive.google.com/file/d/QD_NV12/view']
   ];
   sh.getRange(2, 1, sampleData.length, headers.length).setValues(sampleData);
 
@@ -149,6 +170,9 @@ function taoSheet_DM_NS(ss) {
   sh.getRange("M2:M100").setHorizontalAlignment("center");
   sh.getRange("N2:N100").setHorizontalAlignment("center");
   sh.getRange("O2:O100").setHorizontalAlignment("right");
+  sh.getRange("V2:V100").setHorizontalAlignment("right").setNumberFormat('#,##0 "₫"');
+  sh.getRange("W2:W100").setHorizontalAlignment("center");
+  sh.getRange("X2:Z100").setHorizontalAlignment("center");
 }
 
 // =========================================================================================
@@ -203,22 +227,32 @@ function taoSheet_DM_CHUCDANH(ss) {
     'PA1 Hệ số', 'PA2 Hệ số (Chuẩn)', 'PA3 Hệ số',
     'PA1 KPI', 'PA2 KPI', 'PA3 KPI',
     'PA1 Thưởng', 'PA2 Thưởng', 'PA3 Thưởng',
-    'Phụ cấp TN ₫', 'Thù lao QT ₫', 'Ngày hiệu lực', 'Quyết định phê duyệt'
+    'Phụ cấp TN ₫', 'Thù lao QT ₫', 'Ngày hiệu lực', 'Quyết định phê duyệt',
+    'Nhóm khoán', 'Hệ số bậc 1', 'Hệ số bậc 2', 'Hệ số bậc 3', 'Hệ số bậc 4', 'Hệ số bậc 5',
+    '% Vượt khung mỗi lần', 'Lần vượt khung tối đa', 'Kỳ nâng bậc (năm)', 'Ghi chú'
   ];
-  const widths = [80, 160, 100, 55, 65, 85, 105, 85, 80, 80, 80, 85, 85, 85, 110, 110, 95, 150];
+  const widths = [
+    80, 160, 100, 55, 65,
+    85, 105, 85,
+    80, 80, 80,
+    85, 85, 85,
+    110, 110, 95, 150,
+    100, 85, 85, 85, 85, 85,
+    110, 110, 100, 200
+  ];
   formatHeaderAndFreeze(sh, headers, widths, 1, 2);
 
   const sample = [
-    ['P01', 'Chủ tịch HĐQT', 'Lãnh đạo', 1, 1, 4.8, 5.2, 5.6, 0.20, 0.25, 0.30, 0.10, 0.12, 0.15, 1000000, 3000000, '01/01/2027', 'NQ-01/2027/NQ-HĐQT'],
-    ['P02', 'Giám đốc', 'Điều hành', 2, 1, 4.4, 4.8, 5.2, 0.20, 0.25, 0.30, 0.10, 0.12, 0.15, 800000, 2000000, '01/01/2027', 'NQ-01/2027/NQ-HĐQT'],
-    ['P03', 'Phó Giám đốc', 'Điều hành', 3, 0, 3.9, 4.2, 4.6, 0.18, 0.22, 0.25, 0.08, 0.10, 0.12, 600000, 1500000, '01/01/2027', 'NQ-01/2027/NQ-HĐQT'],
-    ['P04', 'Trưởng BKS', 'Kiểm soát', 4, 1, 3.7, 4.0, 4.3, 0.15, 0.18, 0.22, 0.06, 0.08, 0.10, 700000, 2000000, '01/01/2027', 'NQ-01/2027/NQ-HĐQT'],
-    ['P05', 'Kế toán trưởng', 'Chuyên môn', 5, 1, 3.6, 3.9, 4.2, 0.15, 0.18, 0.22, 0.06, 0.08, 0.10, 0, 0, '01/01/2027', 'NQ-01/2027/NQ-HĐQT'],
-    ['P06', 'Ủy viên HĐQT', 'Quản trị', 6, 1, 3.2, 3.5, 3.8, 0.12, 0.15, 0.18, 0.05, 0.06, 0.08, 500000, 1000000, '01/01/2027', 'NQ-01/2027/NQ-HĐQT'],
-    ['P07', 'Kiểm soát viên', 'Kiểm soát', 7, 2, 3.0, 3.3, 3.6, 0.12, 0.15, 0.18, 0.05, 0.06, 0.08, 500000, 1200000, '01/01/2027', 'NQ-01/2027/NQ-HĐQT'],
-    ['P08', 'Cán bộ tín dụng', 'Nghiệp vụ', 8, 4, 2.6, 2.85, 3.1, 0.12, 0.15, 0.18, 0.05, 0.06, 0.08, 0, 0, '01/01/2027', 'NQ-01/2027/NQ-HĐQT'],
-    ['P09', 'Kế toán viên', 'Nghiệp vụ', 9, 1, 2.4, 2.65, 2.9, 0.10, 0.13, 0.16, 0.04, 0.05, 0.07, 0, 0, '01/01/2027', 'NQ-01/2027/NQ-HĐQT'],
-    ['P10', 'Bảo vệ - Thủ quỹ', 'Hỗ trợ', 10, 1, 1.9, 2.1, 2.3, 0.08, 0.10, 0.12, 0.03, 0.04, 0.05, 0, 0, '01/01/2027', 'NQ-01/2027/NQ-HĐQT']
+    ['P01', 'Chủ tịch HĐQT', 'Lãnh đạo', 1, 1, 4.8, 5.2, 5.6, 0.20, 0.25, 0.30, 0.10, 0.12, 0.15, 1000000, 3000000, '01/01/2027', 'NQ-01/2027/NQ-HĐQT', 'HDQT', 4.80, 5.00, 5.20, 5.40, 5.60, 5, 8, 3, '5 bậc ngạch, sau bậc 5 tính vượt khung chung 5%/3 năm'],
+    ['P02', 'Giám đốc', 'Điều hành', 2, 1, 4.4, 4.8, 5.2, 0.20, 0.25, 0.30, 0.10, 0.12, 0.15, 800000, 2000000, '01/01/2027', 'NQ-01/2027/NQ-HĐQT', 'TP_PP', 4.40, 4.60, 4.80, 5.00, 5.20, 5, 8, 3, '5 bậc ngạch, sau bậc 5 tính vượt khung chung 5%/3 năm'],
+    ['P03', 'Phó Giám đốc', 'Điều hành', 3, 0, 3.9, 4.2, 4.6, 0.18, 0.22, 0.25, 0.08, 0.10, 0.12, 600000, 1500000, '01/01/2027', 'NQ-01/2027/NQ-HĐQT', 'TP_PP', 3.90, 4.10, 4.30, 4.50, 4.70, 5, 8, 3, '5 bậc ngạch'],
+    ['P04', 'Trưởng BKS', 'Kiểm soát', 4, 1, 3.7, 4.0, 4.3, 0.15, 0.18, 0.22, 0.06, 0.08, 0.10, 700000, 2000000, '01/01/2027', 'NQ-01/2027/NQ-HĐQT', 'TP_PP', 3.70, 3.90, 4.10, 4.30, 4.50, 5, 8, 3, '5 bậc ngạch'],
+    ['P05', 'Kế toán trưởng', 'Chuyên môn', 5, 1, 3.6, 3.9, 4.2, 0.15, 0.18, 0.22, 0.06, 0.08, 0.10, 0, 0, '01/01/2027', 'NQ-01/2027/NQ-HĐQT', 'TP_PP', 3.60, 3.80, 4.00, 4.20, 4.40, 5, 8, 3, '5 bậc ngạch'],
+    ['P06', 'Ủy viên HĐQT', 'Quản trị', 6, 1, 3.2, 3.5, 3.8, 0.12, 0.15, 0.18, 0.05, 0.06, 0.08, 500000, 1000000, '01/01/2027', 'NQ-01/2027/NQ-HĐQT', 'HDQT', 3.20, 3.40, 3.60, 3.80, 4.00, 5, 8, 3, '5 bậc ngạch'],
+    ['P07', 'Kiểm soát viên', 'Kiểm soát', 7, 2, 3.0, 3.3, 3.6, 0.12, 0.15, 0.18, 0.05, 0.06, 0.08, 500000, 1200000, '01/01/2027', 'NQ-01/2027/NQ-HĐQT', 'CBNV', 3.00, 3.20, 3.40, 3.60, 3.80, 5, 8, 3, '5 bậc ngạch'],
+    ['P08', 'Cán bộ tín dụng', 'Nghiệp vụ', 8, 4, 2.6, 2.85, 3.1, 0.12, 0.15, 0.18, 0.05, 0.06, 0.08, 0, 0, '01/01/2027', 'NQ-01/2027/NQ-HĐQT', 'CBNV', 2.60, 2.85, 3.10, 3.30, 3.50, 5, 8, 3, '5 bậc ngạch'],
+    ['P09', 'Kế toán viên', 'Nghiệp vụ', 9, 1, 2.4, 2.65, 2.9, 0.10, 0.13, 0.16, 0.04, 0.05, 0.07, 0, 0, '01/01/2027', 'NQ-01/2027/NQ-HĐQT', 'CBNV', 2.40, 2.65, 2.90, 3.15, 3.40, 5, 8, 3, '5 bậc ngạch'],
+    ['P10', 'Bảo vệ - Thủ quỹ', 'Hỗ trợ', 10, 1, 1.9, 2.1, 2.3, 0.08, 0.10, 0.12, 0.03, 0.04, 0.05, 0, 0, '01/01/2027', 'NQ-01/2027/NQ-HĐQT', 'CBNV', 1.90, 2.10, 2.30, 2.50, 2.70, 5, 8, 3, '5 bậc ngạch']
   ];
   sh.getRange(2, 1, sample.length, headers.length).setValues(sample);
 
@@ -277,21 +311,49 @@ function taoSheet_CHAM_CONG(ss) {
 }
 
 // =========================================================================================
-// 6. SHEET: DG_KPI (Đánh giá chi tiết KPI tháng)
+// 6. SHEET: DG_KPI (Đánh giá chi tiết KPI tháng - Quy trình 5 bước)
 // =========================================================================================
 function taoSheet_DG_KPI(ss) {
   let sh = ss.getSheetByName('DG_KPI') || ss.insertSheet('DG_KPI');
   const headers = [
-    'Mã ĐG', 'Kỳ lương', 'Mã NV', 'Họ và tên', 'Mã KPI', 'Tên chỉ số KPI',
-    'Chỉ tiêu giao', 'Kết quả đạt', 'Tỷ lệ hoàn thành', 'Trọng số', 'Điểm quy đổi', 'Nhận xét của Lãnh đạo'
+    'Mã đánh giá', 'Kỳ (YYYY-MM)', 'Mã NV', 'Họ và tên', 'Mã KPI',
+    'Chỉ tiêu giao', 'Thực tế thực hiện', 'Tỷ lệ đạt %',
+    'Điểm tự đánh giá', 'Ý kiến tự đánh giá',
+    'Điểm Trưởng BP', 'Ý kiến Trưởng BP',
+    'Điểm Giám đốc', 'Ý kiến Giám đốc',
+    'Điểm HĐ lương', 'Ý kiến HĐ lương',
+    'Điểm chốt', 'Xếp loại tháng',
+    'Bước phê duyệt', 'Người cập nhật', 'Thời gian cập nhật'
   ];
-  const widths = [100, 85, 80, 160, 95, 180, 100, 100, 105, 80, 90, 220];
+  const widths = [
+    110, 85, 80, 160, 95,
+    100, 100, 90,
+    95, 160,
+    95, 160,
+    95, 160,
+    95, 160,
+    85, 95,
+    120, 110, 140
+  ];
   formatHeaderAndFreeze(sh, headers, widths, 1, 4);
+
+  const sample = [
+    ['DG_2027-01_NV05_01', '2027-01', 'NV05', 'Nguyễn Hữu Nhân', 'KPI_TD_01', 3000, 3200, 1.067, 105, 'Vượt chỉ tiêu 200tr', 105, 'Đồng ý', 105, 'Đồng ý duyệt', 105, 'Chốt điểm', 105, 'Hoàn thành xuất sắc', '5_DA_CHOT', 'Trịnh Đức Anh', '31/01/2027 17:00'],
+    ['DG_2027-01_NV05_02', '2027-01', 'NV05', 'Nguyễn Hữu Nhân', 'KPI_TD_02', 0.8, 0.45, 1.000, 100, 'Nợ xấu an toàn 0.45%', 100, 'Tốt', 100, 'Đồng ý', 100, 'Chốt điểm', 100, 'Hoàn thành tốt', '5_DA_CHOT', 'Trịnh Đức Anh', '31/01/2027 17:00'],
+    ['DG_2027-01_NV10_01', '2027-01', 'NV10', 'Hoàng Thị Lan', 'KPI_KT_01', 0, 0, 1.000, 100, 'Khóa sổ và CĐKT đúng hạn', 100, 'Chuẩn xác', 100, 'Đồng ý', 100, 'Chốt', 100, 'Hoàn thành tốt', '5_DA_CHOT', 'Trịnh Đức Anh', '31/01/2027 17:00']
+  ];
+  sh.getRange(2, 1, sample.length, headers.length).setValues(sample);
 
   sh.getRange("A2:C100").setHorizontalAlignment("center");
   sh.getRange("E2:E100").setHorizontalAlignment("center");
-  sh.getRange("I2:J100").setNumberFormat("0.0%").setHorizontalAlignment("right");
-  sh.getRange("K2:K100").setNumberFormat("0.0").setHorizontalAlignment("right");
+  sh.getRange("H2:H100").setNumberFormat("0.0%").setHorizontalAlignment("right");
+  sh.getRange("I2:I100").setHorizontalAlignment("right");
+  sh.getRange("K2:K100").setHorizontalAlignment("right");
+  sh.getRange("M2:M100").setHorizontalAlignment("right");
+  sh.getRange("O2:O100").setHorizontalAlignment("right");
+  sh.getRange("Q2:Q100").setHorizontalAlignment("right");
+  sh.getRange("R2:S100").setHorizontalAlignment("center");
+  sh.getRange("U2:U100").setHorizontalAlignment("center");
 }
 
 // =========================================================================================
@@ -328,42 +390,41 @@ function taoSheet_BL_LICHSU(ss) {
 }
 
 // =========================================================================================
-// 8. SHEET: TAIKHOAN (Quản lý Tài khoản & Phân quyền)
+// 8. SHEET: TAIKHOAN (Quản lý Tài khoản & Phân quyền 360)
 // =========================================================================================
 function taoSheet_TAIKHOAN(ss) {
   let sh = ss.getSheetByName('TAIKHOAN') || ss.insertSheet('TAIKHOAN');
   const headers = [
-    'Mã tài khoản', 'Mã NV', 'Họ và tên', 'Tên đăng nhập', 'Mật khẩu Hash (SHA-256)',
-    'Đổi pass lần đầu', 'Vai trò (Role)', 'Trạng thái', 'Lần login cuối', 'Số lần sai'
+    'Mã tài khoản', 'Tên đăng nhập / Mã NV', 'Họ và tên', 'Mật khẩu mã hóa',
+    'Email', 'Vai trò RBAC', 'Mã NV liên kết', 'Phòng ban phụ trách',
+    'Quyền chi tiết 360', 'Trạng thái', 'Lần đăng nhập cuối', 'Ghi chú'
   ];
-  const widths = [110, 80, 160, 120, 220, 110, 110, 100, 140, 80];
+  const widths = [110, 140, 160, 200, 180, 120, 100, 130, 220, 110, 140, 160];
   formatHeaderAndFreeze(sh, headers, widths, 1, 3);
 
   // Mật khẩu mẫu "YenTho@2027" đã băm SHA-256:
-  // "07c390cb30e1bb18b824346e4c703d1544321b0b534b150931bb484d8b63e9f4"
   const defaultHash = "07c390cb30e1bb18b824346e4c703d1544321b0b534b150931bb484d8b63e9f4";
 
   const sample = [
-    ['ACC_NV01', 'NV01', 'Nguyễn Thị Sinh', '0388232844', defaultHash, true, 'NHAN_VIEN', 'HOẠT ĐỘNG', '', 0],
-    ['ACC_NV02', 'NV02', 'Nguyễn Thị Mến', '0349547779', defaultHash, true, 'KE_TOAN', 'HOẠT ĐỘNG', '', 0],
-    ['ACC_NV03', 'NV03', 'Nguyễn Văn Sơn', '0941562789', defaultHash, true, 'ADMIN', 'HOẠT ĐỘNG', '', 0],
-    ['ACC_NV04', 'NV04', 'Bùi Thị Thảo', '0839062825', defaultHash, true, 'KIEM_SOAT', 'HOẠT ĐỘNG', '', 0],
-    ['ACC_NV05', 'NV05', 'Nguyễn Hữu Nhân', '0949116817', defaultHash, true, 'NHAN_VIEN', 'HOẠT ĐỘNG', '', 0],
-    ['ACC_NV06', 'NV06', 'Trịnh Thị Hiền', '0948784333', defaultHash, true, 'KIEM_SOAT', 'HOẠT ĐỘNG', '', 0],
-    ['ACC_NV07', 'NV07', 'Trịnh Đức Anh', '0965122111', defaultHash, true, 'ADMIN', 'HOẠT ĐỘNG', '', 0],
-    ['ACC_NV08', 'NV08', 'Vũ Thị Hiền', '0983502181', defaultHash, true, 'ADMIN', 'HOẠT ĐỘNG', '', 0],
-    ['ACC_NV09', 'NV09', 'Trần Như Huyền', '0985709609', defaultHash, true, 'NHAN_VIEN', 'HOẠT ĐỘNG', '', 0],
-    ['ACC_NV10', 'NV10', 'Hoàng Thị Lan', '0965178666', defaultHash, true, 'KE_TOAN', 'HOẠT ĐỘNG', '', 0],
-    ['ACC_NV11', 'NV11', 'Phạm Thị Thảo', '0965567596', defaultHash, true, 'NHAN_VIEN', 'HOẠT ĐỘNG', '', 0],
-    ['ACC_NV12', 'NV12', 'Lưu Thị Định', '0961007855', defaultHash, true, 'NHAN_VIEN', 'HOẠT ĐỘNG', '', 0]
+    ['ACC_ADMIN', 'admin', 'Trịnh Đức Anh (Chủ tịch HĐQT)', defaultHash, 'ducanht@gmail.com', 'CTHDQT', 'NV07', 'HĐQT', 'ALL:READ,WRITE,APPROVE,CONFIG,AUDIT,PAYROLL,SIMULATION', 'HOẠT ĐỘNG', '', 'Chủ tịch HĐQT - Toàn quyền hệ thống'],
+    ['ACC_NV07', 'NV07', 'Trịnh Đức Anh', defaultHash, 'ducanht@gmail.com', 'CTHDQT', 'NV07', 'HĐQT', 'ALL:READ,WRITE,APPROVE,CONFIG,AUDIT,PAYROLL,SIMULATION', 'HOẠT ĐỘNG', '', 'Chủ tịch HĐQT'],
+    ['ACC_NV03', 'NV03', 'Nguyễn Văn Sơn', defaultHash, 'nguyenvansontdyt@gmail.com', 'GIAM_DOC', 'NV03', 'Điều hành', 'STAFF:VIEW;TIMESHEET:VIEW;KPI:APPROVE;PAYROLL:VIEW;SIMULATION:VIEW', 'HOẠT ĐỘNG', '', 'Giám đốc điều hành - Phê duyệt KPI & Xem bảng lương'],
+    ['ACC_NV02', 'NV02', 'Nguyễn Thị Mến', defaultHash, 'nguyenmen.yt.83@gmail.com', 'KE_TOAN', 'NV02', 'Kế toán', 'STAFF:EDIT;TIMESHEET:EDIT;KPI:VIEW;PAYROLL:CALCULATE,LOCK;REPORT:EXPORT', 'HOẠT ĐỘNG', '', 'Kế toán trưởng - Chấm công & Tính lương'],
+    ['ACC_NV04', 'NV04', 'Bùi Thị Thảo', defaultHash, 'thao.bui0282@gmail.com', 'KIEM_SOAT', 'NV04', 'Kiểm soát', 'STAFF:VIEW;TIMESHEET:VIEW;KPI:VIEW;PAYROLL:AUDIT;REPORT:VIEW', 'HOẠT ĐỘNG', '', 'Trưởng ban kiểm soát'],
+    ['ACC_NV01', 'NV01', 'Nguyễn Thị Sinh', defaultHash, 'Sinhtdyt@gmail.com', 'CBNV', 'NV01', 'Tín dụng', 'SELF:VIEW,EVALUATE_KPI,PAYSLIP,FEEDBACK', 'HOẠT ĐỘNG', '', 'Cán bộ thẩm định tài sản'],
+    ['ACC_NV05', 'NV05', 'Nguyễn Hữu Nhân', defaultHash, 'qtdyentho.huunhan@gmail.com', 'CBNV', 'NV05', 'Tín dụng', 'SELF:VIEW,EVALUATE_KPI,PAYSLIP,FEEDBACK', 'HOẠT ĐỘNG', '', 'Cán bộ tín dụng'],
+    ['ACC_NV06', 'NV06', 'Trịnh Thị Hiền', defaultHash, 'qtdyentho.hienha@gmail.com', 'KIEM_SOAT', 'NV06', 'Kiểm soát', 'STAFF:VIEW;TIMESHEET:VIEW;KPI:VIEW;PAYROLL:AUDIT;REPORT:VIEW', 'HOẠT ĐỘNG', '', 'Kiểm soát viên'],
+    ['ACC_NV08', 'NV08', 'Vũ Thị Hiền', defaultHash, 'qtdyentho.vuhien@gmail.com', 'CTHDQT', 'NV08', 'HĐQT', 'SIMULATION:VIEW;PAYROLL:VIEW;REPORT:VIEW', 'HOẠT ĐỘNG', '', 'Ủy viên HĐQT'],
+    ['ACC_NV09', 'NV09', 'Trần Như Huyền', defaultHash, 'Huyennhutran@gmail.com', 'CBNV', 'NV09', 'Tín dụng', 'SELF:VIEW,EVALUATE_KPI,PAYSLIP,FEEDBACK', 'HOẠT ĐỘNG', '', 'Cán bộ tín dụng'],
+    ['ACC_NV10', 'NV10', 'Hoàng Thị Lan', defaultHash, 'hoanglan1289@gmail.com', 'KE_TOAN', 'NV10', 'Kế toán', 'TIMESHEET:EDIT;PAYROLL:VIEW;SELF:VIEW', 'HOẠT ĐỘNG', '', 'Kế toán viên thanh toán'],
+    ['ACC_NV11', 'NV11', 'Phạm Thị Thảo', defaultHash, 'qtdyentho.phamthao@gmail.com', 'CBNV', 'NV11', 'Kế toán', 'SELF:VIEW,EVALUATE_KPI,PAYSLIP,FEEDBACK', 'HOẠT ĐỘNG', '', 'Thủ quỹ'],
+    ['ACC_NV12', 'NV12', 'Lưu Thị Định', defaultHash, 'qtdyentho.luudinh@gmail.com', 'CBNV', 'NV12', 'Tín dụng', 'SELF:VIEW,EVALUATE_KPI,PAYSLIP,FEEDBACK', 'HOẠT ĐỘNG', '', 'Cán bộ tín dụng']
   ];
   sh.getRange(2, 1, sample.length, headers.length).setValues(sample);
 
   sh.getRange("A2:B100").setHorizontalAlignment("center");
-  sh.getRange("D2:D100").setHorizontalAlignment("center");
   sh.getRange("F2:H100").setHorizontalAlignment("center");
-  sh.getRange("I2:I100").setHorizontalAlignment("center");
-  sh.getRange("J2:J100").setHorizontalAlignment("right");
+  sh.getRange("J2:L100").setHorizontalAlignment("center");
 }
 
 // =========================================================================================
@@ -454,22 +515,22 @@ function taoSheet_DM_PHU_CAP(ss) {
   const headers = [
     'Mã khoản', 'Tên khoản phụ cấp / khoán', 'Phân loại chi', 'Cột bảng lương',
     'Tính BHXH?', 'Tính Thuế TNCN?', 'Mức miễn thuế tối đa ₫', 'Phương thức tính',
-    'Căn cứ pháp lý & Quy chế', 'Ghi chú nghiệp vụ'
+    'Căn cứ pháp lý & Quy chế', 'Ghi chú nghiệp vụ',
+    'Nhóm áp dụng', 'Bật/tắt', 'Mức cố định ₫', 'Điều kiện hưởng', 'Tính vào bảng lương tổng'
   ];
-  const widths = [110, 200, 140, 130, 95, 120, 150, 140, 220, 200];
+  const widths = [110, 200, 140, 130, 95, 120, 150, 140, 220, 200, 110, 80, 120, 160, 140];
   formatHeaderAndFreeze(sh, headers, widths, 1, 2);
 
   const sample = [
-    ['AN_TRUA', 'Tiền ăn giữa ca (ăn trưa)', 'KHOAN_CONG_VU', 'Ăn trưa', 'KHÔNG', 'THEO_DINH_MUC', 730000, 'THEO_NGAY_CONG', 'TT 111/2013 & TT 59/2015', 'Miễn BHXH; Miễn thuế tối đa 730k/tháng, phần vượt chịu thuế'],
-    ['XANG_XE', 'Hỗ trợ xăng xe đi lại', 'KHOAN_CONG_VU', 'Xăng xe', 'KHÔNG', 'KHÔNG', 0, 'CO_DINH_THANG', 'TT 111/2013 & Quy chế Quỹ', 'Miễn BHXH; Miễn thuế TNCN nếu có quy chế khoán phục vụ công vụ'],
-    ['DIEN_THOAI', 'Cước điện thoại liên lạc', 'KHOAN_CONG_VU', 'Điện thoại', 'KHÔNG', 'KHÔNG', 0, 'CO_DINH_THANG', 'TT 111/2013 & Quy chế Quỹ', 'Miễn BHXH; Miễn thuế TNCN khoán liên lạc nghiệp vụ'],
-    ['TRANG_PHUC', 'Trang phục công tác', 'KHOAN_CONG_VU', 'Trang phục', 'KHÔNG', 'THEO_DINH_MUC', 416666, 'CO_DINH_THANG', 'TT 111/2013/TT-BTC', 'Miễn BHXH; Tiền mặt miễn tối đa 5tr/năm (~416.666 ₫/tháng)'],
-    ['CONG_TAC_PHI', 'Công tác phí / Lưu trú', 'KHOAN_CONG_VU', 'Công tác phí', 'KHÔNG', 'KHÔNG', 0, 'THUC_TE_PHAT_SINH', 'TT 111/2013/TT-BTC', 'Miễn BHXH; Miễn thuế TNCN theo chứng từ thực tế / giấy đi đường'],
-    ['KHOAN_KHAC', 'Khoán khác / Hỗ trợ', 'KHOAN_CONG_VU', 'Khoán khác', 'KHÔNG', 'THEO_QUY_CHE', 0, 'THUC_TE_PHAT_SINH', 'Quy chế Quỹ', 'Miễn BHXH; Xét thuế TNCN theo tính chất khoản chi'],
-    ['PHU_CAP_TN', 'Phụ cấp chức vụ, trách nhiệm', 'PHU_CAP_LUONG', 'Phụ cấp trách nhiệm', 'CÓ', 'CÓ', 0, 'CO_DINH_THANG', 'Luật BHXH 2024 & TT 111/2013', 'Tính đóng BHXH; Chịu 100% Thuế TNCN'],
-    ['THU_LAO_QT', 'Thù lao HĐQT / BKS', 'THU_LAO_QUAN_TRI', 'Thù lao QTK', 'KHÔNG', 'CÓ', 0, 'CO_DINH_THANG', 'Luật BHXH & TT 111/2013', 'Không đóng BHXH; Chịu 100% Thuế TNCN'],
-    ['LUONG_KPI', 'Tiền lương hiệu quả KPI', 'LUONG_HIEU_QUA', 'Lương KPI', 'KHÔNG', 'CÓ', 0, 'THEO_KET_QUA_KPI', 'TT 111/2013/TT-BTC', 'Không đóng BHXH; Chịu 100% Thuế TNCN'],
-    ['TIEN_THUONG', 'Tiền thưởng thi đua, lễ tết', 'TIEN_THUONG', 'Tiền thưởng', 'KHÔNG', 'CÓ', 0, 'THUC_TE_PHAT_SINH', 'Luật BHXH & TT 111/2013', 'Không đóng BHXH; Chịu 100% Thuế TNCN']
+    ['AN_TRUA', 'Tiền ăn giữa ca (ăn trưa)', 'KHOAN_CONG_VU', 'Ăn trưa', 'KHÔNG', 'THEO_DINH_MUC', 730000, 'THEO_NGAY_CONG', 'TT 111/2013 & TT 59/2015', 'Miễn BHXH; Miễn thuế tối đa 730k/tháng, phần vượt chịu thuế', 'TAT_CA', 'BẬT', 1000000, 'Theo ngày công thực tế', 'CÓ'],
+    ['XANG_XE', 'Hỗ trợ xăng xe đi lại', 'KHOAN_CONG_VU', 'Xăng xe', 'KHÔNG', 'KHÔNG', 0, 'CO_DINH_THANG', 'TT 111/2013 & Quy chế Quỹ', 'Miễn BHXH; Miễn thuế TNCN nếu có quy chế khoán phục vụ công vụ', 'TAT_CA', 'BẬT', 400000, 'Khoán đi lại kiểm tra địa bàn', 'CÓ'],
+    ['DIEN_THOAI', 'Cước điện thoại liên lạc', 'KHOAN_CONG_VU', 'Điện thoại', 'KHÔNG', 'KHÔNG', 0, 'CO_DINH_THANG', 'TT 111/2013 & Quy chế Quỹ', 'Miễn BHXH; Miễn thuế TNCN khoán liên lạc nghiệp vụ', 'TAT_CA', 'BẬT', 300000, 'Khoán liên lạc điều hành', 'CÓ'],
+    ['TRANG_PHUC', 'Trang phục công tác', 'KHOAN_CONG_VU', 'Trang phục', 'KHÔNG', 'THEO_DINH_MUC', 416666, 'CO_DINH_THANG', 'TT 111/2013/TT-BTC', 'Miễn BHXH; Tiền mặt miễn tối đa 5tr/năm (~416.666 ₫/tháng)', 'TAT_CA', 'BẬT', 500000, 'Chuẩn hóa đồng phục Quỹ', 'CÓ'],
+    ['CONG_TAC_PHI', 'Công tác phí / Lưu trú', 'KHOAN_CONG_VU', 'Công tác phí', 'KHÔNG', 'KHÔNG', 0, 'THUC_TE_PHAT_SINH', 'TT 111/2013/TT-BTC', 'Miễn BHXH; Miễn thuế TNCN theo chứng từ thực tế / giấy đi đường', 'TAT_CA', 'BẬT', 0, 'Thực tế phát sinh', 'CÓ'],
+    ['KHOAN_HDQT', 'Khoán công vụ HĐQT (xăng, ĐT, tiếp khách, đại hội)', 'KHOAN_QUAN_TRI', 'Khoán HĐQT', 'KHÔNG', 'CÓ', 0, 'CO_DINH_THANG', 'Luật các TCTD & Quy chế Quỹ', 'Tính vào bảng lương tổng; Không đóng BHXH', 'HDQT', 'BẬT', 3000000, 'Thành viên HĐQT, BKS', 'CÓ'],
+    ['PHU_CAP_TN', 'Phụ cấp chức vụ, trách nhiệm', 'PHU_CAP_LUONG', 'Phụ cấp trách nhiệm', 'CÓ', 'CÓ', 0, 'CO_DINH_THANG', 'Luật BHXH 2024 & TT 111/2013', 'Tính đóng BHXH; Chịu 100% Thuế TNCN', 'LANH_DAO', 'BẬT', 0, 'Theo chức danh bổ nhiệm', 'CÓ'],
+    ['LUONG_KPI', 'Tiền lương hiệu quả KPI', 'LUONG_HIEU_QUA', 'Lương KPI', 'KHÔNG', 'CÓ', 0, 'THEO_KET_QUA_KPI', 'TT 111/2013/TT-BTC', 'Không đóng BHXH; Chịu 100% Thuế TNCN', 'TAT_CA', 'BẬT', 0, 'Theo kết quả đánh giá 5 bước', 'CÓ'],
+    ['TIEN_THUONG', 'Tiền thưởng thi đua, lễ tết', 'TIEN_THUONG', 'Tiền thưởng', 'KHÔNG', 'CÓ', 0, 'THUC_TE_PHAT_SINH', 'Luật BHXH & TT 111/2013', 'Không đóng BHXH; Chịu 100% Thuế TNCN', 'TAT_CA', 'BẬT', 0, 'Theo quyết định thi đua', 'CÓ']
   ];
   sh.getRange(2, 1, sample.length, headers.length).setValues(sample);
 
@@ -477,6 +538,9 @@ function taoSheet_DM_PHU_CAP(ss) {
   sh.getRange("C2:F100").setHorizontalAlignment("center");
   sh.getRange("H2:H100").setHorizontalAlignment("center");
   sh.getRange("G2:G100").setNumberFormat('#,##0 "₫"').setHorizontalAlignment("right");
+  sh.getRange("K2:L100").setHorizontalAlignment("center");
+  sh.getRange("M2:M100").setNumberFormat('#,##0 "₫"').setHorizontalAlignment("right");
+  sh.getRange("O2:O100").setHorizontalAlignment("center");
 }
 
 // =========================================================================================
@@ -509,6 +573,171 @@ function taoSheet_LS_KHOAN(ss) {
   sh.getRange("G2:I100").setHorizontalAlignment("center");
   sh.getRange("K2:K100").setHorizontalAlignment("center");
   sh.getRange("N2:N100").setHorizontalAlignment("center");
+}
+
+// =========================================================================================
+// 14. SHEET: DM_BAC_LUONG (Bảng Lương 5 Bậc Chức Danh Theo Năm Đảm Nhiệm)
+// =========================================================================================
+function taoSheet_DM_BAC_LUONG(ss) {
+  let sh = ss.getSheetByName('DM_BAC_LUONG') || ss.insertSheet('DM_BAC_LUONG');
+  const headers = [
+    'Mã vị trí', 'Tên chức danh', 'Bậc', 'Loại bậc', 'Hệ số', 'Lương ngạch bậc (CB 2340K)',
+    'Số năm giữ bậc yêu cầu', 'Ghi chú', 'Ngày hiệu lực'
+  ];
+  const widths = [100, 180, 70, 110, 80, 160, 140, 200, 110];
+  formatHeaderAndFreeze(sh, headers, widths, 1, 2);
+
+  // 10 chức danh x 5 bậc = 50 dòng chuẩn hóa
+  const LCB = 2340000;
+  const positionsScale = [
+    { ma: 'P01', ten: 'Chủ tịch HĐQT', heSo: [4.80, 5.00, 5.20, 5.40, 5.60] },
+    { ma: 'P02', ten: 'Giám đốc', heSo: [4.40, 4.60, 4.80, 5.00, 5.20] },
+    { ma: 'P03', ten: 'Phó Giám đốc', heSo: [3.90, 4.10, 4.30, 4.50, 4.70] },
+    { ma: 'P04', ten: 'Trưởng BKS', heSo: [3.70, 3.90, 4.10, 4.30, 4.50] },
+    { ma: 'P05', ten: 'Kế toán trưởng', heSo: [3.60, 3.80, 4.00, 4.20, 4.40] },
+    { ma: 'P06', ten: 'Ủy viên HĐQT', heSo: [3.20, 3.40, 3.60, 3.80, 4.00] },
+    { ma: 'P07', ten: 'Kiểm soát viên', heSo: [3.00, 3.20, 3.40, 3.60, 3.80] },
+    { ma: 'P08', ten: 'Cán bộ tín dụng', heSo: [2.60, 2.85, 3.10, 3.30, 3.50] },
+    { ma: 'P09', ten: 'Kế toán viên', heSo: [2.40, 2.65, 2.90, 3.15, 3.40] },
+    { ma: 'P10', ten: 'Bảo vệ - Thủ quỹ', heSo: [1.90, 2.10, 2.30, 2.50, 2.70] }
+  ];
+
+  const sample = [];
+  positionsScale.forEach(p => {
+    p.heSo.forEach((hs, idx) => {
+      const bac = idx + 1;
+      const soNamYeuCau = idx * 3; // 3 năm/bậc
+      sample.push([
+        p.ma,
+        p.ten,
+        bac,
+        'BAC_THUONG',
+        hs,
+        Math.round(hs * LCB),
+        soNamYeuCau === 0 ? 'Mới đảm nhiệm' : `${soNamYeuCau} năm đảm nhiệm vị trí`,
+        bac === 5 ? 'Bậc trần (sau bậc 5 chuyển vượt khung chung toàn quỹ)' : `Bậc ngạch ${bac}`,
+        '01/01/2027'
+      ]);
+    });
+  });
+
+  sh.getRange(2, 1, sample.length, headers.length).setValues(sample);
+  sh.getRange("A2:A100").setHorizontalAlignment("center");
+  sh.getRange("C2:D100").setHorizontalAlignment("center");
+  sh.getRange("E2:E100").setHorizontalAlignment("right").setNumberFormat("0.00");
+  sh.getRange("F2:F100").setHorizontalAlignment("right").setNumberFormat('#,##0 "₫"');
+  sh.getRange("G2:G100").setHorizontalAlignment("center");
+  sh.getRange("I2:I100").setHorizontalAlignment("center");
+}
+
+// =========================================================================================
+// 15. SHEET: DM_THAM_SO_LUONG (Tham Số Lương Pháp Lý & Quy Chế Quỹ)
+// =========================================================================================
+function taoSheet_DM_THAM_SO_LUONG(ss) {
+  let sh = ss.getSheetByName('DM_THAM_SO_LUONG') || ss.insertSheet('DM_THAM_SO_LUONG');
+  const headers = [
+    'Nhóm tham số', 'Mã tham số', 'Tên tham số', 'Giá trị số', 'Giá trị chuỗi',
+    'Đơn vị', 'Từ ngày hiệu lực', 'Đến ngày', 'Căn cứ pháp lý', 'Ghi chú'
+  ];
+  const widths = [130, 160, 220, 120, 120, 90, 110, 110, 220, 250];
+  formatHeaderAndFreeze(sh, headers, widths, 1, 2);
+
+  const sample = [
+    ['LƯƠNG_CƠ_SỞ', 'LUONG_CO_SO', 'Mức lương cơ sở chuẩn', 2340000, '', '₫/tháng', '01/07/2024', '31/12/2099', 'Nghị định 73/2024/NĐ-CP', 'Căn cứ tính hệ số lương, trần BHXH, đoàn phí'],
+    ['BHXH_NLĐ', 'BHXH_NLD', 'Tỷ lệ BHXH người lao động đóng', 0.08, '8%', '%', '01/01/2026', '31/12/2099', 'Luật BHXH 2024', 'Trừ vào lương hàng tháng'],
+    ['BHXH_NLĐ', 'BHYT_NLD', 'Tỷ lệ BHYT người lao động đóng', 0.015, '1.5%', '%', '01/01/2026', '31/12/2099', 'Luật BHYT', 'Trừ vào lương hàng tháng'],
+    ['BHXH_NLĐ', 'BHTN_NLD', 'Tỷ lệ BHTN người lao động đóng', 0.01, '1%', '%', '01/01/2026', '31/12/2099', 'Luật Việc làm', 'Trừ vào lương hàng tháng'],
+    ['BHXH_QUỸ', 'BHXH_DON_VI', 'Tỷ lệ BHXH đơn vị sử dụng LĐ đóng', 0.175, '17.5%', '%', '01/01/2026', '31/12/2099', 'Luật BHXH 2024', 'Quỹ chi trả, tính vào chi phí'],
+    ['BHXH_QUỸ', 'BHYT_DON_VI', 'Tỷ lệ BHYT đơn vị sử dụng LĐ đóng', 0.03, '3%', '%', '01/01/2026', '31/12/2099', 'Luật BHYT', 'Quỹ chi trả, tính vào chi phí'],
+    ['BHXH_QUỸ', 'BHTN_DON_VI', 'Tỷ lệ BHTN đơn vị sử dụng LĐ đóng', 0.01, '1%', '%', '01/01/2026', '31/12/2099', 'Luật Việc làm', 'Quỹ chi trả, tính vào chi phí'],
+    ['BHXH_QUỸ', 'BHXH_TRAN_LAN', 'Mức trần đóng BHXH (số lần LCB)', 20, '20 lần', 'lần LCB', '01/07/2024', '31/12/2099', 'Luật BHXH', 'Tối đa 20 lần mức lương cơ sở (46.800.000 ₫)'],
+    ['THUẾ_TNCN', 'TNCN_GIAM_TRU_BAN_THAN', 'Mức giảm trừ gia cảnh bản thân', 11000000, '', '₫/tháng', '01/07/2020', '31/12/2099', 'Nghị quyết 954/2020/UBTVQH14', 'Giảm trừ trước khi tính thuế TNCN'],
+    ['THUẾ_TNCN', 'TNCN_GIAM_TRU_NPT', 'Mức giảm trừ mỗi người phụ thuộc', 4400000, '', '₫/người/tháng', '01/07/2020', '31/12/2099', 'Nghị quyết 954/2020/UBTVQH14', 'Theo hồ sơ đăng ký NPT hợp lệ'],
+    ['THÂM_NIÊN', 'THAM_NIEN_CT_PHAN_TRAM', 'Tỷ lệ thâm niên công tác mỗi năm', 5, '5%/năm', '%/năm', '01/01/2027', '31/12/2099', 'Quy chế lương QTDND Yên Thọ', 'Tính từ ngày vào làm việc tại Quỹ'],
+    ['THÂM_NIÊN', 'THAM_NIEN_CT_TOI_DA', 'Tỷ lệ thâm niên công tác tối đa', 40, '40%', '%', '01/01/2027', '31/12/2099', 'Quy chế lương QTDND Yên Thọ', 'Trần thâm niên công tác không quá 40%'],
+    ['THÂM_NIÊN', 'THAM_NIEN_CV_PHAN_TRAM', 'Tỷ lệ thâm niên chức vụ mỗi năm', 5, '5%/năm', '%/năm', '01/01/2027', '31/12/2099', 'Quy chế lương QTDND Yên Thọ', 'Tính từ ngày đảm nhiệm chức vụ quy đổi'],
+    ['THÂM_NIÊN', 'THAM_NIEN_CV_TOI_DA', 'Tỷ lệ thâm niên chức vụ tối đa', 30, '30%', '%', '01/01/2027', '31/12/2099', 'Quy chế lương QTDND Yên Thọ', 'Trần thâm niên chức vụ không quá 30%'],
+    ['VƯỢT_KHUNG', 'VUOT_KHUNG_CHUNG_TOAN_QUY_PCT', 'Tỷ lệ vượt khung mỗi lần (toàn Quỹ)', 5, '5%/lần', '%/lần', '01/01/2027', '31/12/2099', 'Quy chế lương QTDND Yên Thọ', 'Sau 5 bậc ngạch, số vượt khung áp dụng chung toàn Quỹ'],
+    ['VƯỢT_KHUNG', 'VUOT_KHUNG_CHU_KY_NAM', 'Chu kỳ nâng vượt khung (năm)', 3, '3 năm', 'năm', '01/01/2027', '31/12/2099', 'Quy chế lương QTDND Yên Thọ', 'Sau khi đạt Bậc 5, cứ 3 năm được tính 1 lần vượt khung'],
+    ['VƯỢT_KHUNG', 'VUOT_KHUNG_TOI_DA_LAN', 'Số lần vượt khung tối đa', 8, '8 lần (40%)', 'lần', '01/01/2027', '31/12/2099', 'Quy chế lương QTDND Yên Thọ', 'Tối đa 8 lần = 40%'],
+    ['NÂNG_BẬC', 'KY_NANG_BAC', 'Kỳ hạn xét nâng bậc ngạch lương', 3, '3 năm', 'năm', '01/01/2027', '31/12/2099', 'Quy chế lương QTDND Yên Thọ', 'Kỳ nâng bậc tiêu chuẩn 3 năm hoàn thành tốt nhiệm vụ']
+  ];
+
+  sh.getRange(2, 1, sample.length, headers.length).setValues(sample);
+  sh.getRange("A2:B100").setHorizontalAlignment("center");
+  sh.getRange("D2:D100").setHorizontalAlignment("right");
+  sh.getRange("E2:H100").setHorizontalAlignment("center");
+}
+
+// =========================================================================================
+// 16. SHEET: DM_CONG_THUC (Công Thức Thành Phần Lương & Quy Tắc Thuế / BHXH)
+// =========================================================================================
+function taoSheet_DM_CONG_THUC(ss) {
+  let sh = ss.getSheetByName('DM_CONG_THUC') || ss.insertSheet('DM_CONG_THUC');
+  const headers = [
+    'Mã CT', 'Tên thành phần', 'Thứ tự', 'Cách tính', 'Tính BHXH',
+    'Tính Thuế', 'Miễn thuế tối đa', 'Phạm vi áp dụng', 'Bật/tắt', 'Ghi chú'
+  ];
+  const widths = [100, 180, 70, 220, 95, 95, 140, 140, 80, 220];
+  formatHeaderAndFreeze(sh, headers, widths, 1, 2);
+
+  const sample = [
+    ['CT01_LNB', 'Lương ngạch bậc', 1, 'LCB * Hệ số bậc * Tỷ lệ công', 'CÓ', 'CÓ', 0, 'TOAN_QUY', 'BẬT', 'Thành phần lương cơ bản theo 5 bậc chức danh'],
+    ['CT02_TNCT', 'Thâm niên công tác', 2, 'LNB * Số năm CT * %TN_CT', 'CÓ', 'CÓ', 0, 'TOAN_QUY', 'BẬT', '5%/năm, tối đa 40%'],
+    ['CT03_TNCV', 'Thâm niên chức vụ', 3, 'LNB * Số năm CV * %TN_CV', 'CÓ', 'CÓ', 0, 'TOAN_QUY', 'BẬT', 'Tính từ ngày đảm nhiệm chức vụ quy đổi'],
+    ['CT04_VK', 'Vượt khung chung toàn quỹ', 4, 'LNB * Số lần VK * 5%', 'CÓ', 'CÓ', 0, 'TOAN_QUY', 'BẬT', 'Sau 5 bậc ngạch, áp dụng chung toàn Quỹ'],
+    ['CT05_PCTN', 'Phụ cấp chức vụ, trách nhiệm', 5, 'Theo định mức chức danh vị trí', 'CÓ', 'CÓ', 0, 'LANH_DAO', 'BẬT', 'Chủ tịch, GĐ, KTT, TBKS, UV HĐQT'],
+    ['CT06_ANTRUA', 'Ăn trưa giữa ca', 6, 'Theo ngày công thực tế', 'KHÔNG', 'THEO_DINH_MUC', 730000, 'TOAN_QUY', 'BẬT', 'Miễn thuế tối đa 730k/tháng'],
+    ['CT07_XANGXE', 'Xăng xe đi lại', 7, 'Định mức tháng theo chức danh', 'KHÔNG', 'KHÔNG', 0, 'TOAN_QUY', 'BẬT', 'Khoán phục vụ công vụ liên xã'],
+    ['CT08_DIENTHOAI', 'Cước điện thoại liên lạc', 8, 'Định mức tháng theo chức danh', 'KHÔNG', 'KHÔNG', 0, 'TOAN_QUY', 'BẬT', 'Khoán cước viễn thông điều hành'],
+    ['CT09_TRANGPHUC', 'Trang phục công tác', 9, 'Định mức tháng', 'KHÔNG', 'THEO_DINH_MUC', 416666, 'TOAN_QUY', 'BẬT', 'Tiền mặt miễn tối đa 5tr/năm'],
+    ['CT10_KHOAN_HDQT', 'Khoán công vụ HĐQT', 10, 'Khoán HĐQT (xăng, ĐT, họp, đại hội)', 'KHÔNG', 'CÓ', 0, 'HDQT', 'BẬT', 'Tính vào bảng lương tổng toàn Quỹ'],
+    ['CT11_KPI', 'Lương hiệu quả KPI', 11, 'Lương cố định * Hệ số KPI * % đạt', 'KHÔNG', 'CÓ', 0, 'TOAN_QUY', 'BẬT', 'Đánh giá theo quy trình 5 bước'],
+    ['CT12_THUONG', 'Tiền thưởng thi đua', 12, 'Theo quyết định khen thưởng', 'KHÔNG', 'CÓ', 0, 'TOAN_QUY', 'BẬT', 'Thưởng lễ tết, thi đua'],
+    ['CT13_THUA_BHXH', 'Tiền thừa BHXH hưởng thêm', 13, 'Chênh lệch Quỹ trả - Mức cá nhân đóng', 'KHÔNG', 'CÓ', 0, 'TOAN_QUY', 'BẬT', 'Cộng vào thu nhập hưởng thêm']
+  ];
+
+  sh.getRange(2, 1, sample.length, headers.length).setValues(sample);
+  sh.getRange("A2:A100").setHorizontalAlignment("center");
+  sh.getRange("C2:C100").setHorizontalAlignment("center");
+  sh.getRange("E2:F100").setHorizontalAlignment("center");
+  sh.getRange("G2:G100").setHorizontalAlignment("right").setNumberFormat('#,##0 "₫"');
+  sh.getRange("H2:I100").setHorizontalAlignment("center");
+}
+
+// =========================================================================================
+// 17. SHEET: KQ_LUONG_THANG (Kết Quả Tính Lương Tháng 22 Thành Phần)
+// =========================================================================================
+function taoSheet_KQ_LUONG_THANG(ss) {
+  let sh = ss.getSheetByName('KQ_LUONG_THANG') || ss.insertSheet('KQ_LUONG_THANG');
+  const headers = [
+    'Kỳ lương', 'Mã NV', 'Họ và tên', 'Chức danh', 'Bậc', 'Hệ số', 'Ngày công chuẩn', 'Ngày công thực',
+    'Lương ngạch bậc', 'Thâm niên CT', 'Thâm niên CV', 'Vượt khung', 'Phụ cấp TN',
+    'Ăn trưa', 'Xăng xe', 'Điện thoại', 'Trang phục', 'Khoán khác', 'Khoán HĐQT',
+    'Điểm KPI', 'Lương KPI', 'Tiền thưởng', 'Tiền thừa BHXH', 'Tổng Gross', 'Căn cứ đóng BHXH',
+    'BHXH NLĐ 8%', 'BHYT NLĐ 1.5%', 'BHTN NLĐ 1%', 'Tổng khấu trừ BH',
+    'Thu nhập chịu thuế', 'Giảm trừ bản thân', 'Giảm trừ NPT', 'Thu nhập tính thuế', 'Thuế TNCN',
+    'Thực lĩnh Net', 'BHXH Quỹ 17.5%', 'BHYT Quỹ 3%', 'BHTN Quỹ 1%', 'Tổng chi phí Quỹ',
+    'Trạng thái', 'Người tạo', 'Thời gian tạo'
+  ];
+  const widths = [
+    85, 75, 160, 130, 55, 65, 80, 80,
+    115, 110, 110, 110, 110,
+    100, 100, 100, 100, 100, 110,
+    75, 115, 110, 110, 130, 120,
+    95, 95, 95, 115,
+    115, 110, 100, 115, 110,
+    130, 100, 95, 95, 130,
+    85, 100, 140
+  ];
+  formatHeaderAndFreeze(sh, headers, widths, 1, 3);
+
+  sh.getRange("A2:B100").setHorizontalAlignment("center");
+  sh.getRange("E2:H100").setHorizontalAlignment("center");
+  sh.getRange("I2:S100").setHorizontalAlignment("right").setNumberFormat('#,##0 "₫"');
+  sh.getRange("T2:T100").setHorizontalAlignment("center");
+  sh.getRange("U2:AN100").setHorizontalAlignment("right").setNumberFormat('#,##0 "₫"');
+  sh.getRange("AO2:AQ100").setHorizontalAlignment("center");
 }
 
 /**

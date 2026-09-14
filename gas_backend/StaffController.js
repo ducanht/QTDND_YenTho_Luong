@@ -37,15 +37,34 @@ function getStaffList() {
     });
   }
 
-  const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
-  const bhxhColIdx = headers.findIndex(h => String(h).trim() === 'Mức đóng BHXH');
+  const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(h => String(h).trim());
+  const colIndexMap = {};
+  headers.forEach((h, idx) => { colIndexMap[h] = idx; });
+
   const values = sh.getRange(2, 1, sh.getLastRow() - 1, sh.getLastColumn()).getValues();
   return values.map(r => {
     const maNV = String(r[0] || '').trim();
     const sal = salaryMap[maNV] || {};
-    const bhxhVal = (bhxhColIdx !== -1 && r[bhxhColIdx] !== undefined && r[bhxhColIdx] !== '') 
-      ? Number(r[bhxhColIdx]) 
-      : (Number(r[21]) || Number(sal.mucDongBhxh) || 0);
+
+    const getVal = (colName) => {
+      const idx = colIndexMap[colName];
+      return (idx !== undefined && idx < r.length) ? r[idx] : undefined;
+    };
+
+    const fmtDate = (val) => {
+      if (!val) return '';
+      if (val instanceof Date) return Utilities.formatDate(val, 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy');
+      return String(val).trim();
+    };
+
+    const bhxhVal = Number(getVal('Mức đóng BHXH')) || Number(r[21]) || Number(sal.mucDongBhxh) || 0;
+    const bacVal = Number(getVal('Bậc lương')) || Number(sal.bac) || 1;
+    const namVKVal = Number(getVal('Năm vượt khung')) || 0;
+    const ngayDamNhiemVal = fmtDate(getVal('Ngày đảm nhiệm chức vụ'));
+    const thamNienQuyDoiVal = Number(getVal('Thâm niên CV quy đổi (năm)')) || 0;
+    const linkHDLDVal = String(getVal('Link File HĐLĐ') || '').trim();
+    const linkPhuLucVal = String(getVal('Link File Phụ lục HĐLĐ') || '').trim();
+    const linkQDVal = String(getVal('Link File Quyết định') || '').trim();
 
     return {
       maNV: maNV,
@@ -54,13 +73,13 @@ function getStaffList() {
       phongBan: String(r[3] || '').trim(),
       dienThoai: String(r[4] || '').trim(),
       email: String(r[5] || '').trim(),
-      ngaySinh: r[6] instanceof Date ? Utilities.formatDate(r[6], 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy') : String(r[6] || ''),
+      ngaySinh: fmtDate(r[6]),
       gioiTinh: String(r[7] || '').trim(),
       cccd: String(r[8] || '').trim(),
-      ngayCapCCCD: r[9] instanceof Date ? Utilities.formatDate(r[9], 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy') : String(r[9] || ''),
+      ngayCapCCCD: fmtDate(r[9]),
       noiCapCCCD: String(r[10] || '').trim(),
       diaChi: String(r[11] || '').trim(),
-      ngayVaoLam: r[12] instanceof Date ? Utilities.formatDate(r[12], 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy') : String(r[12] || ''),
+      ngayVaoLam: fmtDate(r[12]),
       trangThai: String(r[13] || 'ĐANG LÀM').trim(),
       soNPT: Number(r[14]) || 0,
       soTaiKhoanNH: String(r[15] || '').trim(),
@@ -69,14 +88,20 @@ function getStaffList() {
       soSoBHXH: String(r[18] || '').trim(),
       linkAnhThe: String(r[19] || '').trim(),
       ghiChu: String(r[20] || '').trim(),
-      // Các trường lương & phụ cấp kế thừa từ LS_CONGTAC
-      bac: Number(sal.bac) || 1,
+      // Các trường lương & phụ cấp & chức vụ V3
+      bac: bacVal,
       heSoLuong: Number(sal.heSoLuong) || 0,
       maViTri: sal.maViTri || '',
       phuCapTN: Number(sal.phuCapTN) || 0,
       mucDongBhxh: bhxhVal,
       soQD: sal.soQD || '',
-      ngayQD: sal.ngayQD || ''
+      ngayQD: sal.ngayQD || '',
+      ngayDamNhiemCV: ngayDamNhiemVal,
+      thamNienQuyDoi: thamNienQuyDoiVal,
+      namVuotKhung: namVKVal,
+      linkHDLD: linkHDLDVal,
+      linkPhuLuc: linkPhuLucVal,
+      linkQD: linkQDVal
     };
   });
 }
@@ -94,6 +119,10 @@ function saveStaff(staffData) {
   lock.waitLock(10000);
 
   try {
+    const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(h => String(h).trim());
+    const colIndexMap = {};
+    headers.forEach((h, idx) => { colIndexMap[h] = idx + 1; });
+
     const lastRow = sh.getLastRow();
     let rowIndex = -1;
 
@@ -107,36 +136,51 @@ function saveStaff(staffData) {
       }
     }
 
-    const rowData = [
-      staffData.maNV,
-      staffData.hoTen,
-      staffData.chucDanh || '',
-      staffData.phongBan || '',
-      staffData.dienThoai || '',
-      staffData.email || '',
-      staffData.ngaySinh || '',
-      staffData.gioiTinh || '',
-      staffData.cccd || '',
-      staffData.ngayCapCCCD || '',
-      staffData.noiCapCCCD || '',
-      staffData.diaChi || '',
-      staffData.ngayVaoLam || '',
-      staffData.trangThai || 'ĐANG LÀM',
-      Number(staffData.soNPT) || 0,
-      staffData.soTaiKhoanNH || '',
-      staffData.tenNganHang || 'Agribank Quý Lộc',
-      staffData.mst || '',
-      staffData.soSoBHXH || '',
-      staffData.linkAnhThe || '',
-      staffData.ghiChu || '',
-      Number(staffData.mucDongBhxh) || 0
-    ];
-
-    if (rowIndex > 0) {
-      sh.getRange(rowIndex, 1, 1, rowData.length).setValues([rowData]);
-    } else {
-      sh.appendRow(rowData);
+    // Nếu tạo mới, thêm hàng mới
+    if (rowIndex === -1) {
+      rowIndex = lastRow + 1;
+      sh.getRange(rowIndex, 1, 1, headers.length).clearContent();
     }
+
+    // Ghi từng trường theo đúng cột header
+    const fieldMapping = {
+      'Mã NV': staffData.maNV,
+      'Họ và tên': staffData.hoTen,
+      'Chức danh': staffData.chucDanh || '',
+      'Khối phòng ban': staffData.phongBan || '',
+      'Điện thoại': staffData.dienThoai || '',
+      'Email': staffData.email || '',
+      'Ngày sinh': staffData.ngaySinh || '',
+      'Giới tính': staffData.gioiTinh || '',
+      'Số CCCD': staffData.cccd || '',
+      'Ngày cấp CCCD': staffData.ngayCapCCCD || '',
+      'Nơi cấp CCCD': staffData.noiCapCCCD || '',
+      'Địa chỉ thường trú': staffData.diaChi || '',
+      'Ngày vào làm': staffData.ngayVaoLam || '',
+      'Trạng thái': staffData.trangThai || 'ĐANG LÀM',
+      'Số NPT': Number(staffData.soNPT) || 0,
+      'Số tài khoản NH': staffData.soTaiKhoanNH || '',
+      'Tên ngân hàng': staffData.tenNganHang || 'Agribank Quý Lộc',
+      'Mã số thuế': staffData.mst || '',
+      'Số sổ BHXH': staffData.soSoBHXH || '',
+      'Link ảnh thẻ': staffData.linkAnhThe || '',
+      'Ghi chú': staffData.ghiChu || '',
+      'Mức đóng BHXH': Number(staffData.mucDongBhxh) || 0,
+      'Ngày đảm nhiệm chức vụ': staffData.ngayDamNhiemCV || staffData.ngayDamNhiemChucVu || '',
+      'Thâm niên CV quy đổi (năm)': Number(staffData.thamNienQuyDoi) || 0,
+      'Bậc lương': Number(staffData.bac) || 1,
+      'Năm vượt khung': Number(staffData.namVuotKhung) || 0,
+      'Link File HĐLĐ': staffData.linkHDLD || staffData.linkFileHDLD || '',
+      'Link File Phụ lục HĐLĐ': staffData.linkPhuLuc || staffData.linkFilePhuLuc || '',
+      'Link File Quyết định': staffData.linkQD || staffData.linkFileQD || ''
+    };
+
+    Object.keys(fieldMapping).forEach(colName => {
+      const colNum = colIndexMap[colName];
+      if (colNum) {
+        sh.getRange(rowIndex, colNum).setValue(fieldMapping[colName]);
+      }
+    });
 
     // Nếu có cập nhật hệ số lương / chức danh -> Đồng bộ sang LS_CONGTAC
     if (staffData.heSoLuong !== undefined && staffData.heSoLuong !== null) {
@@ -172,7 +216,8 @@ function saveStaff(staffData) {
           Number(staffData.phuCapTN) || 0,
           0,
           staffData.ghiChu || 'Cập nhật từ hồ sơ cán bộ',
-          'HIỆN TẠI'
+          'HIỆN TẠI',
+          staffData.linkQD || staffData.linkFileQD || ''
         ];
 
         if (lsRowIndex > 0) {

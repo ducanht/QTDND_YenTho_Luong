@@ -238,6 +238,30 @@ class ApiService {
   async autoGenerateSalaryScale(luongCoSo) {
     return this.request('autoGenerateSalaryScale', { luongCoSo });
   }
+
+  // ── V3.0: Quản trị Tài khoản & Phân quyền 360 (TAIKHOAN) ──
+
+  async getUsers() {
+    return this.request('getUsers', {});
+  }
+
+  async saveUser(user) {
+    return this.request('saveUser', { user });
+  }
+
+  async deleteUser(username) {
+    return this.request('deleteUser', { username });
+  }
+
+  // ── V3.0: KPI Dictionary & Đánh giá 5 bước ──
+
+  async saveKpiDictionary(kpiList) {
+    return this.request('saveKpiDictionary', { kpiList });
+  }
+
+  async saveKpiEvaluationStep(stepData) {
+    return this.request('saveKpiEvaluationStep', { stepData });
+  }
 }
 
 export const api = new ApiService();

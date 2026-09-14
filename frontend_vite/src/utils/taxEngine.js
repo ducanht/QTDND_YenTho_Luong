@@ -125,27 +125,50 @@ export function detectDepartmentKey(emp, pos) {
   return 'HO_TRO';
 }
 
+export function calcYearsService(dateStr) {
+  if (!dateStr) return 0;
+  try {
+    let d;
+    if (dateStr instanceof Date) {
+      d = dateStr;
+    } else {
+      const parts = String(dateStr).split('/');
+      if (parts.length === 3) {
+        d = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+      } else {
+        d = new Date(dateStr);
+      }
+    }
+    if (isNaN(d.getTime())) return 0;
+    const now = new Date();
+    const diff = (now - d) / (365.25 * 24 * 3600 * 1000);
+    return Math.max(0, Math.floor(diff));
+  } catch (e) {
+    return 0;
+  }
+}
+
 /**
- * ĐỘNG CƠ MÔ PHỎNG LƯƠNG & CÁC KHOẢN THEO LƯƠNG 4 TẦNG CHI TIẾT (CHUẨN HĐQT)
- * - Tầng 1: Lương Vị trí Chức danh (Hệ số x Lương cơ sở)
+ * ĐỘNG CƠ MÔ PHỎNG LƯƠNG & CÁC KHOẢN THEO LƯƠNG 4 TẦNG CHI TIẾT (CHUẨN HĐQT 2027)
+ * - Tầng 1: Lương Vị trí Chức danh (5 bậc ngạch + Thâm niên CT + Thâm niên CV + Vượt khung)
  * - Tầng 2: Lương KPI tính theo % Kết cấu lương của từng bộ phận (có thể thay đổi linh hoạt)
- * - Tầng 3: Các khoản phụ cấp khoán công vụ (Không tính thù lao HĐQT/BKS ở đây)
+ * - Tầng 3: Các khoản phụ cấp khoán công vụ & Khoán HĐQT (tính vào bảng lương tổng và chi phí Quỹ)
  * - Tầng 4: Trích nộp BHXH tùy biến từng người; Số thừa so DN trả được cộng vào thu nhập hưởng thêm
  */
 export function simulateStaffCompensation({
   emp,
   pos,
-  scenario = 'PA3',
+  scenario = 'STANDARD',
   luongCoSo = 2340000,
   // Cấu hình tính KPI:
   kpiCalcMethod = 'DEPT_RATIO', // 'DEPT_RATIO' (% kết cấu bộ phận) | 'FIXED_PRICE'
-  deptKpiRatio = 40, // % Lương KPI trong kết cấu thu nhập (ví dụ: 40% KPI, 60% Vị trí)
+  deptKpiRatio = 40, // % Lương KPI trong kết cấu thu nhập
   tranKpi = 115,
   donGiaKpiCoBan = 4000000,
   kpiPerformanceRatio = 1.0,
 
   // Cấu hình BHXH tùy biến từng người:
-  customBhxhSalary = null, // Mức lương BHXH cá nhân chọn đăng ký đóng
+  customBhxhSalary = null,
   
   // Định mức phụ cấp Tầng 3:
   anTrua = 850000,
@@ -156,44 +179,59 @@ export function simulateStaffCompensation({
   docHai = 400000,
   pitRegime = 'CURRENT'
 }) {
+  // ── 5 Bậc ngạch lương theo vị trí ──
+  const bac = Number(emp?.bac) || 1;
   let heSoLuong = Number(emp?.heSoLuong) || 2.5;
   let heSoKpi = Number(emp?.heSoKpi) || 1.0;
-  let phuCapTnChucDanh = 0;
+  let phuCapTnChucDanh = Number(pos?.phuCapTN || emp?.phuCapTN) || 0;
 
   if (pos) {
-    if (scenario === 'PA1') {
-      heSoLuong = Number(pos.pa1HeSo) || heSoLuong;
-      heSoKpi = Number(pos.pa1Kpi) || heSoKpi;
-    } else if (scenario === 'PA2') {
-      heSoLuong = Number(pos.pa2HeSo) || heSoLuong;
-      heSoKpi = Number(pos.pa2Kpi) || heSoKpi;
+    const heSoKey = `heSoBac${bac}`;
+    if (pos[heSoKey] !== undefined) {
+      heSoLuong = Number(pos[heSoKey]);
     } else {
-      heSoLuong = Number(pos.pa3HeSo) || heSoLuong;
-      heSoKpi = Number(pos.pa3Kpi) || heSoKpi;
+      const bacScale = [pos.heSoBac1 || pos.pa1HeSo, pos.heSoBac2 || pos.pa2HeSo, pos.heSoBac3 || pos.pa3HeSo, pos.heSoBac4, pos.heSoBac5];
+      heSoLuong = Number(bacScale[bac - 1]) || Number(pos.pa2HeSo) || heSoLuong;
     }
-    phuCapTnChucDanh = Number(pos.phuCapTN) || 0;
+    heSoKpi = Number(pos.pa2Kpi) || heSoKpi;
   }
 
-  // TẦNG 1: LƯƠNG VỊ TRÍ CHỨC DANH
-  const luongViTri = Math.round(heSoLuong * luongCoSo);
+  // Lương ngạch bậc cơ bản
+  const luongNgachBac = Math.round(heSoLuong * luongCoSo);
+
+  // Thâm niên công tác (tính từ ngày vào làm, 5%/năm, max 40%)
+  const namThamNienCT = calcYearsService(emp?.ngayVaoLam);
+  const tyLeThamNienCT = Math.min((namThamNienCT * 5) / 100, 0.40);
+  const thamNienCT = Math.round(luongNgachBac * tyLeThamNienCT);
+
+  // Thâm niên chức vụ (tính từ ngày đảm nhiệm chức vụ + năm quy đổi, 5%/năm, max 30%)
+  const namDamNhiemThucTe = calcYearsService(emp?.ngayDamNhiemCV || emp?.ngayVaoLam);
+  const namQuyDoi = Number(emp?.thamNienQuyDoi) || 0;
+  const tongNamChucVu = namDamNhiemThucTe + namQuyDoi;
+  const tyLeThamNienCV = Math.min((tongNamChucVu * 5) / 100, 0.30);
+  const thamNienCV = Math.round(luongNgachBac * tyLeThamNienCV);
+
+  // Vượt khung chung toàn quỹ (sau 5 bậc ngạch, 5% mỗi chu kỳ 3 năm, tối đa 8 lần = 40%)
+  const soLanVuotKhung = Math.min(Number(emp?.namVuotKhung) || 0, 8);
+  const vuotKhung = Math.round(luongNgachBac * (soLanVuotKhung * 0.05));
+
+  // TẦNG 1: LƯƠNG CỐ ĐỊNH (L1)
+  const luongViTri = luongNgachBac + thamNienCT + thamNienCV + vuotKhung;
 
   // TẦNG 2: LƯƠNG NĂNG SUẤT KPI THEO % KẾT CẤU BỘ PHẬN
   let luongKpi = 0;
   if (kpiCalcMethod === 'DEPT_RATIO') {
-    // Tỷ lệ KPI p% trong kết cấu (L1 + L2). Tỷ lệ chuyển đổi r = p / (100 - p)
     const validRatio = Math.max(0, Math.min(deptKpiRatio, 85));
     const multiplier = (100 - validRatio) > 0 ? (validRatio / (100 - validRatio)) : 0;
     const luongKpiCoSoTheoKetCau = luongViTri * multiplier;
-    // Nhân với hệ số năng lực cá nhân và mức độ hoàn thành
     const personalWeight = heSoKpi > 0 ? (heSoKpi / 1.0) : 1.0;
     luongKpi = Math.round(luongKpiCoSoTheoKetCau * personalWeight * (tranKpi / 100) * kpiPerformanceRatio);
   } else {
-    // Phương pháp đơn giá điểm KPI truyền thống
     luongKpi = Math.round(heSoKpi * donGiaKpiCoBan * (tranKpi / 100) * kpiPerformanceRatio);
   }
 
-  // TẦNG 3: CÁC KHOẢN PHỤ CẤP KHOÁN CÔNG VỤ (100% KHÔNG TÍNH THÙ LAO HĐQT Ở ĐÂY)
-  const chucDanhStr = String(emp?.chucDanh || '');
+  // TẦNG 3: CÁC KHOẢN PHỤ CẤP KHOÁN CÔNG VỤ & KHOÁN HĐQT
+  const chucDanhStr = String(emp?.chucDanh || pos?.tenChucDanh || '');
   let khoanXangXe = xangXe;
   if (chucDanhStr.includes('Tín dụng')) khoanXangXe = Math.round(xangXe * 1.5);
   else if (chucDanhStr.includes('Giám đốc') || chucDanhStr.includes('Chủ tịch')) khoanXangXe = Math.round(xangXe * 1.2);
@@ -208,35 +246,33 @@ export function simulateStaffCompensation({
   const khoanAnTrua = anTrua;
   const khoanTrangPhuc = trangPhuc;
 
+  // Khoán HĐQT (điện thoại, xăng xe, họp HĐQT) tính vào Bảng Lương Tổng và Tổng Chi Phí Quỹ
+  const isHdqt = chucDanhStr.toUpperCase().includes('CHỦ TỊCH') || chucDanhStr.toUpperCase().includes('ỦY VIÊN HĐQT') || pos?.nhomKhoan === 'HDQT';
+  const khoanHdqt = isHdqt ? (Number(emp?.khoanHdqt) || 3000000) : 0;
+
   const tongKhoanChi = khoanAnTrua + khoanXangXe + khoanDienThoai + khoanTrangPhuc + khoanDocHai;
-  const tongPhuCap = khoanTrachNhiem; // Chỉ tính phụ cấp trách nhiệm công việc chuyên môn, không tính thù lao HĐQT
+  const tongPhuCap = khoanTrachNhiem;
 
   // TẦNG 4: BHXH TÙY BIẾN & SỐ THỪA SO VỚI DOANH NGHIỆP TRẢ ĐƯỢC HƯỞNG
-  const maxLuongDongBhxh = luongCoSo * 20; // Trần 20 lần lương cơ sở (46.800.000đ)
-  const minLuongDongBhxh = 2340000; // Mức sàn cơ sở tối thiểu
+  const maxLuongDongBhxh = luongCoSo * 20; // Trần 20 lần lương cơ sở
+  const minLuongDongBhxh = 2340000;
 
-  // 1. Mức chuẩn Quỹ chi trả theo chức danh (Định mức DN trả cho vị trí)
-  const luongDongBhxhChuan = Math.min(luongViTri, maxLuongDongBhxh);
+  const luongDongBhxhChuan = Math.min(luongNgachBac + khoanTrachNhiem, maxLuongDongBhxh);
   const bhxhDonViDinhMuc = Math.round(luongDongBhxhChuan * 0.235); // 23.5%
 
-  // 2. Mức lương đóng BHXH cá nhân thực tế đăng ký
   let luongDongBhxhThucTe = luongDongBhxhChuan;
   if (customBhxhSalary !== null && customBhxhSalary !== undefined && customBhxhSalary !== '') {
     luongDongBhxhThucTe = Math.min(Math.max(Number(customBhxhSalary) || minLuongDongBhxh, minLuongDongBhxh), maxLuongDongBhxh);
   }
 
-  // 3. Quỹ thực đóng vào cơ quan BHXH: 23.5% trên mức thực tế
   const bhxhDonViThucTe = Math.round(luongDongBhxhThucTe * 0.235);
-
-  // 4. Số tiền thừa so với mức Quỹ trả mà người lao động được hưởng (Cộng vào thu nhập)
   const tienThuaBhxhHuong = Math.max(0, bhxhDonViDinhMuc - bhxhDonViThucTe);
 
-  // 5. NLĐ đóng BHXH (10.5%) & Đoàn phí (1%) trên mức thực tế đăng ký
   const bhxhNld = Math.round(luongDongBhxhThucTe * 0.105);
   const doanPhiNld = Math.min(Math.round(luongDongBhxhThucTe * 0.01), Math.round(luongCoSo * 0.1));
 
-  // TỔNG THU NHẬP GROSS (Bao gồm số thừa BHXH được hưởng)
-  const tongGross = luongViTri + luongKpi + tongPhuCap + tongKhoanChi + tienThuaBhxhHuong;
+  // TỔNG THU NHẬP GROSS (Bao gồm số thừa BHXH & Khoán HĐQT)
+  const tongGross = luongViTri + luongKpi + tongPhuCap + tongKhoanChi + khoanHdqt + tienThuaBhxhHuong;
 
   // KHOẢN MIỄN THUẾ TNCN HỢP LỆ
   const mienThueAnTrua = Math.min(khoanAnTrua, 730000);
@@ -273,9 +309,17 @@ export function simulateStaffCompensation({
     heSoLuong,
     heSoKpi,
     deptKpiRatio,
+    luongNgachBac,
+    namThamNienCT,
+    thamNienCT,
+    tongNamChucVu,
+    thamNienCV,
+    soLanVuotKhung,
+    vuotKhung,
     luongViTri,
     luongKpi,
     khoanTrachNhiem,
+    khoanHdqt,
     khoanAnTrua,
     khoanXangXe,
     khoanDienThoai,

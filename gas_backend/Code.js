@@ -40,6 +40,7 @@ function getAllDataBundle(period = '', maNV = '') {
     salaryParams: getSalaryParams(),
     salaryScale: getSalaryScale(),
     scenarios: getScenarios(),
+    users: getUsersList(),
     serverTime: Utilities.formatDate(new Date(), 'Asia/Ho_Chi_Minh', 'dd/MM/yyyy HH:mm:ss')
   };
 }
@@ -181,6 +182,34 @@ function executeGasAction(action, payload) {
     case 'autoGenerateSalaryScale': {
       const scale = autoGenerateSalaryScale(payload.luongCoSo || 2340000);
       return { status: 'success', data: scale, count: scale.length };
+    }
+
+    case 'getUsers': {
+      return { status: 'success', data: getUsersList() };
+    }
+
+    case 'saveUser': {
+      const res = saveUser(payload.user || payload.payload || payload);
+      logAuditAction(payload.caller || 'Admin', 'Web Client', 'LƯU_TÀI_KHOẢN', (payload.user || payload).username || '');
+      return res;
+    }
+
+    case 'deleteUser': {
+      const res = deleteUser(payload.username);
+      logAuditAction(payload.caller || 'Admin', 'Web Client', 'XÓA_TÀI_KHOẢN', payload.username || '');
+      return res;
+    }
+
+    case 'saveKpiDictionary': {
+      const res = saveKpiDictionary(payload.kpiList || payload.payload || []);
+      logAuditAction(payload.user || 'Admin', 'Web Client', 'CẬP_NHẬT_TỪ_ĐIỂN_KPI', 'Số lượng: ' + (payload.kpiList || []).length);
+      return res;
+    }
+
+    case 'saveKpiEvaluationStep': {
+      const res = saveKpiEvaluationStep(payload.stepData || payload.payload || payload);
+      logAuditAction(payload.user || 'Đánh giá', 'Web Client', 'PHÊ_DUYỆT_KPI_BƯỚC_' + (payload.stepData || payload).buocPheDuyet, (payload.stepData || payload).maNV);
+      return res;
     }
 
     default:

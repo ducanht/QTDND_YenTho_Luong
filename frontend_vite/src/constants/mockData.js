@@ -33,7 +33,15 @@ export const MOCK_STAFF_LIST = [
     heSoLuong: 3.10,
     maViTri: 'P08',
     phuCapTN: 0,
-    mucDongBhxh: 7750000
+    mucDongBhxh: 7750000,
+    ngayDamNhiemCV: '09/03/2010',
+    thamNienQuyDoi: 2,
+    namVuotKhung: 1,
+    soQD: 'QĐ-08/2021/QĐ-HĐQT',
+    ngayQD: '01/01/2021',
+    linkHDLD: 'https://drive.google.com/file/d/hdld-nv01',
+    linkPhuLuc: 'https://drive.google.com/file/d/pl-nv01',
+    linkQD: 'https://drive.google.com/file/d/qd-nv01'
   },
   {
     maNV: 'NV02',
@@ -61,7 +69,15 @@ export const MOCK_STAFF_LIST = [
     heSoLuong: 3.90,
     maViTri: 'P05',
     phuCapTN: 0,
-    mucDongBhxh: 9750000
+    mucDongBhxh: 9750000,
+    ngayDamNhiemCV: '01/06/2015',
+    thamNienQuyDoi: 1,
+    namVuotKhung: 0,
+    soQD: 'NQ-02/2021/NQ-HĐQT',
+    ngayQD: '01/06/2021',
+    linkHDLD: 'https://drive.google.com/file/d/hdld-nv02',
+    linkPhuLuc: '',
+    linkQD: 'https://drive.google.com/file/d/qd-nv02'
   },
   {
     maNV: 'NV03',
@@ -89,7 +105,15 @@ export const MOCK_STAFF_LIST = [
     heSoLuong: 4.80,
     maViTri: 'P02',
     phuCapTN: 800000,
-    mucDongBhxh: 12000000
+    mucDongBhxh: 12000000,
+    ngayDamNhiemCV: '01/01/2018',
+    thamNienQuyDoi: 2,
+    namVuotKhung: 0,
+    soQD: 'NQ-01/2021/NQ-HĐQT',
+    ngayQD: '01/01/2021',
+    linkHDLD: 'https://drive.google.com/file/d/hdld-nv03',
+    linkPhuLuc: '',
+    linkQD: 'https://drive.google.com/file/d/qd-nv03'
   },
   {
     maNV: 'NV04',
@@ -117,7 +141,15 @@ export const MOCK_STAFF_LIST = [
     heSoLuong: 4.00,
     maViTri: 'P04',
     phuCapTN: 700000,
-    mucDongBhxh: 10000000
+    mucDongBhxh: 10000000,
+    ngayDamNhiemCV: '01/01/2018',
+    thamNienQuyDoi: 1,
+    namVuotKhung: 0,
+    soQD: 'NQ-04/2021/NQ-HĐQT',
+    ngayQD: '01/01/2021',
+    linkHDLD: 'https://drive.google.com/file/d/hdld-nv04',
+    linkPhuLuc: '',
+    linkQD: 'https://drive.google.com/file/d/qd-nv04'
   },
   {
     maNV: 'NV05',
@@ -145,7 +177,15 @@ export const MOCK_STAFF_LIST = [
     heSoLuong: 2.85,
     maViTri: 'P08',
     phuCapTN: 0,
-    mucDongBhxh: 7125000
+    mucDongBhxh: 7125000,
+    ngayDamNhiemCV: '30/01/2013',
+    thamNienQuyDoi: 0,
+    namVuotKhung: 0,
+    soQD: 'QĐ-12/2021/QĐ-HĐQT',
+    ngayQD: '01/01/2021',
+    linkHDLD: 'https://drive.google.com/file/d/hdld-nv05',
+    linkPhuLuc: '',
+    linkQD: 'https://drive.google.com/file/d/qd-nv05'
   },
   {
     maNV: 'NV06',
@@ -173,7 +213,15 @@ export const MOCK_STAFF_LIST = [
     heSoLuong: 3.30,
     maViTri: 'P07',
     phuCapTN: 500000,
-    mucDongBhxh: 8250000
+    mucDongBhxh: 8250000,
+    ngayDamNhiemCV: '21/05/2016',
+    thamNienQuyDoi: 1,
+    namVuotKhung: 0,
+    soQD: 'NQ-07/2021/NQ-HĐQT',
+    ngayQD: '01/01/2021',
+    linkHDLD: 'https://drive.google.com/file/d/hdld-nv06',
+    linkPhuLuc: '',
+    linkQD: 'https://drive.google.com/file/d/qd-nv06'
   },
   {
     maNV: 'NV07',
@@ -201,7 +249,15 @@ export const MOCK_STAFF_LIST = [
     heSoLuong: 5.20,
     maViTri: 'P01',
     phuCapTN: 1000000,
-    mucDongBhxh: 13000000
+    mucDongBhxh: 13000000,
+    ngayDamNhiemCV: '01/01/2021',
+    thamNienQuyDoi: 3,
+    namVuotKhung: 0,
+    soQD: 'NQ-01/2021/NQ-ĐHĐCĐ',
+    ngayQD: '01/01/2021',
+    linkHDLD: 'https://drive.google.com/file/d/hdld-nv07',
+    linkPhuLuc: '',
+    linkQD: 'https://drive.google.com/file/d/qd-nv07'
   },
   {
     maNV: 'NV08',
@@ -229,7 +285,15 @@ export const MOCK_STAFF_LIST = [
     heSoLuong: 3.50,
     maViTri: 'P06',
     phuCapTN: 500000,
-    mucDongBhxh: 8750000
+    mucDongBhxh: 8750000,
+    ngayDamNhiemCV: '01/01/2021',
+    thamNienQuyDoi: 1,
+    namVuotKhung: 0,
+    soQD: 'NQ-02/2021/NQ-ĐHĐCĐ',
+    ngayQD: '01/01/2021',
+    linkHDLD: 'https://drive.google.com/file/d/hdld-nv08',
+    linkPhuLuc: '',
+    linkQD: 'https://drive.google.com/file/d/qd-nv08'
   },
   {
     maNV: 'NV09',
@@ -257,7 +321,15 @@ export const MOCK_STAFF_LIST = [
     heSoLuong: 2.85,
     maViTri: 'P08',
     phuCapTN: 0,
-    mucDongBhxh: 7125000
+    mucDongBhxh: 7125000,
+    ngayDamNhiemCV: '11/12/2020',
+    thamNienQuyDoi: 0,
+    namVuotKhung: 0,
+    soQD: 'QĐ-15/2021/QĐ-HĐQT',
+    ngayQD: '01/01/2021',
+    linkHDLD: 'https://drive.google.com/file/d/hdld-nv09',
+    linkPhuLuc: '',
+    linkQD: 'https://drive.google.com/file/d/qd-nv09'
   },
   {
     maNV: 'NV10',
@@ -285,7 +357,15 @@ export const MOCK_STAFF_LIST = [
     heSoLuong: 2.65,
     maViTri: 'P09',
     phuCapTN: 0,
-    mucDongBhxh: 6625000
+    mucDongBhxh: 6625000,
+    ngayDamNhiemCV: '08/10/2021',
+    thamNienQuyDoi: 0,
+    namVuotKhung: 0,
+    soQD: 'QĐ-18/2021/QĐ-HĐQT',
+    ngayQD: '08/10/2021',
+    linkHDLD: 'https://drive.google.com/file/d/hdld-nv10',
+    linkPhuLuc: '',
+    linkQD: 'https://drive.google.com/file/d/qd-nv10'
   },
   {
     maNV: 'NV11',
@@ -313,7 +393,15 @@ export const MOCK_STAFF_LIST = [
     heSoLuong: 2.10,
     maViTri: 'P10',
     phuCapTN: 0,
-    mucDongBhxh: 5250000
+    mucDongBhxh: 5250000,
+    ngayDamNhiemCV: '06/09/2023',
+    thamNienQuyDoi: 0,
+    namVuotKhung: 0,
+    soQD: 'QĐ-22/2023/QĐ-HĐQT',
+    ngayQD: '06/09/2023',
+    linkHDLD: 'https://drive.google.com/file/d/hdld-nv11',
+    linkPhuLuc: '',
+    linkQD: 'https://drive.google.com/file/d/qd-nv11'
   },
   {
     maNV: 'NV12',
@@ -341,21 +429,29 @@ export const MOCK_STAFF_LIST = [
     heSoLuong: 2.60,
     maViTri: 'P08',
     phuCapTN: 0,
-    mucDongBhxh: 6500000
+    mucDongBhxh: 6500000,
+    ngayDamNhiemCV: '06/09/2024',
+    thamNienQuyDoi: 0,
+    namVuotKhung: 0,
+    soQD: 'QĐ-25/2024/QĐ-HĐQT',
+    ngayQD: '06/09/2024',
+    linkHDLD: 'https://drive.google.com/file/d/hdld-nv12',
+    linkPhuLuc: '',
+    linkQD: 'https://drive.google.com/file/d/qd-nv12'
   }
 ];
 
 export const MOCK_POSITIONS = [
-  { maViTri: 'P01', tenChucDanh: 'Chủ tịch HĐQT', khoi: 'Lãnh đạo', bac: 1, soLuong: 1, pa1HeSo: 4.8, pa2HeSo: 5.2, pa3HeSo: 5.6, pa1Kpi: 0.20, pa2Kpi: 0.25, pa3Kpi: 0.30, pa1Thuong: 0.10, pa2Thuong: 0.12, pa3Thuong: 0.15, phuCapTN: 1000000, thuLaoQT: 0, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
-  { maViTri: 'P02', tenChucDanh: 'Giám đốc', khoi: 'Điều hành', bac: 2, soLuong: 1, pa1HeSo: 4.4, pa2HeSo: 4.8, pa3HeSo: 5.2, pa1Kpi: 0.20, pa2Kpi: 0.25, pa3Kpi: 0.30, pa1Thuong: 0.10, pa2Thuong: 0.12, pa3Thuong: 0.15, phuCapTN: 800000, thuLaoQT: 0, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
-  { maViTri: 'P03', tenChucDanh: 'Phó Giám đốc', khoi: 'Điều hành', bac: 3, soLuong: 0, pa1HeSo: 3.9, pa2HeSo: 4.2, pa3HeSo: 4.6, pa1Kpi: 0.18, pa2Kpi: 0.22, pa3Kpi: 0.25, pa1Thuong: 0.08, pa2Thuong: 0.10, pa3Thuong: 0.12, phuCapTN: 600000, thuLaoQT: 0, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
-  { maViTri: 'P04', tenChucDanh: 'Trưởng BKS', khoi: 'Kiểm soát', bac: 4, soLuong: 1, pa1HeSo: 3.7, pa2HeSo: 4.0, pa3HeSo: 4.3, pa1Kpi: 0.15, pa2Kpi: 0.18, pa3Kpi: 0.22, pa1Thuong: 0.06, pa2Thuong: 0.08, pa3Thuong: 0.10, phuCapTN: 700000, thuLaoQT: 0, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
-  { maViTri: 'P05', tenChucDanh: 'Kế toán trưởng', khoi: 'Chuyên môn', bac: 5, soLuong: 1, pa1HeSo: 3.6, pa2HeSo: 3.9, pa3HeSo: 4.2, pa1Kpi: 0.15, pa2Kpi: 0.18, pa3Kpi: 0.22, pa1Thuong: 0.06, pa2Thuong: 0.08, pa3Thuong: 0.10, phuCapTN: 0, thuLaoQT: 0, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
-  { maViTri: 'P06', tenChucDanh: 'Ủy viên HĐQT', khoi: 'Quản trị', bac: 6, soLuong: 1, pa1HeSo: 3.2, pa2HeSo: 3.5, pa3HeSo: 3.8, pa1Kpi: 0.12, pa2Kpi: 0.15, pa3Kpi: 0.18, pa1Thuong: 0.05, pa2Thuong: 0.06, pa3Thuong: 0.08, phuCapTN: 500000, thuLaoQT: 0, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
-  { maViTri: 'P07', tenChucDanh: 'Kiểm soát viên', khoi: 'Kiểm soát', bac: 7, soLuong: 2, pa1HeSo: 3.0, pa2HeSo: 3.3, pa3HeSo: 3.6, pa1Kpi: 0.12, pa2Kpi: 0.15, pa3Kpi: 0.18, pa1Thuong: 0.05, pa2Thuong: 0.06, pa3Thuong: 0.08, phuCapTN: 500000, thuLaoQT: 0, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
-  { maViTri: 'P08', tenChucDanh: 'Cán bộ tín dụng', khoi: 'Nghiệp vụ', bac: 8, soLuong: 4, pa1HeSo: 2.6, pa2HeSo: 2.85, pa3HeSo: 3.1, pa1Kpi: 0.12, pa2Kpi: 0.15, pa3Kpi: 0.18, pa1Thuong: 0.05, pa2Thuong: 0.06, pa3Thuong: 0.08, phuCapTN: 0, thuLaoQT: 0, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
-  { maViTri: 'P09', tenChucDanh: 'Kế toán viên', khoi: 'Nghiệp vụ', bac: 9, soLuong: 1, pa1HeSo: 2.4, pa2HeSo: 2.65, pa3HeSo: 2.9, pa1Kpi: 0.10, pa2Kpi: 0.13, pa3Kpi: 0.16, pa1Thuong: 0.04, pa2Thuong: 0.05, pa3Thuong: 0.07, phuCapTN: 0, thuLaoQT: 0, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
-  { maViTri: 'P10', tenChucDanh: 'Bảo vệ - Thủ quỹ', khoi: 'Hỗ trợ', bac: 10, soLuong: 1, pa1HeSo: 1.9, pa2HeSo: 2.1, pa3HeSo: 2.3, pa1Kpi: 0.08, pa2Kpi: 0.10, pa3Kpi: 0.12, pa1Thuong: 0.03, pa2Thuong: 0.04, pa3Thuong: 0.05, phuCapTN: 0, thuLaoQT: 0, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' }
+  { maViTri: 'P01', tenChucDanh: 'Chủ tịch HĐQT', khoi: 'Lãnh đạo', nhomKhoan: 'HDQT', bac: 1, soLuong: 1, heSoBac1: 4.80, heSoBac2: 5.00, heSoBac3: 5.20, heSoBac4: 5.40, heSoBac5: 5.60, pa1HeSo: 4.8, pa2HeSo: 5.2, pa3HeSo: 5.6, pa1Kpi: 0.20, pa2Kpi: 0.25, pa3Kpi: 0.30, pa1Thuong: 0.10, pa2Thuong: 0.12, pa3Thuong: 0.15, phuCapTN: 1000000, thuLaoQT: 0, kyNangBac: 3, pctVuotKhung: 5, maxLanVuotKhung: 8, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
+  { maViTri: 'P02', tenChucDanh: 'Giám đốc', khoi: 'Điều hành', nhomKhoan: 'TP_PP', bac: 2, soLuong: 1, heSoBac1: 4.40, heSoBac2: 4.60, heSoBac3: 4.80, heSoBac4: 5.00, heSoBac5: 5.20, pa1HeSo: 4.4, pa2HeSo: 4.8, pa3HeSo: 5.2, pa1Kpi: 0.20, pa2Kpi: 0.25, pa3Kpi: 0.30, pa1Thuong: 0.10, pa2Thuong: 0.12, pa3Thuong: 0.15, phuCapTN: 800000, thuLaoQT: 0, kyNangBac: 3, pctVuotKhung: 5, maxLanVuotKhung: 8, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
+  { maViTri: 'P03', tenChucDanh: 'Phó Giám đốc', khoi: 'Điều hành', nhomKhoan: 'TP_PP', bac: 3, soLuong: 0, heSoBac1: 3.90, heSoBac2: 4.10, heSoBac3: 4.20, heSoBac4: 4.40, heSoBac5: 4.60, pa1HeSo: 3.9, pa2HeSo: 4.2, pa3HeSo: 4.6, pa1Kpi: 0.18, pa2Kpi: 0.22, pa3Kpi: 0.25, pa1Thuong: 0.08, pa2Thuong: 0.10, pa3Thuong: 0.12, phuCapTN: 600000, thuLaoQT: 0, kyNangBac: 3, pctVuotKhung: 5, maxLanVuotKhung: 8, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
+  { maViTri: 'P04', tenChucDanh: 'Trưởng BKS', khoi: 'Kiểm soát', nhomKhoan: 'TP_PP', bac: 4, soLuong: 1, heSoBac1: 3.70, heSoBac2: 3.90, heSoBac3: 4.00, heSoBac4: 4.15, heSoBac5: 4.30, pa1HeSo: 3.7, pa2HeSo: 4.0, pa3HeSo: 4.3, pa1Kpi: 0.15, pa2Kpi: 0.18, pa3Kpi: 0.22, pa1Thuong: 0.06, pa2Thuong: 0.08, pa3Thuong: 0.10, phuCapTN: 700000, thuLaoQT: 0, kyNangBac: 3, pctVuotKhung: 5, maxLanVuotKhung: 8, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
+  { maViTri: 'P05', tenChucDanh: 'Kế toán trưởng', khoi: 'Chuyên môn', nhomKhoan: 'TP_PP', bac: 5, soLuong: 1, heSoBac1: 3.60, heSoBac2: 3.80, heSoBac3: 3.90, heSoBac4: 4.05, heSoBac5: 4.20, pa1HeSo: 3.6, pa2HeSo: 3.9, pa3HeSo: 4.2, pa1Kpi: 0.15, pa2Kpi: 0.18, pa3Kpi: 0.22, pa1Thuong: 0.06, pa2Thuong: 0.08, pa3Thuong: 0.10, phuCapTN: 0, thuLaoQT: 0, kyNangBac: 3, pctVuotKhung: 5, maxLanVuotKhung: 8, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
+  { maViTri: 'P06', tenChucDanh: 'Ủy viên HĐQT', khoi: 'Quản trị', nhomKhoan: 'HDQT', bac: 6, soLuong: 1, heSoBac1: 3.20, heSoBac2: 3.35, heSoBac3: 3.50, heSoBac4: 3.65, heSoBac5: 3.80, pa1HeSo: 3.2, pa2HeSo: 3.5, pa3HeSo: 3.8, pa1Kpi: 0.12, pa2Kpi: 0.15, pa3Kpi: 0.18, pa1Thuong: 0.05, pa2Thuong: 0.06, pa3Thuong: 0.08, phuCapTN: 500000, thuLaoQT: 0, kyNangBac: 3, pctVuotKhung: 5, maxLanVuotKhung: 8, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
+  { maViTri: 'P07', tenChucDanh: 'Kiểm soát viên', khoi: 'Kiểm soát', nhomKhoan: 'CBNV', bac: 7, soLuong: 2, heSoBac1: 3.00, heSoBac2: 3.15, heSoBac3: 3.30, heSoBac4: 3.45, heSoBac5: 3.60, pa1HeSo: 3.0, pa2HeSo: 3.3, pa3HeSo: 3.6, pa1Kpi: 0.12, pa2Kpi: 0.15, pa3Kpi: 0.18, pa1Thuong: 0.05, pa2Thuong: 0.06, pa3Thuong: 0.08, phuCapTN: 500000, thuLaoQT: 0, kyNangBac: 3, pctVuotKhung: 5, maxLanVuotKhung: 8, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
+  { maViTri: 'P08', tenChucDanh: 'Cán bộ tín dụng', khoi: 'Nghiệp vụ', nhomKhoan: 'CBNV', bac: 8, soLuong: 4, heSoBac1: 2.60, heSoBac2: 2.85, heSoBac3: 3.10, heSoBac4: 3.30, heSoBac5: 3.50, pa1HeSo: 2.6, pa2HeSo: 2.85, pa3HeSo: 3.1, pa1Kpi: 0.12, pa2Kpi: 0.15, pa3Kpi: 0.18, pa1Thuong: 0.05, pa2Thuong: 0.06, pa3Thuong: 0.08, phuCapTN: 0, thuLaoQT: 0, kyNangBac: 3, pctVuotKhung: 5, maxLanVuotKhung: 8, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
+  { maViTri: 'P09', tenChucDanh: 'Kế toán viên', khoi: 'Nghiệp vụ', nhomKhoan: 'CBNV', bac: 9, soLuong: 1, heSoBac1: 2.40, heSoBac2: 2.50, heSoBac3: 2.65, heSoBac4: 2.75, heSoBac5: 2.90, pa1HeSo: 2.4, pa2HeSo: 2.65, pa3HeSo: 2.9, pa1Kpi: 0.10, pa2Kpi: 0.13, pa3Kpi: 0.16, pa1Thuong: 0.04, pa2Thuong: 0.05, pa3Thuong: 0.07, phuCapTN: 0, thuLaoQT: 0, kyNangBac: 3, pctVuotKhung: 5, maxLanVuotKhung: 8, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' },
+  { maViTri: 'P10', tenChucDanh: 'Bảo vệ - Thủ quỹ', khoi: 'Hỗ trợ', nhomKhoan: 'CBNV', bac: 10, soLuong: 1, heSoBac1: 1.90, heSoBac2: 2.00, heSoBac3: 2.10, heSoBac4: 2.20, heSoBac5: 2.30, pa1HeSo: 1.9, pa2HeSo: 2.1, pa3HeSo: 2.3, pa1Kpi: 0.08, pa2Kpi: 0.10, pa3Kpi: 0.12, pa1Thuong: 0.03, pa2Thuong: 0.04, pa3Thuong: 0.05, phuCapTN: 0, thuLaoQT: 0, kyNangBac: 3, pctVuotKhung: 5, maxLanVuotKhung: 8, ngayHieuLuc: '01/01/2027', quyetDinh: 'NQ-01/2027/NQ-HĐQT' }
 ];
 
 export const MOCK_PARAMS = {

@@ -137,6 +137,29 @@
   background: #cbd5e1;
   border-radius: 3px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+/* =========================================================================
+   6. IN ẤN BÁO CÁO & XUẤT PDF A4 CHUẨN VĂN BẢN (A4 LANDSCAPE)
+   ========================================================================= */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #print-salary-report,
+  #print-salary-report * {
+    visibility: visible;
+  }
+  #print-salary-report {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: white !important;
+    color: #0f172a !important;
+  }
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
 }

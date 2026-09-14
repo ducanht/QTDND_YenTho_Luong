@@ -133,32 +133,43 @@ function calcProgressivePIT(taxableIncome, params) {
 }
 
 /**
- * CORE ENGINE: Tính lương 1 cán bộ theo công thức 22 bước
- * @param {Object} staff - hồ sơ CBNV từ DM_NS
- * @param {Object} position - chức danh từ DM_CHUCDANH
- * @param {Object} timesheet - chấm công tháng từ CHAM_CONG
- * @param {number} kpiScore - điểm KPI tháng (%) từ DG_KPI (0-120)
- * @param {Array} allowances - danh mục phụ cấp từ DM_PHU_CAP
- * @param {Object} params - tham số lương từ DM_THAM_SO_LUONG
- * @param {string} scenario - 'PA1' | 'PA2' | 'PA3'
- * @returns {Object} kết quả đầy đủ 22 mục
+ * CORE ENGINE V3.0: Tính lương 1 cán bộ theo công thức chuẩn hóa 22 bước
+ * - Bảng lương 5 bậc ngạch theo năm đảm nhiệm vị trí công tác
+ * - Thâm niên chức vụ tính từ ngày đảm nhiệm và quy đổi tương đương
+ * - Sau 5 bậc, số vượt khung áp dụng chung toàn Quỹ (5%/chu kỳ 3 năm)
+ * - Khoán HĐQT (điện thoại, xăng xe, họp HĐQT...) tính vào bảng lương tổng
+ * - BHXH cá nhân hóa: thừa so với Quỹ trả được cộng vào thu nhập hưởng thêm
  */
-function computeOneStaffPayroll({ staff, position, timesheet, kpiScore, allowances, params, scenario }) {
-  scenario = scenario || 'PA2';
+function computeOneStaffPayroll({ staff, position, timesheet, kpiScore, allowances, params, scenario, customConfig }) {
   const p = params || getDefaultSalaryParams();
+  const cfg = customConfig || {};
   
-  const luongCoSo = Number(p.LUONG_CO_SO) || 2340000;
+  const luongCoSo = Number(cfg.luongCoSo || p.LUONG_CO_SO) || 2340000;
   const congChuan = Number(timesheet?.congChuan) || 22;
-  const congThuc = Number(timesheet?.congThucTe) || congChuan; // Nếu không có chấm công, tính đủ công
+  const congThuc = timesheet?.congThucTe !== undefined && timesheet?.congThucTe !== '' ? Number(timesheet.congThucTe) : congChuan;
   const congPhep = Number(timesheet?.nghiPhep) || 0;
   const tyLeCong = congChuan > 0 ? Math.min((congThuc + congPhep) / congChuan, 1) : 1;
   const tyLeCongThuc = congChuan > 0 ? Math.min(congThuc / congChuan, 1) : 1;
   
-  // ── Bước 1: Hệ số bậc theo scenario và chức danh ──
-  let heSoBac;
-  if (scenario === 'PA1') heSoBac = Number(position?.pa1HeSo) || Number(staff?.heSoLuong) || 2.5;
-  else if (scenario === 'PA3') heSoBac = Number(position?.pa3HeSo) || Number(staff?.heSoLuong) || 2.5;
-  else heSoBac = Number(position?.pa2HeSo) || Number(staff?.heSoLuong) || 2.5;
+  // ── Bước 1: Hệ số bậc lương theo 5 bậc vị trí công tác ──
+  const bac = Number(cfg.bac || staff?.bac) || 1;
+  let heSoBac = 2.5;
+
+  if (cfg.customHeSo !== undefined && cfg.customHeSo !== null) {
+    heSoBac = Number(cfg.customHeSo);
+  } else if (position) {
+    // Lấy theo bậc 1-5 của chức danh
+    const heSoKey = `heSoBac${bac}`;
+    if (position[heSoKey]) {
+      heSoBac = Number(position[heSoKey]);
+    } else {
+      // Fallback theo bậc
+      const bacScale = [position.heSoBac1 || position.pa1HeSo, position.heSoBac2 || position.pa2HeSo, position.heSoBac3 || position.pa3HeSo, position.heSoBac4, position.heSoBac5];
+      heSoBac = Number(bacScale[bac - 1]) || Number(position.pa2HeSo) || Number(staff?.heSoLuong) || 2.5;
+    }
+  } else {
+    heSoBac = Number(staff?.heSoLuong) || 2.5;
+  }
   
   // ── Bước 2: Lương ngạch bậc cơ bản ──
   const luongNgachBac = Math.round(luongCoSo * heSoBac * tyLeCong);
@@ -170,54 +181,77 @@ function computeOneStaffPayroll({ staff, position, timesheet, kpiScore, allowanc
     (Number(p.THAM_NIEN_CT_TOI_DA) || 40) / 100
   );
   const thamNienCT = Math.round(luongNgachBac * tyLeThamNienCT);
+
+  // ── Bước 3b: Thâm niên chức vụ (tính từ ngày đảm nhiệm và quy đổi tương đương) ──
+  const namDamNhiemThucTe = calcYearsService(staff?.ngayDamNhiemCV);
+  const namQuyDoi = Number(staff?.thamNienQuyDoi) || 0;
+  const tongNamChucVu = namDamNhiemThucTe + namQuyDoi;
+  const tyLeThamNienCV = Math.min(
+    tongNamChucVu * (Number(p.THAM_NIEN_CV_PHAN_TRAM) || 5) / 100,
+    (Number(p.THAM_NIEN_CV_TOI_DA) || 30) / 100
+  );
+  const thamNienCV = Math.round(luongNgachBac * tyLeThamNienCV);
   
-  // ── Bước 4: Vượt khung ──
-  const soLanVuotKhung = Number(staff?.namVuotKhung) || 0;
-  const phanTramVuotKhung = soLanVuotKhung * (Number(p.VUOT_KHUNG_PHAN_TRAM) || 5) / 100;
-  const vuotKhung = Math.round(luongNgachBac * phanTramVuotKhung);
+  // ── Bước 4: Vượt khung chung toàn quỹ (sau 5 bậc ngạch) ──
+  const soLanVuotKhung = Number(cfg.namVuotKhung !== undefined ? cfg.namVuotKhung : staff?.namVuotKhung) || 0;
+  const pctVkChung = Number(p.VUOT_KHUNG_CHUNG_TOAN_QUY_PCT || p.VUOT_KHUNG_PHAN_TRAM) || 5;
+  const maxLanVk = Number(p.VUOT_KHUNG_TOI_DA_LAN) || 8;
+  const soLanVkHopLe = Math.min(soLanVuotKhung, maxLanVk);
+  const vuotKhung = Math.round(luongNgachBac * (soLanVkHopLe * pctVkChung / 100));
   
-  // ── Bước 5: Lương cố định (L1 vị trí chuẩn, chưa có KPI) ──
-  const luongCoDinh = luongNgachBac + thamNienCT + vuotKhung;
+  // ── Bước 5: Lương cố định ──
+  const luongCoDinh = luongNgachBac + thamNienCT + thamNienCV + vuotKhung;
   
   // ── Bước 6: Phụ cấp trách nhiệm chức danh ──
   const phuCapTN = Number(position?.phuCapTN || staff?.phuCapTN) || 0;
   
-  // ── Bước 7: Tính phụ cấp khoán từ DM_PHU_CAP ──
-  const allowanceResult = calcAllowancesForStaff(staff, position, allowances);
+  // ── Bước 7: Tính phụ cấp khoán từ DM_PHU_CAP (kèm khoán HĐQT tính vào bảng lương tổng) ──
+  const allowanceResult = calcAllowancesForStaff(staff, position, allowances, cfg.allowances);
   const tongKhoanChi = allowanceResult.tongKhoanChi;
   const chiTietKhoan = allowanceResult.chiTiet;
   const tongMienThue = allowanceResult.tongMienThue;
+  const khoanHdqt = allowanceResult.khoanHdqt || 0;
   
-  // ── Bước 8: KPI ──
-  const kpiScoreRatio = Math.min(Math.max(Number(kpiScore) || 100, 0), 120) / 100;
-  let heSoKpi;
-  if (scenario === 'PA1') heSoKpi = Number(position?.pa1Kpi) || 0.15;
-  else if (scenario === 'PA3') heSoKpi = Number(position?.pa3Kpi) || 0.15;
-  else heSoKpi = Number(position?.pa2Kpi) || 0.15;
+  // ── Bước 8: Lương hiệu quả KPI theo % kết cấu hoặc đơn giá ──
+  const kpiScoreRatio = Math.min(Math.max(Number(kpiScore) || 100, 0), 150) / 100;
+  const deptRatio = Number(cfg.deptKpiRatio) || 40; // % KPI trong thu nhập
+  let luongKpi = 0;
   
-  const luongKpi = Math.round(luongCoDinh * heSoKpi * kpiScoreRatio * tyLeCongThuc);
-  const tienThuong = 0; // Thưởng thêm (nếu có, nhập riêng)
+  if (cfg.kpiCalcMethod === 'FIXED_PRICE') {
+    const donGiaKpi = Number(cfg.donGiaKpiCoBan) || 3500000;
+    const heSoKpi = Number(position?.pa2Kpi || staff?.heSoKpi) || 1.0;
+    luongKpi = Math.round(heSoKpi * donGiaKpi * kpiScoreRatio * tyLeCongThuc);
+  } else {
+    // Mặc định: theo % kết cấu bộ phận
+    const validRatio = Math.max(0, Math.min(deptRatio, 85));
+    const multiplier = (100 - validRatio) > 0 ? (validRatio / (100 - validRatio)) : 0;
+    const luongKpiCoSo = luongCoDinh * multiplier;
+    luongKpi = Math.round(luongKpiCoSo * kpiScoreRatio * tyLeCongThuc);
+  }
+  
+  const tienThuong = Number(cfg.tienThuong) || 0;
   
   // ── Bước 9: BHXH cá nhân hóa ──
   const tranBHXH = luongCoSo * (Number(p.BHXH_TRAN_LAN) || 20);
-  // Căn cứ đóng chuẩn = Lương ngạch bậc + Phụ cấp TN (chịu BHXH)
   const canCuDongBhxhL1 = Math.min(luongNgachBac + phuCapTN, tranBHXH);
-  // Mức đóng cá nhân chọn
-  const mucDongBhxhCaNhan = staff?.mucDongBhxh ? 
-    Math.min(Math.max(Number(staff.mucDongBhxh), luongCoSo), tranBHXH) : canCuDongBhxhL1;
+  
+  // Mức đóng cá nhân tự chọn
+  const customBhxh = cfg.customBhxhSalary !== undefined ? cfg.customBhxhSalary : staff?.mucDongBhxh;
+  const mucDongBhxhCaNhan = customBhxh ? 
+    Math.min(Math.max(Number(customBhxh), luongCoSo), tranBHXH) : canCuDongBhxhL1;
   
   const bhxhNld = Math.round(mucDongBhxhCaNhan * (Number(p.BHXH_NLD) || 0.08));
   const bhytNld = Math.round(mucDongBhxhCaNhan * (Number(p.BHYT_NLD) || 0.015));
   const bhtnNld = Math.round(mucDongBhxhCaNhan * (Number(p.BHTN_NLD) || 0.01));
   const tongKhauTruBH = bhxhNld + bhytNld + bhtnNld;
   
-  // Tiền thừa Quỹ trả khi đóng thấp hơn chuẩn L1
-  const bhxhDonViDinhMuc = Math.round(canCuDongBhxhL1 * (Number(p.BHXH_NLD) + Number(p.BHYT_NLD) + Number(p.BHTN_NLD) + Number(p.BHXH_DON_VI) + Number(p.BHYT_DON_VI) + Number(p.BHTN_DON_VI) || 0.235));
-  const bhxhDonViThucTe = Math.round(mucDongBhxhCaNhan * (Number(p.BHXH_DON_VI) + Number(p.BHYT_DON_VI) + Number(p.BHTN_DON_VI) || 0.215));
-  const tienThuaBhxh = Math.max(0, bhxhDonViDinhMuc - bhxhDonViThucTe - (Math.round(canCuDongBhxhL1 * (Number(p.BHXH_NLD) + Number(p.BHYT_NLD) + Number(p.BHTN_NLD) || 0.105)) - tongKhauTruBH));
+  // Số thừa Quỹ trả mà NLĐ được hưởng thêm
+  const bhxhDonViDinhMuc = Math.round(canCuDongBhxhL1 * 0.235); // Quỹ chịu 23.5%
+  const bhxhDonViThucTe = Math.round(mucDongBhxhCaNhan * 0.235);
+  const tienThuaBhxh = Math.max(0, bhxhDonViDinhMuc - bhxhDonViThucTe);
   
-  // ── Bước 10: Tổng Gross (có cộng tiền thừa BHXH) ──
-  const tongGross = luongCoDinh + phuCapTN + tongKhoanChi + luongKpi + tienThuong + tienThuaBhxh;
+  // ── Bước 10: Tổng Gross (bao gồm khoán HĐQT & tiền thừa BHXH) ──
+  const tongGross = luongCoDinh + phuCapTN + tongKhoanChi + khoanHdqt + luongKpi + tienThuong + tienThuaBhxh;
   
   // ── Bước 11-17: Thuế TNCN ──
   const giamTruBanThan = Number(p.TNCN_GIAM_TRU_BAN_THAN) || 11000000;
@@ -246,12 +280,15 @@ function computeOneStaffPayroll({ staff, position, timesheet, kpiScore, allowanc
     congChuan, congThuc, tyLeCong,
     luongNgachBac,
     namThamNienCT, tyLeThamNienCT: Math.round(tyLeThamNienCT * 100), thamNienCT,
+    namDamNhiemThucTe, namQuyDoi, tongNamChucVu, tyLeThamNienCV: Math.round(tyLeThamNienCV * 100), thamNienCV,
     soLanVuotKhung, vuotKhung,
     luongCoDinh,
     phuCapTN,
+    khoanHdqt,
     ...chiTietKhoan,
     tongKhoanChi,
-    heSoKpi, kpiScoreRatio: Math.round(kpiScoreRatio * 100), luongKpi,
+    heSoKpi: cfg.kpiCalcMethod === 'FIXED_PRICE' ? (Number(position?.pa2Kpi || staff?.heSoKpi) || 1.0) : (deptRatio / 100),
+    kpiScoreRatio: Math.round(kpiScoreRatio * 100), luongKpi,
     tienThuong, tienThuaBhxh,
     tongGross,
     mucDongBhxhCaNhan, canCuDongBhxhL1,
@@ -265,15 +302,24 @@ function computeOneStaffPayroll({ staff, position, timesheet, kpiScore, allowanc
 }
 
 /**
- * Tính phụ cấp khoán cho 1 CBNV dựa trên DM_PHU_CAP
+ * Tính phụ cấp khoán cho 1 CBNV dựa trên DM_PHU_CAP (hỗ trợ overrides và khoán HĐQT)
  */
-function calcAllowancesForStaff(staff, position, allowances) {
+function calcAllowancesForStaff(staff, position, allowances, customAllowances) {
   if (!allowances || allowances.length === 0) {
     // Default cố định nếu chưa có CSDL
+    const custom = customAllowances || {};
+    const anTrua = custom.lunch !== undefined ? Number(custom.lunch) : 1000000;
+    const xangXe = custom.fuel !== undefined ? Number(custom.fuel) : 400000;
+    const dienThoai = custom.phone !== undefined ? Number(custom.phone) : 300000;
+    const trangPhuc = custom.clothing !== undefined ? Number(custom.clothing) : 500000;
+    const isHdqt = detectNhomKhoan(staff?.chucDanh || '') === 'HDQT';
+    const khoanHdqt = isHdqt ? (custom.hdqt !== undefined ? Number(custom.hdqt) : 3000000) : 0;
+
     return {
-      chiTiet: { anTrua: 1000000, xangXe: 400000, dienThoai: 300000, trangPhuc: 500000, khoanKhac: 0 },
-      tongKhoanChi: 2200000,
-      tongMienThue: 730000 + 500000 + 400000 + 300000
+      chiTiet: { anTrua, xangXe, dienThoai, trangPhuc, khoanKhac: 0 },
+      khoanHdqt,
+      tongKhoanChi: anTrua + xangXe + dienThoai + trangPhuc,
+      tongMienThue: Math.min(anTrua, 730000) + xangXe + dienThoai + Math.min(trangPhuc, 416666)
     };
   }
   
@@ -281,21 +327,37 @@ function calcAllowancesForStaff(staff, position, allowances) {
   const nhomKhoan = detectNhomKhoan(chucDanhStr);
   let tongKhoanChi = 0;
   let tongMienThue = 0;
+  let khoanHdqt = 0;
   const chiTiet = {};
   
   allowances.forEach(al => {
-    if (!al.batTat && al.batTat !== undefined) return; // Skip nếu tắt
+    if (al.batTat === false || al.batTat === 'KHÔNG' || al.batTat === 'TẮT') return;
     const nhomApDung = al.nhomApDung || 'TAT_CA';
     if (nhomApDung !== 'TAT_CA' && nhomApDung !== nhomKhoan) return;
     
-    const muc = Number(al.mucCoDinh || al.mucTieuChuan) || 0;
+    let muc = Number(al.mucCoDinh || al.mucTieuChuan) || 0;
+    // Kiểm tra nếu có custom override
+    if (customAllowances) {
+      if (al.maKhoan === 'AN_TRUA' && customAllowances.lunch !== undefined) muc = Number(customAllowances.lunch);
+      if (al.maKhoan === 'XANG_XE' && customAllowances.fuel !== undefined) muc = Number(customAllowances.fuel);
+      if (al.maKhoan === 'DIEN_THOAI' && customAllowances.phone !== undefined) muc = Number(customAllowances.phone);
+      if (al.maKhoan === 'TRANG_PHUC' && customAllowances.clothing !== undefined) muc = Number(customAllowances.clothing);
+      if (al.maKhoan === 'KHOAN_HDQT' && customAllowances.hdqt !== undefined) muc = Number(customAllowances.hdqt);
+    }
+
     const key = String(al.maKhoan || '').toLowerCase().replace(/_/g, '');
     chiTiet[key] = muc;
-    tongKhoanChi += muc;
+
+    if (al.maKhoan === 'KHOAN_HDQT' || nhomApDung === 'HDQT') {
+      khoanHdqt += muc;
+    } else {
+      tongKhoanChi += muc;
+    }
+
     tongMienThue += Math.min(muc, Number(al.mienThueToiDa) || 0);
   });
   
-  return { chiTiet, tongKhoanChi, tongMienThue };
+  return { chiTiet, khoanHdqt, tongKhoanChi, tongMienThue };
 }
 
 function detectNhomKhoan(chucDanhStr) {

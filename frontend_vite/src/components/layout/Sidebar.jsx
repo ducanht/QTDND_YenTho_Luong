@@ -53,7 +53,7 @@ const NAV_SECTIONS = [
       { id: 'simulation.salary_structure', label: 'Cơ cấu lương & hệ số',    icon: Briefcase },
       { id: 'simulation.allowances',       label: 'Khoán & phụ cấp',          icon: Receipt },
       { id: 'simulation.insurance_tax',    label: 'BHXH & thuế TNCN',         icon: ShieldCheck },
-      { id: 'simulation.scenarios',        label: 'Phương án A/B/C',           icon: GitCompare },
+      { id: 'simulation.scenarios',        label: 'Kịch bản mô phỏng & So sánh', icon: GitCompare },
       { id: 'simulation.proposal',         label: 'Tờ trình HĐQT',            icon: ScrollText },
     ],
     roles: ['SUPER_ADMIN', 'LANH_DAO'],

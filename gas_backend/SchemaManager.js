@@ -16,7 +16,8 @@ const SHEET_DEFINITIONS = {
       'Ngày sinh', 'Giới tính', 'Số CCCD', 'Ngày cấp CCCD', 'Nơi cấp CCCD',
       'Địa chỉ thường trú', 'Ngày vào làm', 'Trạng thái', 'Số NPT',
       'Số tài khoản NH', 'Tên ngân hàng', 'Mã số thuế', 'Số sổ BHXH', 'Link ảnh thẻ', 'Ghi chú', 'Mức đóng BHXH',
-      'Ngày đảm nhiệm chức vụ', 'Bậc lương', 'Năm vượt khung'
+      'Ngày đảm nhiệm chức vụ', 'Thâm niên CV quy đổi (năm)', 'Bậc lương', 'Năm vượt khung',
+      'Link File HĐLĐ', 'Link File Phụ lục HĐLĐ', 'Link File Quyết định'
     ]
   },
   LS_CONGTAC: {
@@ -26,7 +27,7 @@ const SHEET_DEFINITIONS = {
       'Mã bản ghi', 'Mã NV', 'Họ và tên', 'Số Quyết định', 'Ngày quyết định',
       'Từ ngày', 'Đến ngày', 'Mã vị trí', 'Chức danh công tác', 'Bậc',
       'Hệ số lương', 'Tỷ lệ KPI trần', 'Tỷ lệ Thưởng trần', 'Phụ cấp trách nhiệm',
-      'Thù lao quản trị', 'Lý do điều chỉnh', 'Trạng thái'
+      'Thù lao quản trị', 'Lý do điều chỉnh', 'Trạng thái', 'Link File Quyết định'
     ]
   },
   DM_CHUCDANH: {
@@ -38,14 +39,16 @@ const SHEET_DEFINITIONS = {
       'PA1 KPI', 'PA2 KPI', 'PA3 KPI',
       'PA1 Thưởng', 'PA2 Thưởng', 'PA3 Thưởng',
       'Phụ cấp TN ₫', 'Thù lao QT ₫', 'Ngày hiệu lực', 'Quyết định phê duyệt',
-      'Nhóm khoán', 'Hệ số bậc 1', 'Hệ số bậc 2', 'Hệ số bậc 3', 'Hệ số bậc 4', 'Hệ số bậc 5', '% Vượt khung mỗi lần', 'Lần vượt khung tối đa', 'Kỳ nâng bậc (năm)'
+      'Nhóm khoán', 'Hệ số bậc 1', 'Hệ số bậc 2', 'Hệ số bậc 3', 'Hệ số bậc 4', 'Hệ số bậc 5',
+      '% Vượt khung mỗi lần', 'Lần vượt khung tối đa', 'Kỳ nâng bậc (năm)', 'Ghi chú'
     ]
   },
   DM_KPI: {
     name: 'DM_KPI',
     createFn: 'taoSheet_DM_KPI',
     headers: [
-      'Mã KPI', 'Tên chỉ số KPI', 'Khối áp dụng', 'Đơn vị tính', 'Trọng số mặc định', 'Tiêu chuẩn đánh giá / Công thức'
+      'Mã KPI', 'Tên chỉ số KPI', 'Khối áp dụng', 'Đơn vị tính', 'Trọng số mặc định',
+      'Tiêu chuẩn đánh giá / Công thức', 'Bật/tắt', 'Người tạo', 'Ngày tạo'
     ]
   },
   CHAM_CONG: {
@@ -61,7 +64,13 @@ const SHEET_DEFINITIONS = {
     createFn: 'taoSheet_DG_KPI',
     headers: [
       'Mã đánh giá', 'Kỳ (YYYY-MM)', 'Mã NV', 'Họ và tên', 'Mã KPI',
-      'Chỉ tiêu giao', 'Thực tế thực hiện', 'Tỷ lệ đạt %', 'Điểm trọng số', 'Xếp loại tháng'
+      'Chỉ tiêu giao', 'Thực tế thực hiện', 'Tỷ lệ đạt %',
+      'Điểm tự đánh giá', 'Ý kiến tự đánh giá',
+      'Điểm Trưởng BP', 'Ý kiến Trưởng BP',
+      'Điểm Giám đốc', 'Ý kiến Giám đốc',
+      'Điểm HĐ lương', 'Ý kiến HĐ lương',
+      'Điểm chốt', 'Xếp loại tháng',
+      'Bước phê duyệt', 'Người cập nhật', 'Thời gian cập nhật'
     ]
   },
   BL_LICHSU: {
@@ -74,7 +83,8 @@ const SHEET_DEFINITIONS = {
       'Xăng xe', 'Điện thoại', 'Trang phục', 'Khoán khác', 'Tổng thu nhập Gross',
       'BHXH NLĐ (10.5%)', 'Giảm trừ gia cảnh', 'Thu nhập tính thuế', 'Thuế TNCN',
       'Thực Lĩnh (Net)', 'BHXH Đơn vị (21.5%)', 'Ngày chốt & Khóa sổ',
-      'Thâm niên CT', 'Vượt khung', 'Điểm KPI', 'Lương KPI', 'Tiền thừa BHXH', 'BHXH NLĐ 8%', 'BHYT NLĐ 1.5%', 'BHTN NLĐ 1%', 'Tổng chi phí Quỹ'
+      'Thâm niên CT', 'Thâm niên CV', 'Vượt khung', 'Điểm KPI', 'Lương KPI', 'Tiền thừa BHXH',
+      'BHXH NLĐ 8%', 'BHYT NLĐ 1.5%', 'BHTN NLĐ 1%', 'Khoán HĐQT', 'Tổng chi phí Quỹ'
     ]
   },
   TAIKHOAN: {
@@ -82,7 +92,8 @@ const SHEET_DEFINITIONS = {
     createFn: 'taoSheet_TAIKHOAN',
     headers: [
       'Mã tài khoản', 'Tên đăng nhập / Mã NV', 'Họ và tên', 'Mật khẩu mã hóa',
-      'Email', 'Vai trò RBAC', 'Trạng thái', 'Lần đăng nhập cuối', 'Ghi chú'
+      'Email', 'Vai trò RBAC', 'Mã NV liên kết', 'Phòng ban phụ trách',
+      'Quyền chi tiết 360', 'Trạng thái', 'Lần đăng nhập cuối', 'Ghi chú'
     ]
   },
   AUDIT_LOG: {
@@ -115,7 +126,7 @@ const SHEET_DEFINITIONS = {
       'Mã khoản', 'Tên khoản phụ cấp / khoán', 'Phân loại chi', 'Cột bảng lương',
       'Tính BHXH?', 'Tính Thuế TNCN?', 'Mức miễn thuế tối đa ₫', 'Phương thức tính',
       'Căn cứ pháp lý & Quy chế', 'Ghi chú nghiệp vụ',
-      'Nhóm áp dụng', 'Bật/tắt', 'Mức cố định ₫', 'Điều kiện hưởng'
+      'Nhóm áp dụng', 'Bật/tắt', 'Mức cố định ₫', 'Điều kiện hưởng', 'Tính vào bảng lương tổng'
     ]
   },
   LS_KHOAN: {
@@ -130,22 +141,40 @@ const SHEET_DEFINITIONS = {
   DM_BAC_LUONG: {
     name: 'DM_BAC_LUONG',
     createFn: 'taoSheet_DM_BAC_LUONG',
-    headers: ['Mã vị trí', 'Tên chức danh', 'Bậc', 'Loại bậc', 'Hệ số', 'Lương ngạch bậc (CB 2340K)', 'Ghi chú', 'Ngày hiệu lực']
+    headers: [
+      'Mã vị trí', 'Tên chức danh', 'Bậc', 'Loại bậc', 'Hệ số', 'Lương ngạch bậc (CB 2340K)',
+      'Số năm giữ bậc yêu cầu', 'Ghi chú', 'Ngày hiệu lực'
+    ]
   },
   DM_THAM_SO_LUONG: {
     name: 'DM_THAM_SO_LUONG',
     createFn: 'taoSheet_DM_THAM_SO_LUONG',
-    headers: ['Nhóm tham số', 'Mã tham số', 'Tên tham số', 'Giá trị số', 'Giá trị chuỗi', 'Đơn vị', 'Từ ngày hiệu lực', 'Đến ngày', 'Căn cứ pháp lý', 'Ghi chú']
+    headers: [
+      'Nhóm tham số', 'Mã tham số', 'Tên tham số', 'Giá trị số', 'Giá trị chuỗi',
+      'Đơn vị', 'Từ ngày hiệu lực', 'Đến ngày', 'Căn cứ pháp lý', 'Ghi chú'
+    ]
   },
   DM_CONG_THUC: {
     name: 'DM_CONG_THUC',
     createFn: 'taoSheet_DM_CONG_THUC',
-    headers: ['Mã CT', 'Tên thành phần', 'Thứ tự', 'Cách tính', 'Tính BHXH', 'Tính Thuế', 'Miễn thuế tối đa', 'Phạm vi áp dụng', 'Bật/tắt', 'Ghi chú']
+    headers: [
+      'Mã CT', 'Tên thành phần', 'Thứ tự', 'Cách tính', 'Tính BHXH',
+      'Tính Thuế', 'Miễn thuế tối đa', 'Phạm vi áp dụng', 'Bật/tắt', 'Ghi chú'
+    ]
   },
   KQ_LUONG_THANG: {
     name: 'KQ_LUONG_THANG',
     createFn: 'taoSheet_KQ_LUONG_THANG',
-    headers: ['Kỳ lương', 'Mã NV', 'Họ và tên', 'Chức danh', 'Bậc', 'Hệ số', 'Ngày công chuẩn', 'Ngày công thực', 'Lương ngạch bậc', 'Thâm niên CT', 'Vượt khung', 'Phụ cấp TN', 'Ăn trưa', 'Xăng xe', 'Điện thoại', 'Trang phục', 'Khoán khác', 'Điểm KPI', 'Lương KPI', 'Tiền thưởng', 'Tiền thừa BHXH', 'Tổng Gross', 'Căn cứ đóng BHXH', 'BHXH NLĐ 8%', 'BHYT NLĐ 1.5%', 'BHTN NLĐ 1%', 'Tổng khấu trừ BH', 'Thu nhập chịu thuế', 'Giảm trừ bản thân', 'Giảm trừ NPT', 'Thu nhập tính thuế', 'Thuế TNCN', 'Thực lĩnh Net', 'BHXH Quỹ 17.5%', 'BHYT Quỹ 3%', 'BHTN Quỹ 1%', 'Tổng chi phí Quỹ', 'Trạng thái', 'Người tạo', 'Thời gian tạo']
+    headers: [
+      'Kỳ lương', 'Mã NV', 'Họ và tên', 'Chức danh', 'Bậc', 'Hệ số', 'Ngày công chuẩn', 'Ngày công thực',
+      'Lương ngạch bậc', 'Thâm niên CT', 'Thâm niên CV', 'Vượt khung', 'Phụ cấp TN',
+      'Ăn trưa', 'Xăng xe', 'Điện thoại', 'Trang phục', 'Khoán khác', 'Khoán HĐQT',
+      'Điểm KPI', 'Lương KPI', 'Tiền thưởng', 'Tiền thừa BHXH', 'Tổng Gross', 'Căn cứ đóng BHXH',
+      'BHXH NLĐ 8%', 'BHYT NLĐ 1.5%', 'BHTN NLĐ 1%', 'Tổng khấu trừ BH',
+      'Thu nhập chịu thuế', 'Giảm trừ bản thân', 'Giảm trừ NPT', 'Thu nhập tính thuế', 'Thuế TNCN',
+      'Thực lĩnh Net', 'BHXH Quỹ 17.5%', 'BHYT Quỹ 3%', 'BHTN Quỹ 1%', 'Tổng chi phí Quỹ',
+      'Trạng thái', 'Người tạo', 'Thời gian tạo'
+    ]
   }
 };
 

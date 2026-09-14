@@ -21,7 +21,12 @@ import {
   CreditCard,
   Percent,
   RotateCcw,
-  Check
+  Check,
+  Download,
+  Image,
+  FileSpreadsheet,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { formatCurrency, formatPercent } from '../../utils/currency';
 import { simulateStaffCompensation, detectDepartmentKey } from '../../utils/taxEngine';
@@ -39,15 +44,120 @@ const formatShort = (amount) => {
   return String(amount);
 };
 
-export function SimulationModule({ data, onSaveScenario, onRefresh }) {
+const DEFAULT_SCENARIOS = [
+  {
+    id: 'SCENARIO_STANDARD_2027',
+    name: 'Chuẩn HĐQT 2027',
+    luongCoSo: 2340000,
+    tranKpi: 115,
+    donGiaKpiCoBan: 4000000,
+    kpiCalcMethod: 'DEPT_RATIO',
+    deptKpiRatios: { LANH_DAO: 40, TIN_DUNG: 50, KE_TOAN: 35, HO_TRO: 20 },
+    bulkBhxhOption: 'INDIVIDUAL',
+    anTrua: 850000,
+    xangXe: 500000,
+    dienThoai: 400000,
+    trangPhuc: 416666,
+    trachNhiem: 600000,
+    docHai: 400000,
+    quyThuongNam: 200000000
+  },
+  {
+    id: 'SCENARIO_BASE_2500',
+    name: 'Lương Cơ Sở 2.50Tr',
+    luongCoSo: 2500000,
+    tranKpi: 110,
+    donGiaKpiCoBan: 4200000,
+    kpiCalcMethod: 'DEPT_RATIO',
+    deptKpiRatios: { LANH_DAO: 40, TIN_DUNG: 50, KE_TOAN: 35, HO_TRO: 20 },
+    bulkBhxhOption: 'INDIVIDUAL',
+    anTrua: 900000,
+    xangXe: 500000,
+    dienThoai: 400000,
+    trangPhuc: 416666,
+    trachNhiem: 600000,
+    docHai: 400000,
+    quyThuongNam: 220000000
+  },
+  {
+    id: 'SCENARIO_HIGH_KPI',
+    name: 'Đột Phá Kinh Doanh',
+    luongCoSo: 2340000,
+    tranKpi: 125,
+    donGiaKpiCoBan: 4500000,
+    kpiCalcMethod: 'DEPT_RATIO',
+    deptKpiRatios: { LANH_DAO: 45, TIN_DUNG: 60, KE_TOAN: 40, HO_TRO: 25 },
+    bulkBhxhOption: 'INDIVIDUAL',
+    anTrua: 850000,
+    xangXe: 600000,
+    dienThoai: 500000,
+    trangPhuc: 416666,
+    trachNhiem: 600000,
+    docHai: 400000,
+    quyThuongNam: 250000000
+  },
+  {
+    id: 'SCENARIO_COST_OPTIMAL',
+    name: 'Tối Ưu Chi Phí Quỹ',
+    luongCoSo: 2340000,
+    tranKpi: 100,
+    donGiaKpiCoBan: 3500000,
+    kpiCalcMethod: 'DEPT_RATIO',
+    deptKpiRatios: { LANH_DAO: 35, TIN_DUNG: 40, KE_TOAN: 30, HO_TRO: 15 },
+    bulkBhxhOption: 'INDIVIDUAL',
+    anTrua: 730000,
+    xangXe: 400000,
+    dienThoai: 300000,
+    trangPhuc: 416666,
+    trachNhiem: 500000,
+    docHai: 300000,
+    quyThuongNam: 150000000
+  }
+];
+
+export function SimulationModule({
+  data,
+  activeSubTab: externalSubTab = 'scenarios',
+  onSaveScenario,
+  onSaveSalaryParams,
+  onSaveSalaryScale,
+  onSaveAllowances,
+  onRefresh
+}) {
   // Lấy dữ liệu 12 CBNV và Chức danh từ CSDL
   const staffList = data?.staffList || [];
   const positions = data?.positions || [];
   const scenarios = data?.scenarios || [];
 
-  // Trạng thái kịch bản và chế độ xem
-  const [selectedScenarioId, setSelectedScenarioId] = useState('PA3');
-  const [activeSubTab, setActiveSubTab] = useState('matrix'); // 'matrix' | 'tuner' | 'sensitivity' | 'proposal'
+  // Ánh xạ sub-tab routing V3 → nội dung hiện có
+  const subTabMapping = {
+    salary_structure: 'tuner',  // Cơ cấu lương & hệ số
+    allowances: 'tuner',        // Khoán & phụ cấp (tạm dùng tuner)
+    insurance_tax: 'tuner',     // BHXH & Thuế (tạm dùng tuner)
+    scenarios: 'matrix',        // Bảng so sánh 12 CBNV
+    proposal: 'proposal',       // Tờ trình HĐQT
+  };
+
+  // Quản lý danh sách kịch bản mô phỏng động
+  const [customScenarios, setCustomScenarios] = useState(() => {
+    if (scenarios && scenarios.length > 0) return scenarios;
+    return DEFAULT_SCENARIOS;
+  });
+
+  // Trạng thái kịch bản đang chọn và chế độ xem
+  const [selectedScenarioId, setSelectedScenarioId] = useState(() => {
+    if (scenarios && scenarios.length > 0) return scenarios[0].id;
+    return 'SCENARIO_STANDARD_2027';
+  });
+
+  // Modal tạo kịch bản mới & Modal xem trước in ấn A4
+  const [showNewScenarioModal, setShowNewScenarioModal] = useState(false);
+  const [newScenarioName, setNewScenarioName] = useState('');
+  const [newScenarioBaseSalary, setNewScenarioBaseSalary] = useState(2340000);
+  const [newScenarioTranKpi, setNewScenarioTranKpi] = useState(115);
+  const [showPrintModal, setShowPrintModal] = useState(false);
+
+  const [activeSubTab, setActiveSubTab] = useState(subTabMapping[externalSubTab] || 'matrix');
   const [displayMode, setDisplayMode] = useState('SUMMARY'); // 'SUMMARY' | 'DETAILED'
   const [pitRegime, setPitRegime] = useState('CURRENT'); // 'CURRENT' (11tr/4.4tr) | 'DRAFT' (15tr/6.2tr)
   const [departmentFilter, setDepartmentFilter] = useState('ALL');
@@ -147,16 +257,21 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
   // Tải cấu hình khi đổi kịch bản
   const handleSelectScenario = (scId) => {
     setSelectedScenarioId(scId);
-    const sc = scenarios.find(s => s.id === scId);
+    const sc = customScenarios.find(s => s.id === scId);
     if (sc) {
-      setLuongCoSo(sc.luongCoSo || 2340000);
-      setTranKpi(sc.tranKpi || 100);
-      setAnTrua(sc.anTrua || 730000);
-      setXangXe(sc.xangXe || 400000);
-      setDienThoai(sc.dienThoai || 300000);
-      setTrachNhiem(sc.trachNhiem || 500000);
-      setDocHai(sc.docHai || 300000);
-      setQuyThuongNam(sc.quyThuongNam || 150000000);
+      if (sc.luongCoSo !== undefined) setLuongCoSo(sc.luongCoSo);
+      if (sc.tranKpi !== undefined) setTranKpi(sc.tranKpi);
+      if (sc.donGiaKpiCoBan !== undefined) setDonGiaKpiCoBan(sc.donGiaKpiCoBan);
+      if (sc.kpiCalcMethod) setKpiCalcMethod(sc.kpiCalcMethod);
+      if (sc.deptKpiRatios) setDeptKpiRatios(sc.deptKpiRatios);
+      if (sc.bulkBhxhOption) setBulkBhxhOption(sc.bulkBhxhOption);
+      if (sc.anTrua !== undefined) setAnTrua(sc.anTrua);
+      if (sc.xangXe !== undefined) setXangXe(sc.xangXe);
+      if (sc.dienThoai !== undefined) setDienThoai(sc.dienThoai);
+      if (sc.trangPhuc !== undefined) setTrangPhuc(sc.trangPhuc);
+      if (sc.trachNhiem !== undefined) setTrachNhiem(sc.trachNhiem);
+      if (sc.docHai !== undefined) setDocHai(sc.docHai);
+      if (sc.quyThuongNam !== undefined) setQuyThuongNam(sc.quyThuongNam);
     }
   };
 
@@ -358,13 +473,47 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
     return { countMin, countStandard, countCustom, countSurplus };
   }, [simulationResults]);
 
+  const handleCreateNewScenario = (e) => {
+    e.preventDefault();
+    if (!newScenarioName.trim()) return;
+
+    const newId = `SCENARIO_${Date.now()}`;
+    const newSc = {
+      id: newId,
+      name: newScenarioName.trim(),
+      luongCoSo: newScenarioBaseSalary,
+      tranKpi: newScenarioTranKpi,
+      donGiaKpiCoBan,
+      deptKpiRatios: { ...deptKpiRatios },
+      kpiCalcMethod,
+      bulkBhxhOption,
+      anTrua,
+      xangXe,
+      dienThoai,
+      trangPhuc,
+      trachNhiem,
+      docHai,
+      quyThuongNam
+    };
+
+    setCustomScenarios(prev => [...prev, newSc]);
+    setSelectedScenarioId(newId);
+    setLuongCoSo(newScenarioBaseSalary);
+    setTranKpi(newScenarioTranKpi);
+    setShowNewScenarioModal(false);
+    setNewScenarioName('');
+    setSaveSuccessMsg(`✅ Đã tạo kịch bản mới "${newSc.name}"! Bạn có thể chỉnh sửa tham số và bấm "Lưu Kịch Bản".`);
+    setTimeout(() => setSaveSuccessMsg(''), 5000);
+  };
+
   const handleSaveCurrentScenario = async () => {
     setIsSaving(true);
     setSaveSuccessMsg('');
     try {
+      const activeSc = customScenarios.find(s => s.id === selectedScenarioId);
       const scenarioPayload = {
-        id: selectedScenarioId.startsWith('PA') ? `SCENARIO_${Date.now()}` : selectedScenarioId,
-        name: selectedScenarioId.startsWith('PA') ? `Kịch bản HĐQT tùy chỉnh (${new Date().toLocaleDateString('vi-VN')})` : `Kịch bản ${selectedScenarioId}`,
+        id: selectedScenarioId,
+        name: activeSc ? activeSc.name : `Kịch bản ${selectedScenarioId}`,
         luongCoSo,
         kpiCalcMethod,
         deptKpiRatios,
@@ -374,21 +523,386 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
         anTrua,
         xangXe,
         dienThoai,
+        trangPhuc,
         trachNhiem,
         docHai,
         quyThuongNam
       };
 
+      setCustomScenarios(prev => prev.map(s => s.id === selectedScenarioId ? { ...s, ...scenarioPayload } : s));
+
       if (onSaveScenario) {
         await onSaveScenario(scenarioPayload);
       }
-      setSaveSuccessMsg('✅ Đã lưu kịch bản vào CSDL thành công!');
+      setSaveSuccessMsg(`✅ Đã lưu kịch bản "${scenarioPayload.name}" vào CSDL thành công!`);
       setTimeout(() => setSaveSuccessMsg(''), 4000);
     } catch (err) {
       alert('Lỗi lưu kịch bản: ' + err.message);
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // 1. XUẤT BẢNG SO SÁNH RA EXCEL (.XLS)
+  const exportToExcel = () => {
+    const activeSc = customScenarios.find(s => s.id === selectedScenarioId);
+    const scenarioName = activeSc ? activeSc.name : `Kịch bản ${selectedScenarioId}`;
+    const dateStr = new Date().toLocaleDateString('vi-VN');
+
+    let html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8">
+        <style>
+          table { border-collapse: collapse; width: 100%; font-family: 'Times New Roman', serif; font-size: 11pt; }
+          th, td { border: 1px solid #999; padding: 6px; }
+          .header-title { font-size: 14pt; font-weight: bold; text-align: center; color: #17365d; }
+          .sub-title { font-size: 11pt; text-align: center; font-style: italic; color: #444; }
+          .th-main { background-color: #17365d; color: #ffffff; font-weight: bold; text-align: center; }
+          .num { text-align: right; mso-number-format: "#,##0"; }
+          .text-center { text-align: center; }
+          .total-row { background-color: #e6edf5; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <table>
+          <tr><td colspan="22" class="header-title">QUỸ TÍN DỤNG NHÂN DÂN YÊN THỌ</td></tr>
+          <tr><td colspan="22" class="sub-title">Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá</td></tr>
+          <tr><td colspan="22" style="height: 10px;"></td></tr>
+          <tr><td colspan="22" class="header-title">BẢNG SO SÁNH MÔ PHỎNG CHI TRẢ TIỀN LƯƠNG & CHI PHÍ QUỸ NĂM 2027</td></tr>
+          <tr><td colspan="22" class="sub-title">Kịch bản: <b>${scenarioName}</b> | Lương cơ sở: <b>${formatCurrency(luongCoSo)}</b> | Trần KPI: <b>${tranKpi}%</b> | Ngày xuất: ${dateStr}</td></tr>
+          <tr><td colspan="22" style="height: 15px;"></td></tr>
+          <thead>
+            <tr>
+              <th class="th-main">STT</th>
+              <th class="th-main">Mã NV</th>
+              <th class="th-main">Họ và tên</th>
+              <th class="th-main">Chức danh</th>
+              <th class="th-main">Phòng ban</th>
+              <th class="th-main">Bậc</th>
+              <th class="th-main">Hệ số</th>
+              <th class="th-main">TN Công tác</th>
+              <th class="th-main">TN Chức vụ</th>
+              <th class="th-main">Vượt khung</th>
+              <th class="th-main">Lương Vị trí (L1)</th>
+              <th class="th-main">Lương KPI (L2)</th>
+              <th class="th-main">Khoán & PC (L3)</th>
+              <th class="th-main">Tiền thừa BHXH</th>
+              <th class="th-main">Tổng Gross Đề xuất</th>
+              <th class="th-main">Trích BHXH NLĐ (10.5%)</th>
+              <th class="th-main">Thuế TNCN</th>
+              <th class="th-main">Thực lĩnh Net</th>
+              <th class="th-main">BHXH Quỹ (23.5%)</th>
+              <th class="th-main">Tổng Chi Phí Quỹ</th>
+              <th class="th-main">Gross Cũ (Hiện tại)</th>
+              <th class="th-main">Chênh lệch Gross</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    simulationResults.forEach((r, idx) => {
+      html += `
+        <tr>
+          <td class="text-center">${idx + 1}</td>
+          <td class="text-center">${r.maNV}</td>
+          <td><b>${r.hoTen}</b></td>
+          <td>${r.chucDanh}</td>
+          <td>${r.phongBan}</td>
+          <td class="text-center">${r.moPhong.bac || 1}</td>
+          <td class="num">${r.moPhong.heSoLuong.toFixed(2)}</td>
+          <td class="text-center">${r.moPhong.namThamNienCT || 0} năm</td>
+          <td class="text-center">${r.moPhong.tongNamChucVu || 0} năm</td>
+          <td class="text-center">${(r.moPhong.soLanVuotKhung || 0) * 5}%</td>
+          <td class="num">${r.moPhong.luongViTri}</td>
+          <td class="num">${r.moPhong.luongKpi}</td>
+          <td class="num">${r.moPhong.tongKhoanChi + r.moPhong.khoanTrachNhiem}</td>
+          <td class="num">${r.moPhong.tienThuaBhxhHuong || 0}</td>
+          <td class="num"><b>${r.moPhong.tongGross}</b></td>
+          <td class="num">${r.moPhong.tongKhauTruBh}</td>
+          <td class="num">${r.moPhong.thueTncn}</td>
+          <td class="num"><b>${r.moPhong.thucLinhNet}</b></td>
+          <td class="num">${r.moPhong.bhxhDonVi}</td>
+          <td class="num"><b>${r.moPhong.tongChiPhiQuy}</b></td>
+          <td class="num">${r.hienTai.tongGross}</td>
+          <td class="num" style="color: ${r.chenhLechGross >= 0 ? '#047857' : '#e11d48'}">${r.chenhLechGross}</td>
+        </tr>
+      `;
+    });
+
+    const totalViTri = simulationResults.reduce((s, r) => s + r.moPhong.luongViTri, 0);
+    const totalKpi = simulationResults.reduce((s, r) => s + r.moPhong.luongKpi, 0);
+    const totalKhoan = simulationResults.reduce((s, r) => s + r.moPhong.tongKhoanChi + r.moPhong.khoanTrachNhiem, 0);
+    const totalThuaBhxh = simulationResults.reduce((s, r) => s + (r.moPhong.tienThuaBhxhHuong || 0), 0);
+    const totalGross = macroMetrics.tongGrossThangMoPhong;
+    const totalKhauTruBh = simulationResults.reduce((s, r) => s + r.moPhong.tongKhauTruBh, 0);
+    const totalThue = macroMetrics.tongThueTncnThangMoPhong;
+    const totalNet = macroMetrics.tongNetThangMoPhong;
+    const totalBhxhQuy = simulationResults.reduce((s, r) => s + r.moPhong.bhxhDonVi, 0);
+    const totalChiPhi = simulationResults.reduce((s, r) => s + r.moPhong.tongChiPhiQuy, 0);
+    const totalGrossCu = macroMetrics.tongGrossThangHienTai;
+    const totalChenhLech = totalGross - totalGrossCu;
+
+    html += `
+        <tr class="total-row">
+          <td colspan="10" class="text-center"><b>TỔNG CỘNG TOÀN QUỸ (12 CBNV)</b></td>
+          <td class="num"><b>${totalViTri}</b></td>
+          <td class="num"><b>${totalKpi}</b></td>
+          <td class="num"><b>${totalKhoan}</b></td>
+          <td class="num"><b>${totalThuaBhxh}</b></td>
+          <td class="num"><b>${totalGross}</b></td>
+          <td class="num"><b>${totalKhauTruBh}</b></td>
+          <td class="num"><b>${totalThue}</b></td>
+          <td class="num"><b>${totalNet}</b></td>
+          <td class="num"><b>${totalBhxhQuy}</b></td>
+          <td class="num"><b>${totalChiPhi}</b></td>
+          <td class="num"><b>${totalGrossCu}</b></td>
+          <td class="num"><b>${totalChenhLech}</b></td>
+        </tr>
+        <tr><td colspan="22" style="height: 20px;"></td></tr>
+        <tr>
+          <td colspan="7" class="text-center"><b>NGƯỜI LẬP BIỂU</b><br><br><br><br><i>(Ký, ghi rõ họ tên)</i></td>
+          <td colspan="7" class="text-center"><b>KẾ TOÁN TRƯỞNG</b><br><br><br><br><i>(Ký, ghi rõ họ tên)</i></td>
+          <td colspan="8" class="text-center"><b>CHỦ TỊCH HỘI ĐỒNG QUẢN TRỊ</b><br><br><br><br><i>(Ký tên, đóng dấu)</i></td>
+        </tr>
+      </tbody>
+    </table>
+    </body>
+    </html>
+    `;
+
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const cleanScName = scenarioName.replace(/[^a-zA-Z0-9_\u00C0-\u024F\u1EA0-\u1EF9]/g, '_');
+    a.download = `Bang_So_Sanh_Mo_Phong_Luong_${cleanScName}_${new Date().toISOString().slice(0, 10)}.xls`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // 2. XUẤT ẢNH PNG ĐỘ PHÂN GIẢI CAO (2X HIGH-DPI) GỬI ZALO/TELEGRAM
+  const exportToImage = () => {
+    const activeSc = customScenarios.find(s => s.id === selectedScenarioId);
+    const scenarioName = activeSc ? activeSc.name : `Kịch bản ${selectedScenarioId}`;
+
+    const canvas = document.createElement('canvas');
+    const scale = 2;
+    const width = 1920;
+    const height = 1120;
+
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+
+    // Nền trắng / slate sáng
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, width, height);
+
+    // Banner tiêu đề Navy
+    const grad = ctx.createLinearGradient(0, 0, width, 0);
+    grad.addColorStop(0, '#0f172a');
+    grad.addColorStop(1, '#1e293b');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, width, 140);
+
+    ctx.fillStyle = '#a3e635';
+    ctx.font = 'bold 13px "Be Vietnam Pro", sans-serif';
+    ctx.fillText('🏛️ QUỸ TÍN DỤNG NHÂN DÂN YÊN THỌ • XÃ QUÝ LỘC, TỈNH THANH HOÁ', 40, 35);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 24px "Be Vietnam Pro", sans-serif';
+    ctx.fillText('BẢNG SO SÁNH MÔ PHỎNG CHI TRẢ TIỀN LƯƠNG & CHI PHÍ QUỸ NĂM 2027', 40, 72);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '13px "Be Vietnam Pro", sans-serif';
+    ctx.fillText(`Kịch bản: ${scenarioName}  |  Lương cơ sở: ${formatCurrency(luongCoSo)}  |  Trần KPI: ${tranKpi}%  |  Ngày trích xuất: ${new Date().toLocaleDateString('vi-VN')}  |  Đơn vị: VNĐ`, 40, 105);
+
+    // 4 Thẻ KPI vĩ mô
+    const cardWidth = (width - 80 - 3 * 20) / 4;
+    const cardY = 160;
+    const cardH = 90;
+    const cards = [
+      { title: 'TỔNG QUỸ LƯƠNG & BH NĂM', val: formatCurrency(macroMetrics.tongChiPhiNamMoPhong), sub: `Chênh lệch: +${formatCurrency(macroMetrics.chenhLechChiPhiNam)}/năm`, color: '#1e3a8a' },
+      { title: 'BHXH ĐƠN VỊ GÁNH CHỊU', val: formatCurrency(macroMetrics.tongBhxhDonViNamMoPhong), sub: 'Tỷ lệ 23.5% toàn Quỹ', color: '#b45309' },
+      { title: 'THU NHẬP BÌNH QUÂN / THÁNG', val: `${formatCurrency(macroMetrics.thuNhapBqMoPhong)}`, sub: `Hiện tại: ${formatCurrency(macroMetrics.thuNhapBqHienTai)}`, color: '#047857' },
+      { title: 'HỆ SỐ KHOẢNG CÁCH MAX/MIN', val: `${macroMetrics.heSoKhoangCach} lần`, sub: 'Chủ tịch/GĐ so với Hỗ trợ (<3.5)', color: '#6d28d9' },
+    ];
+
+    cards.forEach((c, idx) => {
+      const cx = 40 + idx * (cardWidth + 20);
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(cx, cardY, cardWidth, cardH, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = 'bold 10px "Be Vietnam Pro", sans-serif';
+      ctx.fillText(c.title, cx + 16, cardY + 24);
+
+      ctx.fillStyle = c.color;
+      ctx.font = 'bold 18px "Be Vietnam Pro", sans-serif';
+      ctx.fillText(c.val, cx + 16, cardY + 54);
+
+      ctx.fillStyle = '#64748b';
+      ctx.font = '10px "Be Vietnam Pro", sans-serif';
+      ctx.fillText(c.sub, cx + 16, cardY + 76);
+    });
+
+    // Bảng dữ liệu
+    const tblY = 270;
+    const colDefs = [
+      { label: 'STT', w: 50, align: 'center' },
+      { label: 'Họ và tên', w: 220, align: 'left' },
+      { label: 'Chức danh', w: 180, align: 'left' },
+      { label: 'Bậc', w: 60, align: 'center' },
+      { label: 'Hệ số', w: 70, align: 'right' },
+      { label: 'Lương Vị trí (L1)', w: 150, align: 'right' },
+      { label: 'Lương KPI (L2)', w: 150, align: 'right' },
+      { label: 'Khoán & PC', w: 130, align: 'right' },
+      { label: 'Tiền thừa BH', w: 120, align: 'right' },
+      { label: 'Gross Đề xuất', w: 160, align: 'right' },
+      { label: 'Net Thực lĩnh', w: 160, align: 'right' },
+      { label: 'Chi phí Quỹ', w: 170, align: 'right' },
+      { label: 'Gross Cũ', w: 130, align: 'right' },
+      { label: 'Chênh lệch', w: 100, align: 'right' }
+    ];
+
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(40, tblY, width - 80, 36);
+
+    let curX = 40;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 11px "Be Vietnam Pro", sans-serif';
+    colDefs.forEach(c => {
+      if (c.align === 'center') {
+        ctx.textAlign = 'center';
+        ctx.fillText(c.label, curX + c.w / 2, tblY + 22);
+      } else if (c.align === 'right') {
+        ctx.textAlign = 'right';
+        ctx.fillText(c.label, curX + c.w - 12, tblY + 22);
+      } else {
+        ctx.textAlign = 'left';
+        ctx.fillText(c.label, curX + 12, tblY + 22);
+      }
+      curX += c.w;
+    });
+
+    let rowY = tblY + 36;
+    simulationResults.forEach((r, idx) => {
+      ctx.fillStyle = idx % 2 === 1 ? '#f8fafc' : '#ffffff';
+      ctx.fillRect(40, rowY, width - 80, 36);
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.beginPath();
+      ctx.moveTo(40, rowY + 36);
+      ctx.lineTo(width - 40, rowY + 36);
+      ctx.stroke();
+
+      const cells = [
+        String(idx + 1),
+        r.hoTen,
+        r.chucDanh,
+        `Bậc ${r.moPhong.bac || 1}`,
+        r.moPhong.heSoLuong.toFixed(2),
+        formatCurrency(r.moPhong.luongViTri),
+        formatCurrency(r.moPhong.luongKpi),
+        formatCurrency(r.moPhong.tongKhoanChi + r.moPhong.khoanTrachNhiem),
+        r.moPhong.tienThuaBhxhHuong > 0 ? `+${formatCurrency(r.moPhong.tienThuaBhxhHuong)}` : '0',
+        formatCurrency(r.moPhong.tongGross),
+        formatCurrency(r.moPhong.thucLinhNet),
+        formatCurrency(r.moPhong.tongChiPhiQuy),
+        formatCurrency(r.hienTai.tongGross),
+        (r.chenhLechGross >= 0 ? '+' : '') + formatCurrency(r.chenhLechGross)
+      ];
+
+      curX = 40;
+      cells.forEach((val, cIdx) => {
+        if (cIdx === 1) {
+          ctx.fillStyle = '#0f172a';
+          ctx.font = 'bold 11px "Be Vietnam Pro", sans-serif';
+        } else if (cIdx === 9) {
+          ctx.fillStyle = '#92400e';
+          ctx.font = 'bold 11px "Be Vietnam Pro", sans-serif';
+        } else if (cIdx === 10) {
+          ctx.fillStyle = '#047857';
+          ctx.font = 'bold 11px "Be Vietnam Pro", sans-serif';
+        } else if (cIdx === 13) {
+          ctx.fillStyle = r.chenhLechGross >= 0 ? '#047857' : '#e11d48';
+          ctx.font = 'bold 11px "Be Vietnam Pro", sans-serif';
+        } else {
+          ctx.fillStyle = '#334155';
+          ctx.font = '11px "Be Vietnam Pro", sans-serif';
+        }
+
+        const c = colDefs[cIdx];
+        if (c.align === 'center') {
+          ctx.textAlign = 'center';
+          ctx.fillText(val, curX + c.w / 2, rowY + 22);
+        } else if (c.align === 'right') {
+          ctx.textAlign = 'right';
+          ctx.fillText(val, curX + c.w - 12, rowY + 22);
+        } else {
+          ctx.textAlign = 'left';
+          ctx.fillText(val, curX + 12, rowY + 22);
+        }
+        curX += c.w;
+      });
+
+      rowY += 36;
+    });
+
+    // Dòng tổng
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillRect(40, rowY, width - 80, 40);
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 12px "Be Vietnam Pro", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('TỔNG CỘNG (12 CBNV):', 52, rowY + 25);
+
+    ctx.textAlign = 'right';
+    const grossX = 40 + colDefs.slice(0, 10).reduce((s, c) => s + c.w, 0);
+    ctx.fillText(formatCurrency(macroMetrics.tongGrossThangMoPhong), grossX - 12, rowY + 25);
+
+    const netX = grossX + colDefs[10].w;
+    ctx.fillStyle = '#047857';
+    ctx.fillText(formatCurrency(macroMetrics.tongNetThangMoPhong), netX - 12, rowY + 25);
+
+    const cpX = netX + colDefs[11].w;
+    ctx.fillStyle = '#1e3a8a';
+    ctx.fillText(formatCurrency(simulationResults.reduce((s, r) => s + r.moPhong.tongChiPhiQuy, 0)), cpX - 12, rowY + 25);
+
+    const cuX = cpX + colDefs[12].w;
+    ctx.fillStyle = '#475569';
+    ctx.fillText(formatCurrency(macroMetrics.tongGrossThangHienTai), cuX - 12, rowY + 25);
+
+    const diffX = cuX + colDefs[13].w;
+    ctx.fillStyle = '#047857';
+    ctx.fillText(`+${formatCurrency(macroMetrics.tongGrossThangMoPhong - macroMetrics.tongGrossThangHienTai)}`, diffX - 12, rowY + 25);
+
+    // Chân trang
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px "Be Vietnam Pro", sans-serif';
+    ctx.fillText('HỆ THỐNG QUẢN TRỊ LƯƠNG 2027 PRO V3 • QUỸ TÍN DỤNG NHÂN DÂN YÊN THỌ • BẢO MẬT NỘI BỘ', width / 2, height - 25);
+
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const cleanScName = scenarioName.replace(/[^a-zA-Z0-9_\u00C0-\u024F\u1EA0-\u1EF9]/g, '_');
+      a.download = `Bang_Mo_Phong_Luong_${cleanScName}_${new Date().toISOString().slice(0, 10)}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 'image/png');
   };
 
   // Đồng bộ số liệu tương tác tức thì cho modal chi tiết 1 CBNV
@@ -418,18 +932,51 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* 1. Xuất Excel */}
+            <button
+              onClick={exportToExcel}
+              className="px-3 py-2 rounded-xl bg-emerald-600/90 hover:bg-emerald-600 text-white font-bold text-xs flex items-center space-x-1.5 transition-all shadow-sm border border-emerald-400/30"
+              title="Xuất bảng đối soát 12 CBNV ra tệp Excel (.xls)"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
+              <span>Xuất Excel</span>
+            </button>
+
+            {/* 2. Xuất Ảnh PNG */}
+            <button
+              onClick={exportToImage}
+              className="px-3 py-2 rounded-xl bg-sky-600/90 hover:bg-sky-600 text-white font-bold text-xs flex items-center space-x-1.5 transition-all shadow-sm border border-sky-400/30"
+              title="Xuất ảnh chất lượng cao 2x gửi Zalo / Telegram"
+            >
+              <Image className="w-4 h-4 text-sky-200" />
+              <span>Xuất Ảnh</span>
+            </button>
+
+            {/* 3. In Báo Cáo / Xuất PDF */}
+            <button
+              onClick={() => setShowPrintModal(true)}
+              className="px-3 py-2 rounded-xl bg-indigo-600/90 hover:bg-indigo-600 text-white font-bold text-xs flex items-center space-x-1.5 transition-all shadow-sm border border-indigo-400/30"
+              title="Mở bản in chuẩn A4 ngang và lưu file PDF"
+            >
+              <Printer className="w-4 h-4 text-indigo-200" />
+              <span>In Báo Cáo / PDF</span>
+            </button>
+
+            {/* 4. Tờ Trình HĐQT */}
             <button
               onClick={() => setActiveSubTab('proposal')}
-              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
+              className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
             >
               <FileText className="w-4 h-4 text-brand-lime" />
-              <span>Xuất Tờ Trình HĐQT</span>
+              <span>Tờ Trình</span>
             </button>
+
+            {/* 5. Lưu Kịch Bản */}
             <button
               onClick={handleSaveCurrentScenario}
               disabled={isSaving}
-              className="px-4 py-2 rounded-xl bg-brand-lime hover:bg-lime-500 text-brand-navy font-bold text-xs flex items-center space-x-1.5 transition-all shadow-md"
+              className="px-3.5 py-2 rounded-xl bg-brand-lime hover:bg-lime-500 text-brand-navy font-bold text-xs flex items-center space-x-1.5 transition-all shadow-md"
             >
               <Save className="w-4 h-4" />
               <span>{isSaving ? 'Đang Lưu...' : 'Lưu Kịch Bản'}</span>
@@ -444,29 +991,37 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
           </div>
         )}
 
-        {/* Bộ Điều Khiển Kịch Bản Nền & Tùy Chọn Thuế */}
+        {/* Bộ Quản Lý Kịch Bản Mô Phỏng Động & Tùy Chọn Thuế */}
         <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-semibold text-slate-300">Phương Án Nền:</span>
-              <div className="inline-flex rounded-xl bg-slate-900/60 p-1 border border-white/10">
-                {[
-                  { id: 'PA1', label: 'PA1 (Cơ bản)' },
-                  { id: 'PA2', label: 'PA2 (Đột phá)' },
-                  { id: 'PA3', label: 'PA3 (Khuyến nghị)' }
-                ].map(pa => (
+              <span className="text-xs font-semibold text-slate-300 flex items-center space-x-1">
+                <Sliders className="w-3.5 h-3.5 text-brand-lime" />
+                <span>Kịch Bản Mô Phỏng:</span>
+              </span>
+              <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-900/60 border border-white/10">
+                {customScenarios.map(sc => (
                   <button
-                    key={pa.id}
-                    onClick={() => handleSelectScenario(pa.id)}
+                    key={sc.id}
+                    onClick={() => handleSelectScenario(sc.id)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                      selectedScenarioId === pa.id
+                      selectedScenarioId === sc.id
                         ? 'bg-brand-lime text-brand-navy font-bold shadow'
-                        : 'text-slate-300 hover:text-white'
+                        : 'text-slate-300 hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    {pa.label}
+                    {sc.name}
                   </button>
                 ))}
+                {/* Nút Tạo Kịch Bản Mới */}
+                <button
+                  onClick={() => setShowNewScenarioModal(true)}
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-bold text-amber-300 hover:text-amber-200 hover:bg-amber-400/10 border border-dashed border-amber-400/40 flex items-center space-x-1 transition-all"
+                  title="Tạo thêm kịch bản mô phỏng mới"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Kịch Bản Mới</span>
+                </button>
               </div>
             </div>
 
@@ -706,6 +1261,34 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>{isSavingBhxh ? 'Đang lưu...' : 'Lưu Vào Hồ Sơ'}</span>
+                </button>
+              </div>
+
+              {/* Nút Xuất Báo Cáo Nhanh Trên Bảng */}
+              <div className="flex items-center space-x-1.5">
+                <button
+                  onClick={exportToExcel}
+                  className="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 text-xs font-bold flex items-center space-x-1 transition-all shadow-xs"
+                  title="Xuất bảng đối soát 12 CBNV ra Excel (.xls)"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>Excel</span>
+                </button>
+                <button
+                  onClick={exportToImage}
+                  className="px-2.5 py-1 rounded-xl bg-sky-50 text-sky-800 hover:bg-sky-100 border border-sky-300 text-xs font-bold flex items-center space-x-1 transition-all shadow-xs"
+                  title="Xuất ảnh PNG 2x gửi Zalo/Telegram"
+                >
+                  <Image className="w-3.5 h-3.5 text-sky-700" />
+                  <span>Ảnh</span>
+                </button>
+                <button
+                  onClick={() => setShowPrintModal(true)}
+                  className="px-2.5 py-1 rounded-xl bg-indigo-50 text-indigo-800 hover:bg-indigo-100 border border-indigo-300 text-xs font-bold flex items-center space-x-1 transition-all shadow-xs"
+                  title="In báo cáo chuẩn A4 ngang hoặc lưu PDF"
+                >
+                  <Printer className="w-3.5 h-3.5 text-indigo-700" />
+                  <span>In / PDF</span>
                 </button>
               </div>
 
@@ -1956,7 +2539,7 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
             </p>
             <p>
               Ban Giám đốc kính trình Hội đồng Quản trị xem xét, thông qua Phương án phân phối tiền lương theo kịch bản 
-              <strong> [{selectedScenarioId}]</strong> với các nội dung trọng tâm như sau:
+              <strong> [{customScenarios.find(s => s.id === selectedScenarioId)?.name || selectedScenarioId}]</strong> với các nội dung trọng tâm như sau:
             </p>
           </div>
 
@@ -2272,6 +2855,263 @@ export function SimulationModule({ data, onSaveScenario, onRefresh }) {
               >
                 Đóng
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL TẠO KỊCH BẢN MỚI */}
+      {showNewScenarioModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="bg-brand-navy p-5 text-white flex justify-between items-center">
+              <div>
+                <h3 className="text-base font-bold flex items-center space-x-2">
+                  <Sliders className="w-4 h-4 text-brand-lime" />
+                  <span>Tạo Kịch Bản Mô Phỏng Mới</span>
+                </h3>
+                <p className="text-xs text-slate-300 mt-0.5">Kế thừa và tùy biến các tham số tài chính</p>
+              </div>
+              <button 
+                onClick={() => setShowNewScenarioModal(false)}
+                className="p-1 rounded-lg text-slate-300 hover:text-white hover:bg-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateNewScenario} className="p-6 space-y-4 text-xs">
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">Tên kịch bản mô phỏng <span className="text-rose-500">*</span></label>
+                <input
+                  type="text"
+                  required
+                  value={newScenarioName}
+                  onChange={(e) => setNewScenarioName(e.target.value)}
+                  placeholder="VD: Kịch bản HĐQT Tăng Lương Cơ Sở 2027..."
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-navy focus:outline-none text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">Mức Lương cơ sở (₫)</label>
+                <input
+                  type="number"
+                  step="50000"
+                  min="1500000"
+                  max="5000000"
+                  value={newScenarioBaseSalary}
+                  onChange={(e) => setNewScenarioBaseSalary(Number(e.target.value) || 2340000)}
+                  className="w-full px-3 py-2 font-numeric font-bold border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-navy focus:outline-none text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">Tỷ lệ Trần Quỹ KPI (%)</label>
+                <input
+                  type="number"
+                  min="50"
+                  max="200"
+                  value={newScenarioTranKpi}
+                  onChange={(e) => setNewScenarioTranKpi(Number(e.target.value) || 100)}
+                  className="w-full px-3 py-2 font-numeric font-bold border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-navy focus:outline-none text-slate-900"
+                />
+              </div>
+
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-[11px] leading-relaxed">
+                💡 <strong>Gợi ý:</strong> Kịch bản mới sẽ tự động kế thừa toàn bộ định mức phụ cấp khoán, % kết cấu KPI các bộ phận và cơ cấu BHXH hiện tại. Sau khi tạo, bạn có thể tự do tinh chỉnh các thông số.
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowNewScenarioModal(false)}
+                  className="px-4 py-2 border border-slate-200 rounded-xl text-slate-700 font-semibold hover:bg-slate-50"
+                >
+                  Hủy bỏ
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-brand-navy text-white rounded-xl font-bold hover:bg-slate-800 shadow"
+                >
+                  Tạo Kịch Bản
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL XEM TRƯỚC BẢN IN / XUẤT PDF CHUẨN A4 NGANG */}
+      {showPrintModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-6xl w-full shadow-2xl border border-slate-300 overflow-hidden my-8 animate-in fade-in zoom-in duration-200">
+            {/* Top Toolbar (Non-printable) */}
+            <div className="bg-slate-900 p-4 text-white flex flex-wrap items-center justify-between gap-3 print:hidden">
+              <div className="flex items-center space-x-2">
+                <Printer className="w-5 h-5 text-brand-lime" />
+                <div>
+                  <h3 className="text-sm font-bold">Bản In & Xuất PDF Báo Cáo Lương (Khổ A4 Ngang)</h3>
+                  <p className="text-[11px] text-slate-300">Biểu mẫu chính thức trình Thường trực HĐQT & Ban Giám đốc</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => window.print()}
+                  className="px-4 py-2 bg-brand-lime hover:bg-lime-500 text-brand-navy font-bold text-xs rounded-xl flex items-center space-x-1.5 shadow"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>In Ngay / Lưu PDF</span>
+                </button>
+                <button
+                  onClick={() => setShowPrintModal(false)}
+                  className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/10"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Printable Area */}
+            <div id="print-salary-report" className="printable-salary-report p-8 text-slate-900 font-sans text-xs bg-white space-y-4">
+              {/* Header Quốc Hiệu & Cơ Quan */}
+              <div className="flex justify-between items-start border-b border-slate-300 pb-3">
+                <div className="text-left space-y-0.5">
+                  <div className="font-extrabold text-xs uppercase text-slate-900 tracking-wider">
+                    QUỸ TÍN DỤNG NHÂN DÂN YÊN THỌ
+                  </div>
+                  <div className="text-[11px] text-slate-600">
+                    Địa chỉ: Thôn Tân Lộc, xã Quý Lộc, tỉnh Thanh Hoá
+                  </div>
+                  <div className="text-[11px] text-slate-600 font-medium">
+                    Số: ..... /BC-QTD
+                  </div>
+                </div>
+                <div className="text-right space-y-0.5">
+                  <div className="font-extrabold text-xs uppercase text-slate-900 tracking-wider">
+                    CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+                  </div>
+                  <div className="font-bold text-[11px] text-slate-800">
+                    Độc lập - Tự do - Hạnh phúc
+                  </div>
+                  <div className="text-[11px] italic text-slate-600 pt-1">
+                    Quý Lộc, ngày {new Date().getDate()} tháng {new Date().getMonth() + 1} năm {new Date().getFullYear()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Tiêu đề báo cáo */}
+              <div className="text-center space-y-1 pt-2">
+                <h2 className="text-base font-extrabold uppercase text-slate-900 tracking-wide">
+                  BẢNG SO SÁNH MÔ PHỎNG CHI TRẢ TIỀN LƯƠNG & CHI PHÍ QUỸ NĂM 2027
+                </h2>
+                <div className="text-xs font-semibold text-slate-700">
+                  Kịch bản: <span className="text-blue-900 font-bold">{customScenarios.find(s => s.id === selectedScenarioId)?.name || selectedScenarioId}</span>
+                  {'  •  '}Lương cơ sở: <span className="font-bold font-numeric">{formatCurrency(luongCoSo)}</span>
+                  {'  •  '}Trần KPI: <span className="font-bold font-numeric">{tranKpi}%</span>
+                  {'  •  '}Chính sách thuế: <span className="font-bold">{pitRegime === 'CURRENT' ? 'Hiện hành (11tr/4.4tr)' : 'Dự thảo (15tr/6.2tr)'}</span>
+                </div>
+              </div>
+
+              {/* Tóm tắt 4 chỉ số vĩ mô */}
+              <div className="grid grid-cols-4 gap-3 py-2">
+                <div className="p-2 border border-slate-300 rounded bg-slate-50 text-center">
+                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Tổng Quỹ Lương & BH Năm</div>
+                  <div className="text-xs font-bold text-slate-900 font-numeric">{formatCurrency(macroMetrics.tongChiPhiNamMoPhong)}</div>
+                </div>
+                <div className="p-2 border border-slate-300 rounded bg-slate-50 text-center">
+                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Chênh Lệch So Hiện Tại</div>
+                  <div className="text-xs font-bold text-emerald-800 font-numeric">+{formatCurrency(macroMetrics.chenhLechChiPhiNam)}/năm</div>
+                </div>
+                <div className="p-2 border border-slate-300 rounded bg-slate-50 text-center">
+                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Thu Nhập BQ / Người / Tháng</div>
+                  <div className="text-xs font-bold text-emerald-800 font-numeric">{formatCurrency(macroMetrics.thuNhapBqMoPhong)}</div>
+                </div>
+                <div className="p-2 border border-slate-300 rounded bg-slate-50 text-center">
+                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Hệ Số Giãn Cách Max/Min</div>
+                  <div className="text-xs font-bold text-purple-900 font-numeric">{macroMetrics.heSoKhoangCach} lần</div>
+                </div>
+              </div>
+
+              {/* Bảng dữ liệu 12 CBNV */}
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-[10px] border border-slate-400">
+                  <thead>
+                    <tr className="bg-slate-100 text-slate-900 font-bold border-b border-slate-400">
+                      <th className="border border-slate-400 p-1.5 text-center w-8">STT</th>
+                      <th className="border border-slate-400 p-1.5 text-center w-14">Mã NV</th>
+                      <th className="border border-slate-400 p-1.5 text-left min-w-[130px]">Họ và tên</th>
+                      <th className="border border-slate-400 p-1.5 text-left min-w-[110px]">Chức danh</th>
+                      <th className="border border-slate-400 p-1.5 text-center w-10">Bậc</th>
+                      <th className="border border-slate-400 p-1.5 text-center w-12">Hệ số</th>
+                      <th className="border border-slate-400 p-1.5 text-right">Lương Vị trí L1</th>
+                      <th className="border border-slate-400 p-1.5 text-right">Lương KPI</th>
+                      <th className="border border-slate-400 p-1.5 text-right">Khoán & PC</th>
+                      <th className="border border-slate-400 p-1.5 text-right">Tiền thừa BH</th>
+                      <th className="border border-slate-400 p-1.5 text-right font-bold bg-amber-50">Gross Đề Xuất</th>
+                      <th className="border border-slate-400 p-1.5 text-right">Thuế TNCN</th>
+                      <th className="border border-slate-400 p-1.5 text-right font-bold bg-emerald-50">Net Thực Lĩnh</th>
+                      <th className="border border-slate-400 p-1.5 text-right">Chi Phí Quỹ</th>
+                      <th className="border border-slate-400 p-1.5 text-right">Gross Cũ</th>
+                      <th className="border border-slate-400 p-1.5 text-right">Chênh Lệch</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {simulationResults.map((r, idx) => (
+                      <tr key={r.maNV} className={idx % 2 === 1 ? 'bg-slate-50/60' : ''}>
+                        <td className="border border-slate-300 p-1 text-center">{idx + 1}</td>
+                        <td className="border border-slate-300 p-1 text-center font-mono">{r.maNV}</td>
+                        <td className="border border-slate-300 p-1 font-bold">{r.hoTen}</td>
+                        <td className="border border-slate-300 p-1">{r.chucDanh}</td>
+                        <td className="border border-slate-300 p-1 text-center font-numeric">{r.moPhong.bac || 1}</td>
+                        <td className="border border-slate-300 p-1 text-center font-numeric">{r.moPhong.heSoLuong.toFixed(2)}</td>
+                        <td className="border border-slate-300 p-1 text-right font-numeric">{formatCurrency(r.moPhong.luongViTri)}</td>
+                        <td className="border border-slate-300 p-1 text-right font-numeric">{formatCurrency(r.moPhong.luongKpi)}</td>
+                        <td className="border border-slate-300 p-1 text-right font-numeric">{formatCurrency(r.moPhong.tongKhoanChi + r.moPhong.khoanTrachNhiem)}</td>
+                        <td className="border border-slate-300 p-1 text-right font-numeric">{r.moPhong.tienThuaBhxhHuong > 0 ? `+${formatCurrency(r.moPhong.tienThuaBhxhHuong)}` : '-'}</td>
+                        <td className="border border-slate-300 p-1 text-right font-numeric font-bold bg-amber-50/50">{formatCurrency(r.moPhong.tongGross)}</td>
+                        <td className="border border-slate-300 p-1 text-right font-numeric">{formatCurrency(r.moPhong.thueTncn)}</td>
+                        <td className="border border-slate-300 p-1 text-right font-numeric font-bold bg-emerald-50/50">{formatCurrency(r.moPhong.thucLinhNet)}</td>
+                        <td className="border border-slate-300 p-1 text-right font-numeric">{formatCurrency(r.moPhong.tongChiPhiQuy)}</td>
+                        <td className="border border-slate-300 p-1 text-right font-numeric">{formatCurrency(r.hienTai.tongGross)}</td>
+                        <td className="border border-slate-300 p-1 text-right font-numeric font-bold" style={{ color: r.chenhLechGross >= 0 ? '#047857' : '#e11d48' }}>
+                          {r.chenhLechGross >= 0 ? `+${formatCurrency(r.chenhLechGross)}` : formatCurrency(r.chenhLechGross)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-slate-100 font-bold border-t-2 border-slate-400">
+                      <td colSpan={6} className="border border-slate-400 p-1.5 text-center uppercase">TỔNG CỘNG TOÀN QUỸ (12 CBNV)</td>
+                      <td className="border border-slate-400 p-1.5 text-right font-numeric">{formatCurrency(simulationResults.reduce((s, r) => s + r.moPhong.luongViTri, 0))}</td>
+                      <td className="border border-slate-400 p-1.5 text-right font-numeric">{formatCurrency(simulationResults.reduce((s, r) => s + r.moPhong.luongKpi, 0))}</td>
+                      <td className="border border-slate-400 p-1.5 text-right font-numeric">{formatCurrency(simulationResults.reduce((s, r) => s + r.moPhong.tongKhoanChi + r.moPhong.khoanTrachNhiem, 0))}</td>
+                      <td className="border border-slate-400 p-1.5 text-right font-numeric">{macroMetrics.tongTienThuaBhxhThangMoPhong > 0 ? `+${formatCurrency(macroMetrics.tongTienThuaBhxhThangMoPhong)}` : '-'}</td>
+                      <td className="border border-slate-400 p-1.5 text-right font-numeric font-bold bg-amber-50">{formatCurrency(macroMetrics.tongGrossThangMoPhong)}</td>
+                      <td className="border border-slate-400 p-1.5 text-right font-numeric">{formatCurrency(macroMetrics.tongThueTncnThangMoPhong)}</td>
+                      <td className="border border-slate-400 p-1.5 text-right font-numeric font-bold bg-emerald-50">{formatCurrency(macroMetrics.tongNetThangMoPhong)}</td>
+                      <td className="border border-slate-400 p-1.5 text-right font-numeric font-bold">{formatCurrency(simulationResults.reduce((s, r) => s + r.moPhong.tongChiPhiQuy, 0))}</td>
+                      <td className="border border-slate-400 p-1.5 text-right font-numeric">{formatCurrency(macroMetrics.tongGrossThangHienTai)}</td>
+                      <td className="border border-slate-400 p-1.5 text-right font-numeric font-bold text-emerald-800">+{formatCurrency(macroMetrics.tongGrossThangMoPhong - macroMetrics.tongGrossThangHienTai)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              {/* 3 Khối Chữ Ký */}
+              <div className="flex justify-between items-start pt-6 text-center text-xs font-bold">
+                <div className="w-1/3">
+                  <div className="uppercase">NGƯỜI LẬP BIỂU</div>
+                  <div className="font-normal italic text-slate-500 mt-16">(Ký, ghi rõ họ tên)</div>
+                </div>
+                <div className="w-1/3">
+                  <div className="uppercase">KẾ TOÁN TRƯỞNG</div>
+                  <div className="font-normal italic text-slate-500 mt-16">(Ký, ghi rõ họ tên)</div>
+                </div>
+                <div className="w-1/3">
+                  <div className="uppercase">CHỦ TỊCH HỘI ĐỒNG QUẢN TRỊ</div>
+                  <div className="font-normal italic text-slate-500 mt-16">(Ký tên, đóng dấu)</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
