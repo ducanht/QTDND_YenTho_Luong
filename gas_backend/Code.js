@@ -85,6 +85,13 @@ function executeGasAction(action, payload) {
       return res;
     }
 
+    case 'saveBatchBhxh':
+    case 'saveStaffBatchBhxh': {
+      const res = updateBatchStaffBhxh(payload.payload || payload.bhxhList || payload);
+      logAuditAction(payload.user || 'HĐQT', 'Web Client', 'LƯU_MỨC_ĐÓNG_BHXH_CBNV', 'Số lượng: ' + (payload.bhxhList || payload.payload || []).length);
+      return res;
+    }
+
     case 'savePositions': {
       const res = savePositions(payload.payload || payload);
       logAuditAction(payload.user || 'HĐQT', 'Web Client', 'CẬP_NHẬT_CHỨC_DANH_HỆ_SỐ', 'Số lượng: ' + (payload.payload || payload).length);

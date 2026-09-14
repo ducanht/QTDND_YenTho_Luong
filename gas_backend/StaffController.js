@@ -37,10 +37,15 @@ function getStaffList() {
     });
   }
 
+  const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+  const bhxhColIdx = headers.findIndex(h => String(h).trim() === 'Mức đóng BHXH');
   const values = sh.getRange(2, 1, sh.getLastRow() - 1, sh.getLastColumn()).getValues();
   return values.map(r => {
     const maNV = String(r[0] || '').trim();
     const sal = salaryMap[maNV] || {};
+    const bhxhVal = (bhxhColIdx !== -1 && r[bhxhColIdx] !== undefined && r[bhxhColIdx] !== '') 
+      ? Number(r[bhxhColIdx]) 
+      : (Number(r[21]) || Number(sal.mucDongBhxh) || 0);
 
     return {
       maNV: maNV,
@@ -69,7 +74,7 @@ function getStaffList() {
       heSoLuong: Number(sal.heSoLuong) || 0,
       maViTri: sal.maViTri || '',
       phuCapTN: Number(sal.phuCapTN) || 0,
-      mucDongBhxh: Number(sal.mucDongBhxh) || 0,
+      mucDongBhxh: bhxhVal,
       soQD: sal.soQD || '',
       ngayQD: sal.ngayQD || ''
     };
@@ -123,7 +128,8 @@ function saveStaff(staffData) {
       staffData.mst || '',
       staffData.soSoBHXH || '',
       staffData.linkAnhThe || '',
-      staffData.ghiChu || ''
+      staffData.ghiChu || '',
+      Number(staffData.mucDongBhxh) || 0
     ];
 
     if (rowIndex > 0) {
@@ -178,6 +184,66 @@ function saveStaff(staffData) {
     }
 
     return { status: 'success', message: 'Đã lưu hồ sơ cán bộ thành công' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Cập nhật hàng loạt mức đóng BHXH cho nhiều cán bộ cùng lúc
+ * Dùng khi HĐQT chốt phương án mô phỏng lương và phân bổ BHXH
+ */
+function updateBatchStaffBhxh(bhxhList) {
+  if (!Array.isArray(bhxhList) || bhxhList.length === 0) {
+    throw new Error('Danh sách cập nhật BHXH không hợp lệ hoặc rỗng.');
+  }
+
+  const ss = getSpreadsheet();
+  const sh = ss.getSheetByName('DM_NS');
+  if (!sh || sh.getLastRow() <= 1) throw new Error('Không tìm thấy Sheet DM_NS hoặc chưa có dữ liệu');
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+
+  try {
+    const lastRow = sh.getLastRow();
+    const lastCol = sh.getLastColumn();
+    const headers = sh.getRange(1, 1, 1, lastCol).getValues()[0];
+    let bhxhColIdx = headers.findIndex(h => String(h).trim() === 'Mức đóng BHXH');
+    
+    if (bhxhColIdx === -1) {
+      bhxhColIdx = lastCol;
+      sh.getRange(1, bhxhColIdx + 1).setValue('Mức đóng BHXH')
+        .setFontWeight('bold')
+        .setBackground('#17365d')
+        .setFontColor('#ffffff');
+      sh.setColumnWidth(bhxhColIdx + 1, 130);
+    }
+
+    const colToUpdate = bhxhColIdx + 1;
+    const ids = sh.getRange(2, 1, lastRow - 1, 1).getValues();
+    const bhxhMap = {};
+    bhxhList.forEach(item => {
+      if (item && item.maNV) {
+        bhxhMap[String(item.maNV).trim().toUpperCase()] = Number(item.mucDongBhxh) || 0;
+      }
+    });
+
+    let count = 0;
+    for (let i = 0; i < ids.length; i++) {
+      const maNV = String(ids[i][0]).trim().toUpperCase();
+      if (bhxhMap[maNV] !== undefined) {
+        const val = bhxhMap[maNV];
+        sh.getRange(i + 2, colToUpdate).setValue(val).setNumberFormat('#,##0 "₫"');
+        count++;
+      }
+    }
+
+    return { 
+      status: 'success', 
+      message: `Đã lưu thành công mức đóng BHXH cho ${count} cán bộ vào CSDL DM_NS`,
+      updatedCount: count
+    };
   } finally {
     lock.releaseLock();
   }

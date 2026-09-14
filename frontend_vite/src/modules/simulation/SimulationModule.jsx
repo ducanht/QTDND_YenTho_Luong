@@ -19,12 +19,27 @@ import {
   X,
   Filter,
   CreditCard,
-  Percent
+  Percent,
+  RotateCcw,
+  Check
 } from 'lucide-react';
 import { formatCurrency, formatPercent } from '../../utils/currency';
 import { simulateStaffCompensation, detectDepartmentKey } from '../../utils/taxEngine';
+import { api } from '../../services/api';
 
-export function SimulationModule({ data, onSaveScenario }) {
+const formatShort = (amount) => {
+  if (!amount) return '0';
+  if (amount >= 1000000) {
+    const tr = amount / 1000000;
+    return tr % 1 === 0 ? `${tr}Tr` : `${tr.toFixed(1)}Tr`;
+  }
+  if (amount >= 1000) {
+    return `${Math.round(amount / 1000)}K`;
+  }
+  return String(amount);
+};
+
+export function SimulationModule({ data, onSaveScenario, onRefresh }) {
   // Lấy dữ liệu 12 CBNV và Chức danh từ CSDL
   const staffList = data?.staffList || [];
   const positions = data?.positions || [];
@@ -50,21 +65,25 @@ export function SimulationModule({ data, onSaveScenario }) {
     HO_TRO: 20    // 20% KPI (80% Lương Vị Trí)
   });
 
-  // Cấu hình Mức Đóng BHXH Tùy Biến & Hưởng Tiền Thừa Doanh Nghiệp Trả
-  // { [maNV]: { mode: 'STANDARD' | 'MIN' | 'CUSTOM', customAmount: number } }
+  // Cấu hình Mức Đóng BHXH Tùy Biến Độc Lập Cho Từng Cá Nhân
+  // Mỗi người được tự do chọn mức đóng khác nhau, số thừa so với DN trả được cộng vào thu nhập
+  // { [maNV]: { mode: 'STANDARD' | 'MIN' | 'CUSTOM' | 'PROFILE', customAmount: number } }
   const [staffBhxhCustom, setStaffBhxhCustom] = useState({});
-  const [bulkBhxhOption, setBulkBhxhOption] = useState('STANDARD'); // 'STANDARD' | 'MIN_ZONE' | 'CUSTOM'
+  const [bulkBhxhOption, setBulkBhxhOption] = useState('INDIVIDUAL'); // 'INDIVIDUAL' (theo hồ sơ riêng) | 'MIN_ZONE' | 'STANDARD'
+  const [isSavingBhxh, setIsSavingBhxh] = useState(false);
+  const [bhxhSaveMsg, setBhxhSaveMsg] = useState('');
 
-  const handleUpdateStaffBhxh = (maNV, mode, customAmount = 5000000) => {
+  const handleUpdateStaffBhxh = (maNV, mode, customAmount) => {
     setStaffBhxhCustom(prev => ({
       ...prev,
-      [maNV]: { mode, customAmount: Number(customAmount) || 5000000 }
+      [maNV]: { mode, customAmount: Number(customAmount) || 0 }
     }));
   };
 
   const handleApplyBulkBhxh = (option) => {
     setBulkBhxhOption(option);
-    if (option === 'STANDARD') {
+    if (option === 'INDIVIDUAL' || option === 'PROFILE') {
+      // Khôi phục mức riêng của từng cá nhân đã lưu trong hồ sơ
       setStaffBhxhCustom({});
     } else if (option === 'MIN_ZONE') {
       const updated = {};
@@ -72,6 +91,43 @@ export function SimulationModule({ data, onSaveScenario }) {
         updated[s.maNV] = { mode: 'MIN', customAmount: 5000000 };
       });
       setStaffBhxhCustom(updated);
+    } else if (option === 'STANDARD') {
+      const updated = {};
+      staffList.forEach(s => {
+        updated[s.maNV] = { mode: 'STANDARD', customAmount: 0 };
+      });
+      setStaffBhxhCustom(updated);
+    }
+  };
+
+  const handleSaveBatchBhxhToStaff = async () => {
+    if (!simulationResults || simulationResults.length === 0) return;
+    const confirmSave = window.confirm(
+      `XÁC NHẬN LƯU MỨC ĐÓNG BHXH CÁ NHÂN?\n\nBạn có chắc chắn muốn lưu mức đóng BHXH của 12 cán bộ trong bảng mô phỏng vào CSDL Hồ sơ nhân sự (DM_NS) không?\n\nThao tác này sẽ cập nhật mức đóng chính thức cho từng cá nhân.`
+    );
+    if (!confirmSave) return;
+
+    setIsSavingBhxh(true);
+    setBhxhSaveMsg('');
+
+    try {
+      const bhxhList = simulationResults.map(r => ({
+        maNV: r.maNV,
+        mucDongBhxh: r.moPhong.luongDongBhxhThucTe
+      }));
+
+      const res = await api.saveBatchBhxh(bhxhList);
+      if (res && res.status === 'success') {
+        setBhxhSaveMsg(`✅ ${res.message || 'Đã lưu thành công mức đóng BHXH cho 12 CBNV vào CSDL!'}`);
+        if (onRefresh) onRefresh();
+      } else {
+        setBhxhSaveMsg(`❌ Lỗi khi lưu: ${res?.message || 'Không xác định'}`);
+      }
+    } catch (err) {
+      setBhxhSaveMsg(`❌ Lỗi kết nối: ${err.message}`);
+    } finally {
+      setIsSavingBhxh(false);
+      setTimeout(() => setBhxhSaveMsg(''), 6000);
     }
   };
 
@@ -113,15 +169,28 @@ export function SimulationModule({ data, onSaveScenario }) {
       const deptKey = detectDepartmentKey(emp, pos);
       const deptRatio = deptKpiRatios[deptKey] ?? 40;
 
-      // Xác định mức đóng BHXH cá nhân
+      // Mức đóng BHXH gốc trong hồ sơ cán bộ
+      const empBhxhGoc = Number(emp.mucDongBhxh) || 0;
       const empBhxhConfig = staffBhxhCustom[emp.maNV];
       let customBhxhSalary = null;
-      if (empBhxhConfig?.mode === 'MIN') {
-        customBhxhSalary = 5000000;
-      } else if (empBhxhConfig?.mode === 'CUSTOM' && empBhxhConfig?.customAmount > 0) {
-        customBhxhSalary = empBhxhConfig.customAmount;
+
+      if (empBhxhConfig !== undefined) {
+        if (empBhxhConfig.mode === 'STANDARD') {
+          customBhxhSalary = null; // Theo chuẩn L1
+        } else if (empBhxhConfig.mode === 'MIN') {
+          customBhxhSalary = 5000000;
+        } else if (empBhxhConfig.mode === 'CUSTOM') {
+          customBhxhSalary = Number(empBhxhConfig.customAmount) > 0 ? Number(empBhxhConfig.customAmount) : 5000000;
+        } else if (empBhxhConfig.mode === 'PROFILE') {
+          customBhxhSalary = empBhxhGoc > 0 ? empBhxhGoc : null;
+        }
       } else if (bulkBhxhOption === 'MIN_ZONE') {
         customBhxhSalary = 5000000;
+      } else if (bulkBhxhOption === 'STANDARD') {
+        customBhxhSalary = null;
+      } else {
+        // Mặc định 'INDIVIDUAL': mỗi người đóng theo mức riêng đã lưu trong hồ sơ cá nhân
+        customBhxhSalary = empBhxhGoc > 0 ? empBhxhGoc : null;
       }
 
       // 1. Tính toán Phương Án Hiện Tại (Cơ sở PA1, lương cơ sở 2.340.000, trần KPI 100%)
@@ -178,6 +247,8 @@ export function SimulationModule({ data, onSaveScenario }) {
         phongBan: emp.phongBan || 'Nghiệp vụ',
         deptKey,
         deptRatio,
+        empBhxhGoc,
+        empBhxhConfig,
         soNPT: moPhong.soNPT,
         hienTai,
         moPhong,
@@ -269,6 +340,23 @@ export function SimulationModule({ data, onSaveScenario }) {
       tongBhxhDonViNamMoPhong: tongBhxhDonViThangMoPhong * 12
     };
   }, [simulationResults, quyThuongNam]);
+
+  // Thống kê phân bổ mức đóng BHXH của 12 CBNV
+  const bhxhStats = useMemo(() => {
+    let countMin = 0;
+    let countStandard = 0;
+    let countCustom = 0;
+    let countSurplus = 0;
+
+    simulationResults.forEach(r => {
+      if (r.moPhong.tienThuaBhxhHuong > 0) countSurplus++;
+      if (r.moPhong.luongDongBhxhThucTe === 5000000) countMin++;
+      else if (r.moPhong.luongDongBhxhThucTe === r.moPhong.luongDongBhxhChuan) countStandard++;
+      else countCustom++;
+    });
+
+    return { countMin, countStandard, countCustom, countSurplus };
+  }, [simulationResults]);
 
   const handleSaveCurrentScenario = async () => {
     setIsSaving(true);
@@ -552,33 +640,72 @@ export function SimulationModule({ data, onSaveScenario }) {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              {/* Bộ Chọn Nhanh Mức Đóng BHXH Toàn Cơ Quan */}
-              <div className="flex items-center space-x-1.5 bg-emerald-50/80 px-2.5 py-1 rounded-xl border border-emerald-200 text-xs">
-                <span className="font-bold text-emerald-900 flex items-center text-[11px]">
-                  <ShieldAlert className="w-3.5 h-3.5 mr-1 text-emerald-700" />
-                  BHXH Toàn Quỹ:
-                </span>
+              {/* Công Cụ Quản Lý Mức Đóng BHXH Cá Nhân Hóa */}
+              <div className="flex flex-wrap items-center gap-2 bg-emerald-50/90 px-3 py-1.5 rounded-xl border border-emerald-200 text-xs shadow-xs">
+                <div className="flex items-center space-x-1.5">
+                  <ShieldAlert className="w-4 h-4 text-emerald-700 shrink-0" />
+                  <div>
+                    <span className="font-extrabold text-emerald-950 text-[11px] block leading-tight">
+                      BHXH Từng Người ({simulationResults.length} CBNV)
+                    </span>
+                    <span className="text-[10px] text-emerald-700 font-medium">
+                      {bhxhStats.countSurplus > 0 ? (
+                        <span className="text-emerald-900 font-bold">{bhxhStats.countSurplus} người hưởng tiền thừa</span>
+                      ) : (
+                        'Mỗi người đóng một mức riêng'
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="h-6 w-px bg-emerald-300 hidden sm:block mx-1" />
+
+                {/* Các nút thiết lập nhanh thử nghiệm */}
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => handleApplyBulkBhxh('PROFILE')}
+                    className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                      bulkBhxhOption === 'INDIVIDUAL' || bulkBhxhOption === 'PROFILE'
+                        ? 'bg-emerald-700 text-white shadow-xs'
+                        : 'bg-white text-emerald-800 border border-emerald-300 hover:bg-emerald-100'
+                    }`}
+                    title="Khôi phục mức đóng riêng của từng người đã đăng ký trong hồ sơ"
+                  >
+                    Theo Hồ Sơ Gốc
+                  </button>
+                  <button
+                    onClick={() => handleApplyBulkBhxh('MIN_ZONE')}
+                    className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                      bulkBhxhOption === 'MIN_ZONE'
+                        ? 'bg-emerald-700 text-white shadow-xs'
+                        : 'bg-white text-emerald-800 border border-emerald-300 hover:bg-emerald-100'
+                    }`}
+                    title="Thử nghiệm: Tất cả đóng sàn 5Tr để hưởng tối đa tiền thừa"
+                  >
+                    Thử Sàn 5Tr
+                  </button>
+                  <button
+                    onClick={() => handleApplyBulkBhxh('STANDARD')}
+                    className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                      bulkBhxhOption === 'STANDARD'
+                        ? 'bg-emerald-700 text-white shadow-xs'
+                        : 'bg-white text-emerald-800 border border-emerald-300 hover:bg-emerald-100'
+                    }`}
+                    title="Thử nghiệm: Tất cả đóng chuẩn 100% theo Lương Vị trí L1"
+                  >
+                    Thử Chuẩn L1
+                  </button>
+                </div>
+
+                {/* Nút lưu mức BHXH vào Hồ Sơ CBNV */}
                 <button
-                  onClick={() => handleApplyBulkBhxh('STANDARD')}
-                  className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all ${
-                    bulkBhxhOption === 'STANDARD'
-                      ? 'bg-emerald-700 text-white shadow-sm'
-                      : 'text-emerald-800 hover:bg-emerald-200/60'
-                  }`}
-                  title="Tất cả đóng theo chuẩn chức danh L1"
+                  onClick={handleSaveBatchBhxhToStaff}
+                  disabled={isSavingBhxh}
+                  className="px-2.5 py-1 bg-emerald-800 hover:bg-emerald-900 text-white rounded-lg text-[11px] font-extrabold flex items-center space-x-1 shadow-xs transition-colors ml-1 disabled:opacity-50"
+                  title="Lưu 12 mức đóng BHXH trong bảng mô phỏng này vào hồ sơ CSDL DM_NS"
                 >
-                  Chuẩn (L1)
-                </button>
-                <button
-                  onClick={() => handleApplyBulkBhxh('MIN_ZONE')}
-                  className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all ${
-                    bulkBhxhOption === 'MIN_ZONE'
-                      ? 'bg-emerald-700 text-white shadow-sm'
-                      : 'text-emerald-800 hover:bg-emerald-200/60'
-                  }`}
-                  title="Tất cả đóng sàn 5Tr, Quỹ hoàn trả tiền thừa vào lương"
-                >
-                  Sàn 5Tr (Hưởng thừa)
+                  <Save className="w-3.5 h-3.5" />
+                  <span>{isSavingBhxh ? 'Đang lưu...' : 'Lưu Vào Hồ Sơ'}</span>
                 </button>
               </div>
 
@@ -610,6 +737,16 @@ export function SimulationModule({ data, onSaveScenario }) {
             </div>
           </div>
 
+          {/* Thông báo kết quả lưu BHXH */}
+          {bhxhSaveMsg && (
+            <div className="mx-4 p-2.5 rounded-xl bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-bold flex items-center justify-between animate-fadeIn">
+              <span>{bhxhSaveMsg}</span>
+              <button onClick={() => setBhxhSaveMsg('')} className="text-emerald-700 hover:text-emerald-950 p-1">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           {/* CHẾ ĐỘ 1: BẢNG TỔNG HỢP ĐỐI SOÁT */}
           {displayMode === 'SUMMARY' && (
             <div className="overflow-x-auto">
@@ -624,7 +761,7 @@ export function SimulationModule({ data, onSaveScenario }) {
                     <th className="p-3 text-right bg-blue-50 text-blue-900">Lương Vị Trí (T1)</th>
                     <th className="p-3 text-right bg-blue-50 text-blue-900">Lương KPI (T2)</th>
                     <th className="p-3 text-right bg-blue-50 text-blue-900">Khoán & PC (T3)</th>
-                    <th className="p-3 text-right bg-emerald-50 text-emerald-950">Đóng BHXH & Thừa</th>
+                    <th className="p-3 text-right bg-emerald-100/90 text-emerald-950 font-extrabold min-w-[170px]">Mức Đóng BHXH (Chỉnh Từng Người)</th>
                     <th className="p-3 text-right font-bold bg-amber-50 text-amber-900">Gross Đề Xuất</th>
                     <th className="p-3 text-right font-bold bg-emerald-50 text-emerald-900">Net Thực Lĩnh</th>
                     <th className="p-3 text-right font-bold">Chênh Lệch</th>
@@ -658,15 +795,76 @@ export function SimulationModule({ data, onSaveScenario }) {
                       <td className="p-3 text-right font-mono text-blue-900 bg-blue-50/30">
                         {formatCurrency(r.moPhong.tongKhoanChi + r.moPhong.khoanTrachNhiem)}
                       </td>
-                      <td className="p-3 text-right font-mono bg-emerald-50/20">
-                        <div className="font-semibold text-slate-800">{formatCurrency(r.moPhong.luongDongBhxhThucTe)}</div>
-                        {r.moPhong.tienThuaBhxhHuong > 0 ? (
-                          <span className="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                            +{formatCurrency(r.moPhong.tienThuaBhxhHuong)} (Thừa)
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-slate-400 font-sans">Đủ chuẩn L1</span>
-                        )}
+                      <td className="p-2.5 text-right bg-emerald-50/20 border-x border-emerald-100/60">
+                        <div className="flex flex-col items-end space-y-1">
+                          {/* Ô nhập tiền trực tiếp cho cá nhân */}
+                          <div className="flex items-center space-x-1 justify-end">
+                            <input
+                              type="number"
+                              step="500000"
+                              min="2340000"
+                              max="46800000"
+                              value={r.moPhong.luongDongBhxhThucTe || ''}
+                              onChange={(e) => handleUpdateStaffBhxh(r.maNV, 'CUSTOM', e.target.value)}
+                              className="w-28 px-2 py-1 text-right text-xs font-numeric font-bold border border-emerald-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 shadow-xs"
+                              title={`Mức lương đóng BHXH của ${r.hoTen}`}
+                            />
+                            <span className="text-[11px] font-semibold text-slate-500">₫</span>
+                          </div>
+
+                          {/* Các nút chọn nhanh cho cá nhân */}
+                          <div className="flex items-center space-x-1 justify-end">
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateStaffBhxh(r.maNV, 'MIN', 5000000)}
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-all ${
+                                r.moPhong.luongDongBhxhThucTe === 5000000
+                                  ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                                  : 'bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-50'
+                              }`}
+                              title="Chọn mức sàn 5.000.000 ₫ để hưởng tối đa tiền thừa"
+                            >
+                              Sàn 5Tr
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateStaffBhxh(r.maNV, 'STANDARD', r.moPhong.luongDongBhxhChuan)}
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-all ${
+                                r.moPhong.luongDongBhxhThucTe === r.moPhong.luongDongBhxhChuan && r.moPhong.tienThuaBhxhHuong === 0
+                                  ? 'bg-blue-600 text-white border-blue-700 shadow-xs'
+                                  : 'bg-white text-blue-800 border-blue-200 hover:bg-blue-50'
+                              }`}
+                              title={`Đóng theo chuẩn L1 (${formatShort(r.moPhong.luongDongBhxhChuan)})`}
+                            >
+                              L1
+                            </button>
+
+                            {r.empBhxhGoc > 0 && r.empBhxhGoc !== 5000000 && r.empBhxhGoc !== r.moPhong.luongDongBhxhChuan && (
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateStaffBhxh(r.maNV, 'CUSTOM', r.empBhxhGoc)}
+                                className={`px-1.5 py-0.5 rounded text-[10px] font-bold border transition-all ${
+                                  r.moPhong.luongDongBhxhThucTe === r.empBhxhGoc
+                                    ? 'bg-purple-600 text-white border-purple-700 shadow-xs'
+                                    : 'bg-white text-purple-800 border-purple-200 hover:bg-purple-50'
+                                }`}
+                                title={`Khôi phục mức hồ sơ (${formatShort(r.empBhxhGoc)})`}
+                              >
+                                Hồ sơ
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Hiển thị số tiền thừa hoặc chuẩn L1 */}
+                          {r.moPhong.tienThuaBhxhHuong > 0 ? (
+                            <span className="inline-block px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 font-numeric">
+                              +{formatCurrency(r.moPhong.tienThuaBhxhHuong)} (Thừa)
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 font-sans">Đủ chuẩn L1</span>
+                          )}
+                        </div>
                       </td>
                       <td className="p-3 text-right font-mono font-bold text-amber-900 bg-amber-50/40">
                         {formatCurrency(r.moPhong.tongGross)}
@@ -761,7 +959,7 @@ export function SimulationModule({ data, onSaveScenario }) {
                     <th className="p-2 text-right border-r">Độc Hại</th>
 
                     {/* Tầng 4 */}
-                    <th className="p-2 text-right border-r bg-emerald-50 text-emerald-900 font-bold">Lương Đóng BH</th>
+                    <th className="p-2 text-right border-r bg-emerald-100 text-emerald-950 font-extrabold min-w-[155px]">Lương Đóng BH (Chỉnh)</th>
                     <th className="p-2 text-right border-r bg-emerald-50 text-emerald-800 font-bold">Thừa Quỹ Trả</th>
                     <th className="p-2 text-right border-r font-bold bg-amber-50">Gross</th>
                     <th className="p-2 text-right border-r text-rose-700">BHXH NLĐ (10.5%)</th>
@@ -797,7 +995,63 @@ export function SimulationModule({ data, onSaveScenario }) {
                       <td className="p-2 text-right font-mono border-r">{formatCurrency(r.moPhong.khoanDocHai)}</td>
 
                       {/* Tầng 4 */}
-                      <td className="p-2 text-right font-mono bg-emerald-50/30 border-r font-semibold text-slate-800">{formatCurrency(r.moPhong.luongDongBhxhThucTe)}</td>
+                      <td className="p-2 text-right font-numeric bg-emerald-50/30 border-r">
+                        <div className="flex flex-col items-end space-y-1">
+                          <div className="flex items-center space-x-1 justify-end">
+                            <input
+                              type="number"
+                              step="500000"
+                              min="2340000"
+                              max="46800000"
+                              value={r.moPhong.luongDongBhxhThucTe || ''}
+                              onChange={(e) => handleUpdateStaffBhxh(r.maNV, 'CUSTOM', e.target.value)}
+                              className="w-24 px-1.5 py-0.5 text-right text-[11px] font-numeric font-bold border border-emerald-300 rounded bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-xs"
+                              title={`Chỉnh mức đóng BHXH của ${r.hoTen}`}
+                            />
+                            <span className="text-[10px] text-slate-500 font-semibold">₫</span>
+                          </div>
+                          <div className="flex items-center space-x-1 justify-end">
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateStaffBhxh(r.maNV, 'MIN', 5000000)}
+                              className={`px-1 py-0.2 rounded text-[9px] font-bold border transition-all ${
+                                r.moPhong.luongDongBhxhThucTe === 5000000
+                                  ? 'bg-emerald-600 text-white border-emerald-700'
+                                  : 'bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-50'
+                              }`}
+                              title="Sàn 5Tr"
+                            >
+                              5Tr
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateStaffBhxh(r.maNV, 'STANDARD', r.moPhong.luongDongBhxhChuan)}
+                              className={`px-1 py-0.2 rounded text-[9px] font-bold border transition-all ${
+                                r.moPhong.luongDongBhxhThucTe === r.moPhong.luongDongBhxhChuan && r.moPhong.tienThuaBhxhHuong === 0
+                                  ? 'bg-blue-600 text-white border-blue-700'
+                                  : 'bg-white text-blue-800 border-blue-200 hover:bg-blue-50'
+                              }`}
+                              title={`Theo L1 (${formatShort(r.moPhong.luongDongBhxhChuan)})`}
+                            >
+                              L1
+                            </button>
+                            {r.empBhxhGoc > 0 && r.empBhxhGoc !== 5000000 && r.empBhxhGoc !== r.moPhong.luongDongBhxhChuan && (
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateStaffBhxh(r.maNV, 'CUSTOM', r.empBhxhGoc)}
+                                className={`px-1 py-0.2 rounded text-[9px] font-bold border transition-all ${
+                                  r.moPhong.luongDongBhxhThucTe === r.empBhxhGoc
+                                    ? 'bg-purple-600 text-white border-purple-700'
+                                    : 'bg-white text-purple-800 border-purple-200 hover:bg-purple-50'
+                                }`}
+                                title={`Khôi phục hồ sơ (${formatShort(r.empBhxhGoc)})`}
+                              >
+                                HS
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </td>
                       <td className="p-2 text-right font-mono bg-emerald-50/40 border-r font-bold text-emerald-800">
                         {r.moPhong.tienThuaBhxhHuong > 0 ? `+${formatCurrency(r.moPhong.tienThuaBhxhHuong)}` : '-'}
                       </td>
@@ -1649,6 +1903,27 @@ export function SimulationModule({ data, onSaveScenario }) {
             </table>
           </div>
 
+          {/* Nguyên tắc 4 tầng thu nhập & Cơ chế BHXH cá nhân hóa */}
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2">
+            <div className="font-bold text-slate-900 uppercase tracking-wide">
+              Các Nguyên Tắc Phân Phối Cốt Lõi Theo Đề Án 2027 Pro V2:
+            </div>
+            <ul className="list-disc list-inside space-y-1 text-slate-700 leading-relaxed">
+              <li>
+                <strong>Tầng 1 (Lương Vị trí L1):</strong> Phản ánh đúng độ phức tạp và trách nhiệm công việc, gắn liền ngạch bậc thâm niên.
+              </li>
+              <li>
+                <strong>Tầng 2 (Lương KPI):</strong> Phân bổ theo kết cấu tỷ trọng từng khối ({deptKpiRatios.TIN_DUNG}% Tín dụng, {deptKpiRatios.LANH_DAO}% Lãnh đạo, {deptKpiRatios.KE_TOAN}% Kế toán, {deptKpiRatios.HO_TRO}% Văn phòng).
+              </li>
+              <li>
+                <strong>Tầng 3 (Phụ cấp khoán công vụ):</strong> Ăn trưa, xăng xe, điện thoại, trang phục, độc hại kho quỹ và phụ cấp trách nhiệm theo chức danh.
+              </li>
+              <li>
+                <strong>Tầng 4 (Cơ chế BHXH Độc Lập Theo Từng Cá Nhân):</strong> Quỹ bảo toàn trọn gói định mức đóng BHXH 23.5% theo Lương Vị trí L1 của chức danh. Cán bộ được quyền tự do lựa chọn mức đóng BHXH thực tế (từ mức sàn 5.000.000 ₫ đến mức tối đa theo L1). Trường hợp mức đóng thực tế thấp hơn định mức, Quỹ hoàn trả phần tiền chênh lệch thừa trực tiếp vào thu nhập hàng tháng của cán bộ, đảm bảo 100% quyền lợi tài chính và sự chủ động của người lao động.
+              </li>
+            </ul>
+          </div>
+
           <div className="flex justify-between items-center pt-6 text-xs font-bold text-center">
             <div>
               <div>NGƯỜI LẬP TỜ TRÌNH</div>
@@ -1723,43 +1998,62 @@ export function SimulationModule({ data, onSaveScenario }) {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                   <button
-                    onClick={() => handleUpdateStaffBhxh(activeInspectingRecord.maNV, 'STANDARD')}
-                    className={`p-2 rounded-lg border text-left transition-all ${
-                      !staffBhxhCustom[activeInspectingRecord.maNV] || staffBhxhCustom[activeInspectingRecord.maNV]?.mode === 'STANDARD'
-                        ? 'bg-emerald-700 text-white border-emerald-800 font-bold shadow-sm'
+                    onClick={() => handleUpdateStaffBhxh(activeInspectingRecord.maNV, 'STANDARD', activeInspectingRecord.moPhong.luongDongBhxhChuan)}
+                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                      activeInspectingRecord.moPhong.luongDongBhxhThucTe === activeInspectingRecord.moPhong.luongDongBhxhChuan && activeInspectingRecord.moPhong.tienThuaBhxhHuong === 0
+                        ? 'bg-blue-700 text-white border-blue-800 font-bold shadow-sm'
                         : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
-                    <div className="text-[10px] opacity-80">1. Theo Vị Trí (Chuẩn)</div>
-                    <div className="font-mono font-bold mt-0.5">{formatCurrency(activeInspectingRecord.moPhong.luongDongBhxhChuan)}</div>
-                    <div className="text-[9px] opacity-80">Thừa hưởng: 0 ₫</div>
+                    <div className="text-[10px] opacity-80">1. Theo Lương L1</div>
+                    <div className="font-numeric font-bold mt-0.5">{formatCurrency(activeInspectingRecord.moPhong.luongDongBhxhChuan)}</div>
+                    <div className="text-[9px] opacity-80">Đóng đủ 100%</div>
                   </button>
 
                   <button
                     onClick={() => handleUpdateStaffBhxh(activeInspectingRecord.maNV, 'MIN', 5000000)}
-                    className={`p-2 rounded-lg border text-left transition-all ${
-                      staffBhxhCustom[activeInspectingRecord.maNV]?.mode === 'MIN'
+                    className={`p-2.5 rounded-xl border text-left transition-all ${
+                      activeInspectingRecord.moPhong.luongDongBhxhThucTe === 5000000
                         ? 'bg-emerald-700 text-white border-emerald-800 font-bold shadow-sm'
                         : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
-                    <div className="text-[10px] opacity-80">2. Mức Sàn Cơ Sở (5Tr)</div>
-                    <div className="font-mono font-bold mt-0.5">5.000.000 ₫</div>
-                    <div className="text-[9px] opacity-80">Hưởng tối đa tiền thừa</div>
+                    <div className="text-[10px] opacity-80">2. Mức Sàn Vùng</div>
+                    <div className="font-numeric font-bold mt-0.5">5.000.000 ₫</div>
+                    <div className="text-[9px] opacity-80">Hưởng tối đa thừa</div>
                   </button>
 
-                  <div className="p-2 rounded-lg border bg-white border-slate-200">
-                    <div className="text-[10px] text-slate-500">3. Mức thỏa thuận riêng (₫)</div>
-                    <input
-                      type="number"
-                      step="500000"
-                      placeholder="VD: 7000000"
-                      value={staffBhxhCustom[activeInspectingRecord.maNV]?.customAmount || ''}
-                      onChange={(e) => handleUpdateStaffBhxh(activeInspectingRecord.maNV, 'CUSTOM', e.target.value)}
-                      className="w-full mt-0.5 px-2 py-0.5 text-xs border border-slate-300 rounded font-mono font-bold"
-                    />
+                  {activeInspectingRecord.empBhxhGoc > 0 && (
+                    <button
+                      onClick={() => handleUpdateStaffBhxh(activeInspectingRecord.maNV, 'CUSTOM', activeInspectingRecord.empBhxhGoc)}
+                      className={`p-2.5 rounded-xl border text-left transition-all ${
+                        activeInspectingRecord.moPhong.luongDongBhxhThucTe === activeInspectingRecord.empBhxhGoc
+                          ? 'bg-purple-700 text-white border-purple-800 font-bold shadow-sm'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <div className="text-[10px] opacity-80">3. Hồ Sơ Đăng Ký</div>
+                      <div className="font-numeric font-bold mt-0.5">{formatCurrency(activeInspectingRecord.empBhxhGoc)}</div>
+                      <div className="text-[9px] opacity-80">Mức riêng đã lưu</div>
+                    </button>
+                  )}
+
+                  <div className="p-2.5 rounded-xl border bg-white border-slate-300">
+                    <div className="text-[10px] text-slate-600 font-semibold">Tự nhập mức riêng (₫)</div>
+                    <div className="flex items-center space-x-1 mt-1">
+                      <input
+                        type="number"
+                        step="500000"
+                        min="2340000"
+                        max="46800000"
+                        placeholder="VD: 7500000"
+                        value={activeInspectingRecord.moPhong.luongDongBhxhThucTe || ''}
+                        onChange={(e) => handleUpdateStaffBhxh(activeInspectingRecord.maNV, 'CUSTOM', e.target.value)}
+                        className="w-full px-2 py-1 text-xs border border-slate-300 rounded-lg font-numeric font-bold bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
                   </div>
                 </div>
 

@@ -161,6 +161,10 @@ class ApiService {
     return this.request('saveStaff', { payload: staffData });
   }
 
+  async saveBatchBhxh(bhxhList) {
+    return this.request('saveBatchBhxh', { bhxhList });
+  }
+
   async savePositions(positionsList) {
     return this.request('savePositions', { payload: positionsList });
   }

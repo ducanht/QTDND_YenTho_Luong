@@ -226,6 +226,7 @@ export function App() {
             <SimulationModule
               data={data}
               onSaveScenario={(scenario) => api.saveScenario(scenario).then(() => loadData(period))}
+              onRefresh={() => loadData(period)}
             />
           )}
 

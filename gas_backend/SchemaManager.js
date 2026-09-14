@@ -15,7 +15,7 @@ const SHEET_DEFINITIONS = {
       'Mã NV', 'Họ và tên', 'Chức danh', 'Khối phòng ban', 'Điện thoại', 'Email',
       'Ngày sinh', 'Giới tính', 'Số CCCD', 'Ngày cấp CCCD', 'Nơi cấp CCCD',
       'Địa chỉ thường trú', 'Ngày vào làm', 'Trạng thái', 'Số NPT',
-      'Số tài khoản NH', 'Tên ngân hàng', 'Mã số thuế', 'Số sổ BHXH', 'Link ảnh thẻ', 'Ghi chú'
+      'Số tài khoản NH', 'Tên ngân hàng', 'Mã số thuế', 'Số sổ BHXH', 'Link ảnh thẻ', 'Ghi chú', 'Mức đóng BHXH'
     ]
   },
   LS_CONGTAC: {
