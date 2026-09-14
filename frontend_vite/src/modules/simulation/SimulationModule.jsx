@@ -839,7 +839,7 @@ export function SimulationModule({ data, onSaveScenario }) {
         </div>
       )}
 
-      {/* SUB-TAB 2: BỘ ĐIỀU KHIỂN THAM SỐ TOÀN DIỆN (TUNER) */}
+      {/* SUB-TAB 2: BỘ ĐIỀU KHIỂN THAM SỐ TOÀN DIỆN (TUNER) - NHẬP TAY CHUYÊN NGHIỆP */}
       {activeSubTab === 'tuner' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Card 1: Lương Cơ Sở & Quỹ Thưởng Năm */}
@@ -850,64 +850,186 @@ export function SimulationModule({ data, onSaveScenario }) {
             </h3>
 
             {/* Lương cơ sở nội bộ */}
-            <div>
-              <div className="flex justify-between text-xs mb-1.5">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs">
                 <span className="font-semibold text-slate-700">Mức Lương Cơ Sở Nội Bộ QTD:</span>
-                <span className="font-mono font-bold text-brand-navy">{formatCurrency(luongCoSo)}</span>
+                <span className="font-numeric font-bold text-brand-navy bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-200">
+                  {formatCurrency(luongCoSo)}
+                </span>
               </div>
-              <input
-                type="range"
-                min="1800000"
-                max="3500000"
-                step="50000"
-                value={luongCoSo}
-                onChange={(e) => setLuongCoSo(Number(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-navy"
-              />
-              <div className="flex justify-between text-[10px] text-slate-400 mt-1">
-                <span>1.800.000 ₫ (Cũ)</span>
-                <span>2.340.000 ₫ (Hiện hành)</span>
-                <span>3.500.000 ₫ (Mục tiêu)</span>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setLuongCoSo(prev => Math.max(1500000, prev - 50000))}
+                  className="btn-step px-3 py-2 text-xs"
+                  title="Giảm 50.000 ₫"
+                >
+                  - 50k
+                </button>
+                <div className="relative flex-1">
+                  <input
+                    type="number"
+                    step="10000"
+                    min="1500000"
+                    max="5000000"
+                    value={luongCoSo}
+                    onChange={(e) => setLuongCoSo(Number(e.target.value) || 0)}
+                    className="w-full money-input text-sm py-2 pr-10"
+                    placeholder="Nhập mức lương..."
+                  />
+                  <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-semibold pointer-events-none">₫</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setLuongCoSo(prev => Math.min(5000000, prev + 50000))}
+                  className="btn-step px-3 py-2 text-xs text-brand-navy"
+                  title="Tăng 50.000 ₫"
+                >
+                  + 50k
+                </button>
+              </div>
+              {/* Quick Presets */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                <span className="text-[11px] text-slate-400 self-center mr-1">Gợi ý:</span>
+                {[
+                  { label: '2.340.000 ₫ (Hiện hành)', val: 2340000 },
+                  { label: '2.500.000 ₫ (PA2 Chuẩn)', val: 2500000 },
+                  { label: '3.000.000 ₫ (Mục tiêu)', val: 3000000 },
+                  { label: '3.500.000 ₫ (Đột phá)', val: 3500000 },
+                ].map(p => (
+                  <button
+                    key={p.val}
+                    type="button"
+                    onClick={() => setLuongCoSo(p.val)}
+                    className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all ${
+                      luongCoSo === p.val
+                        ? 'bg-brand-navy text-white border-brand-navy font-bold'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* Trần KPI */}
-            <div>
-              <div className="flex justify-between text-xs mb-1.5">
+            <div className="space-y-2 pt-2 border-t border-slate-100">
+              <div className="flex justify-between items-center text-xs">
                 <span className="font-semibold text-slate-700">Tỷ Lệ Trần Quỹ Lương KPI:</span>
-                <span className="font-mono font-bold text-emerald-700">{tranKpi}%</span>
+                <span className="font-numeric font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
+                  {tranKpi}%
+                </span>
               </div>
-              <input
-                type="range"
-                min="80"
-                max="150"
-                step="5"
-                value={tranKpi}
-                onChange={(e) => setTranKpi(Number(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
-              />
-              <div className="flex justify-between text-[10px] text-slate-400 mt-1">
-                <span>80% (Khủng hoảng)</span>
-                <span>100% (Chuẩn)</span>
-                <span>150% (Đột phá)</span>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setTranKpi(prev => Math.max(50, prev - 5))}
+                  className="btn-step px-3 py-2 text-xs"
+                  title="Giảm 5%"
+                >
+                  - 5%
+                </button>
+                <div className="relative flex-1">
+                  <input
+                    type="number"
+                    step="1"
+                    min="50"
+                    max="200"
+                    value={tranKpi}
+                    onChange={(e) => setTranKpi(Number(e.target.value) || 0)}
+                    className="w-full percent-input text-sm py-2 pr-8 font-bold"
+                    placeholder="Nhập %..."
+                  />
+                  <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-semibold pointer-events-none">%</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTranKpi(prev => Math.min(200, prev + 5))}
+                  className="btn-step px-3 py-2 text-xs text-emerald-700 font-bold"
+                  title="Tăng 5%"
+                >
+                  + 5%
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                {[
+                  { label: '80% (Khủng hoảng)', val: 80 },
+                  { label: '100% (Chuẩn kế hoạch)', val: 100 },
+                  { label: '120% (Tăng trưởng tốt)', val: 120 },
+                  { label: '150% (Xuất sắc)', val: 150 },
+                ].map(p => (
+                  <button
+                    key={p.val}
+                    type="button"
+                    onClick={() => setTranKpi(p.val)}
+                    className={`text-[11px] px-2 py-0.5 rounded-md border transition-all ${
+                      tranKpi === p.val
+                        ? 'bg-emerald-700 text-white border-emerald-700 font-bold'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* Quỹ Khen thưởng năm */}
-            <div>
-              <div className="flex justify-between text-xs mb-1.5">
+            <div className="space-y-2 pt-2 border-t border-slate-100">
+              <div className="flex justify-between items-center text-xs">
                 <span className="font-semibold text-slate-700">Hạn Mức Quỹ Thưởng Năm:</span>
-                <span className="font-mono font-bold text-purple-700">{formatCurrency(quyThuongNam)}</span>
+                <span className="font-numeric font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-lg border border-purple-200">
+                  {formatCurrency(quyThuongNam)}
+                </span>
               </div>
-              <input
-                type="range"
-                min="100000000"
-                max="500000000"
-                step="10000000"
-                value={quyThuongNam}
-                onChange={(e) => setQuyThuongNam(Number(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-              />
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setQuyThuongNam(prev => Math.max(50000000, prev - 10000000))}
+                  className="btn-step px-3 py-2 text-xs"
+                  title="Giảm 10 Triệu"
+                >
+                  - 10 Tr
+                </button>
+                <div className="relative flex-1">
+                  <input
+                    type="number"
+                    step="5000000"
+                    min="50000000"
+                    max="1000000000"
+                    value={quyThuongNam}
+                    onChange={(e) => setQuyThuongNam(Number(e.target.value) || 0)}
+                    className="w-full money-input text-sm py-2 pr-10 text-purple-900"
+                    placeholder="Nhập số tiền..."
+                  />
+                  <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-semibold pointer-events-none">₫</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setQuyThuongNam(prev => Math.min(1000000000, prev + 10000000))}
+                  className="btn-step px-3 py-2 text-xs text-purple-700 font-bold"
+                  title="Tăng 10 Triệu"
+                >
+                  + 10 Tr
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                {[150000000, 250000000, 350000000, 500000000].map(val => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setQuyThuongNam(val)}
+                    className={`text-[11px] px-2 py-0.5 rounded-md border transition-all ${
+                      quyThuongNam === val
+                        ? 'bg-purple-700 text-white border-purple-700 font-bold'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {val / 1000000} Triệu
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -921,16 +1043,16 @@ export function SimulationModule({ data, onSaveScenario }) {
               <div className="inline-flex rounded-lg bg-slate-100 p-0.5 text-[10px]">
                 <button
                   onClick={() => setKpiCalcMethod('DEPT_RATIO')}
-                  className={`px-2 py-0.5 rounded font-semibold transition-all ${
-                    kpiCalcMethod === 'DEPT_RATIO' ? 'bg-brand-navy text-white shadow-sm' : 'text-slate-600'
+                  className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
+                    kpiCalcMethod === 'DEPT_RATIO' ? 'bg-brand-navy text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   % Kết cấu khối
                 </button>
                 <button
                   onClick={() => setKpiCalcMethod('FIXED_PRICE')}
-                  className={`px-2 py-0.5 rounded font-semibold transition-all ${
-                    kpiCalcMethod === 'FIXED_PRICE' ? 'bg-brand-navy text-white shadow-sm' : 'text-slate-600'
+                  className={`px-2.5 py-1 rounded-md font-semibold transition-all ${
+                    kpiCalcMethod === 'FIXED_PRICE' ? 'bg-brand-navy text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   Đơn giá cố định
@@ -941,97 +1063,210 @@ export function SimulationModule({ data, onSaveScenario }) {
             {kpiCalcMethod === 'DEPT_RATIO' ? (
               <div className="space-y-3.5">
                 <div className="p-2.5 bg-blue-50/60 border border-blue-200 rounded-xl text-[11px] text-blue-900 leading-relaxed">
-                  💡 <strong>Cơ cấu lương mục tiêu:</strong> Ở mức 100% KPI, tỷ lệ giữa Lương KPI (L2) và Lương vị trí (L1) = %KPI / (100 - %KPI).
+                  💡 <strong>Cơ cấu lương mục tiêu:</strong> Ở mức 100% KPI, tỷ lệ Lương KPI (L2) trên Lương vị trí (L1) = %KPI / (100 - %KPI).
                 </div>
 
                 {/* Khối Lãnh đạo */}
-                <div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="font-semibold text-slate-700">1. Khối Lãnh Đạo & Điều Hành:</span>
-                    <span className="font-mono font-bold text-brand-navy">{deptKpiRatios.LANH_DAO}% KPI ({100 - deptKpiRatios.LANH_DAO}% Vị trí)</span>
+                <div className="p-3 bg-slate-50/70 border border-slate-200 rounded-xl space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-semibold text-slate-800">1. Khối Lãnh Đạo & Điều Hành:</span>
+                    <span className="font-numeric font-bold text-brand-navy text-xs">
+                      {deptKpiRatios.LANH_DAO}% KPI ({100 - deptKpiRatios.LANH_DAO}% Vị trí)
+                    </span>
                   </div>
-                  <input
-                    type="range"
-                    min="10"
-                    max="60"
-                    step="5"
-                    value={deptKpiRatios.LANH_DAO}
-                    onChange={(e) => setDeptKpiRatios(prev => ({ ...prev, LANH_DAO: Number(e.target.value) }))}
-                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-navy"
-                  />
-                  <div className="text-[10px] text-slate-400">Lương KPI chuẩn = {((deptKpiRatios.LANH_DAO / (100 - deptKpiRatios.LANH_DAO))).toFixed(2)}x Lương Vị trí</div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setDeptKpiRatios(prev => ({ ...prev, LANH_DAO: Math.max(5, prev.LANH_DAO - 5) }))}
+                      className="btn-step px-2.5 py-1 text-xs"
+                    >
+                      - 5%
+                    </button>
+                    <div className="relative flex-1">
+                      <input
+                        type="number"
+                        min="5"
+                        max="80"
+                        step="1"
+                        value={deptKpiRatios.LANH_DAO}
+                        onChange={(e) => setDeptKpiRatios(prev => ({ ...prev, LANH_DAO: Math.min(80, Math.max(5, Number(e.target.value) || 0)) }))}
+                        className="w-full percent-input text-sm py-1.5 pr-7 font-bold text-brand-navy"
+                      />
+                      <span className="absolute right-2.5 top-2 text-xs text-slate-400 font-semibold pointer-events-none">%</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDeptKpiRatios(prev => ({ ...prev, LANH_DAO: Math.min(80, prev.LANH_DAO + 5) }))}
+                      className="btn-step px-2.5 py-1 text-xs text-brand-navy font-bold"
+                    >
+                      + 5%
+                    </button>
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-medium">
+                    Lương KPI chuẩn = {((deptKpiRatios.LANH_DAO / (100 - deptKpiRatios.LANH_DAO))).toFixed(2)}x Lương Vị trí
+                  </div>
                 </div>
 
                 {/* Khối Tín dụng */}
-                <div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="font-semibold text-slate-700">2. Khối Tín Dụng & Khai Thác:</span>
-                    <span className="font-mono font-bold text-emerald-700">{deptKpiRatios.TIN_DUNG}% KPI ({100 - deptKpiRatios.TIN_DUNG}% Vị trí)</span>
+                <div className="p-3 bg-emerald-50/50 border border-emerald-200 rounded-xl space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-semibold text-emerald-950">2. Khối Tín Dụng & Khai Thác:</span>
+                    <span className="font-numeric font-bold text-emerald-800 text-xs">
+                      {deptKpiRatios.TIN_DUNG}% KPI ({100 - deptKpiRatios.TIN_DUNG}% Vị trí)
+                    </span>
                   </div>
-                  <input
-                    type="range"
-                    min="20"
-                    max="70"
-                    step="5"
-                    value={deptKpiRatios.TIN_DUNG}
-                    onChange={(e) => setDeptKpiRatios(prev => ({ ...prev, TIN_DUNG: Number(e.target.value) }))}
-                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
-                  />
-                  <div className="text-[10px] text-slate-400">Lương KPI chuẩn = {((deptKpiRatios.TIN_DUNG / (100 - deptKpiRatios.TIN_DUNG))).toFixed(2)}x Lương Vị trí (Lực lượng kinh doanh)</div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setDeptKpiRatios(prev => ({ ...prev, TIN_DUNG: Math.max(10, prev.TIN_DUNG - 5) }))}
+                      className="btn-step px-2.5 py-1 text-xs"
+                    >
+                      - 5%
+                    </button>
+                    <div className="relative flex-1">
+                      <input
+                        type="number"
+                        min="10"
+                        max="85"
+                        step="1"
+                        value={deptKpiRatios.TIN_DUNG}
+                        onChange={(e) => setDeptKpiRatios(prev => ({ ...prev, TIN_DUNG: Math.min(85, Math.max(10, Number(e.target.value) || 0)) }))}
+                        className="w-full percent-input text-sm py-1.5 pr-7 font-bold text-emerald-800"
+                      />
+                      <span className="absolute right-2.5 top-2 text-xs text-slate-400 font-semibold pointer-events-none">%</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDeptKpiRatios(prev => ({ ...prev, TIN_DUNG: Math.min(85, prev.TIN_DUNG + 5) }))}
+                      className="btn-step px-2.5 py-1 text-xs text-emerald-700 font-bold"
+                    >
+                      + 5%
+                    </button>
+                  </div>
+                  <div className="text-[10px] text-emerald-700 font-medium">
+                    Lương KPI chuẩn = {((deptKpiRatios.TIN_DUNG / (100 - deptKpiRatios.TIN_DUNG))).toFixed(2)}x Lương Vị trí (Kinh doanh)
+                  </div>
                 </div>
 
                 {/* Khối Kế toán */}
-                <div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="font-semibold text-slate-700">3. Khối Kế Toán & Ngân Quỹ:</span>
-                    <span className="font-mono font-bold text-blue-700">{deptKpiRatios.KE_TOAN}% KPI ({100 - deptKpiRatios.KE_TOAN}% Vị trí)</span>
+                <div className="p-3 bg-blue-50/50 border border-blue-200 rounded-xl space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-semibold text-blue-950">3. Khối Kế Toán & Ngân Quỹ:</span>
+                    <span className="font-numeric font-bold text-blue-800 text-xs">
+                      {deptKpiRatios.KE_TOAN}% KPI ({100 - deptKpiRatios.KE_TOAN}% Vị trí)
+                    </span>
                   </div>
-                  <input
-                    type="range"
-                    min="10"
-                    max="50"
-                    step="5"
-                    value={deptKpiRatios.KE_TOAN}
-                    onChange={(e) => setDeptKpiRatios(prev => ({ ...prev, KE_TOAN: Number(e.target.value) }))}
-                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                  />
-                  <div className="text-[10px] text-slate-400">Lương KPI chuẩn = {((deptKpiRatios.KE_TOAN / (100 - deptKpiRatios.KE_TOAN))).toFixed(2)}x Lương Vị trí (Tác nghiệp quầy)</div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setDeptKpiRatios(prev => ({ ...prev, KE_TOAN: Math.max(5, prev.KE_TOAN - 5) }))}
+                      className="btn-step px-2.5 py-1 text-xs"
+                    >
+                      - 5%
+                    </button>
+                    <div className="relative flex-1">
+                      <input
+                        type="number"
+                        min="5"
+                        max="70"
+                        step="1"
+                        value={deptKpiRatios.KE_TOAN}
+                        onChange={(e) => setDeptKpiRatios(prev => ({ ...prev, KE_TOAN: Math.min(70, Math.max(5, Number(e.target.value) || 0)) }))}
+                        className="w-full percent-input text-sm py-1.5 pr-7 font-bold text-blue-800"
+                      />
+                      <span className="absolute right-2.5 top-2 text-xs text-slate-400 font-semibold pointer-events-none">%</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDeptKpiRatios(prev => ({ ...prev, KE_TOAN: Math.min(70, prev.KE_TOAN + 5) }))}
+                      className="btn-step px-2.5 py-1 text-xs text-blue-700 font-bold"
+                    >
+                      + 5%
+                    </button>
+                  </div>
+                  <div className="text-[10px] text-blue-700 font-medium">
+                    Lương KPI chuẩn = {((deptKpiRatios.KE_TOAN / (100 - deptKpiRatios.KE_TOAN))).toFixed(2)}x Lương Vị trí (Tác nghiệp quầy)
+                  </div>
                 </div>
 
                 {/* Khối Hỗ trợ */}
-                <div>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="font-semibold text-slate-700">4. Khối Văn Phòng & Hỗ Trợ:</span>
-                    <span className="font-mono font-bold text-purple-700">{deptKpiRatios.HO_TRO}% KPI ({100 - deptKpiRatios.HO_TRO}% Vị trí)</span>
+                <div className="p-3 bg-purple-50/50 border border-purple-200 rounded-xl space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="font-semibold text-purple-950">4. Khối Văn Phòng & Hỗ Trợ:</span>
+                    <span className="font-numeric font-bold text-purple-800 text-xs">
+                      {deptKpiRatios.HO_TRO}% KPI ({100 - deptKpiRatios.HO_TRO}% Vị trí)
+                    </span>
                   </div>
-                  <input
-                    type="range"
-                    min="5"
-                    max="40"
-                    step="5"
-                    value={deptKpiRatios.HO_TRO}
-                    onChange={(e) => setDeptKpiRatios(prev => ({ ...prev, HO_TRO: Number(e.target.value) }))}
-                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                  />
-                  <div className="text-[10px] text-slate-400">Lương KPI chuẩn = {((deptKpiRatios.HO_TRO / (100 - deptKpiRatios.HO_TRO))).toFixed(2)}x Lương Vị trí (Phục vụ nội bộ)</div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setDeptKpiRatios(prev => ({ ...prev, HO_TRO: Math.max(5, prev.HO_TRO - 5) }))}
+                      className="btn-step px-2.5 py-1 text-xs"
+                    >
+                      - 5%
+                    </button>
+                    <div className="relative flex-1">
+                      <input
+                        type="number"
+                        min="5"
+                        max="60"
+                        step="1"
+                        value={deptKpiRatios.HO_TRO}
+                        onChange={(e) => setDeptKpiRatios(prev => ({ ...prev, HO_TRO: Math.min(60, Math.max(5, Number(e.target.value) || 0)) }))}
+                        className="w-full percent-input text-sm py-1.5 pr-7 font-bold text-purple-800"
+                      />
+                      <span className="absolute right-2.5 top-2 text-xs text-slate-400 font-semibold pointer-events-none">%</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDeptKpiRatios(prev => ({ ...prev, HO_TRO: Math.min(60, prev.HO_TRO + 5) }))}
+                      className="btn-step px-2.5 py-1 text-xs text-purple-700 font-bold"
+                    >
+                      + 5%
+                    </button>
+                  </div>
+                  <div className="text-[10px] text-purple-700 font-medium">
+                    Lương KPI chuẩn = {((deptKpiRatios.HO_TRO / (100 - deptKpiRatios.HO_TRO))).toFixed(2)}x Lương Vị trí (Phục vụ)
+                  </div>
                 </div>
               </div>
             ) : (
               <div className="space-y-4 pt-2">
-                <div>
-                  <div className="flex justify-between text-xs mb-1.5">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-xs">
                     <span className="font-semibold text-slate-700">Đơn Giá Lương KPI Cơ Bản (Hệ số 1.0):</span>
-                    <span className="font-mono font-bold text-blue-700">{formatCurrency(donGiaKpiCoBan)}/tháng</span>
+                    <span className="font-numeric font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                      {formatCurrency(donGiaKpiCoBan)}
+                    </span>
                   </div>
-                  <input
-                    type="range"
-                    min="2000000"
-                    max="8000000"
-                    step="200000"
-                    value={donGiaKpiCoBan}
-                    onChange={(e) => setDonGiaKpiCoBan(Number(e.target.value))}
-                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                  />
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setDonGiaKpiCoBan(prev => Math.max(1000000, prev - 200000))}
+                      className="btn-step px-3 py-2 text-xs"
+                    >
+                      - 200k
+                    </button>
+                    <div className="relative flex-1">
+                      <input
+                        type="number"
+                        step="100000"
+                        min="1000000"
+                        max="10000000"
+                        value={donGiaKpiCoBan}
+                        onChange={(e) => setDonGiaKpiCoBan(Number(e.target.value) || 0)}
+                        className="w-full money-input text-sm py-2 pr-10"
+                      />
+                      <span className="absolute right-3 top-2.5 text-xs text-slate-400 font-semibold pointer-events-none">₫</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDonGiaKpiCoBan(prev => Math.min(10000000, prev + 200000))}
+                      className="btn-step px-3 py-2 text-xs text-blue-700 font-bold"
+                    >
+                      + 200k
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -1049,7 +1284,7 @@ export function SimulationModule({ data, onSaveScenario }) {
                 <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-700" />
                 Cơ chế tài chính minh bạch:
               </div>
-              Quỹ xác định định mức bảo hiểm chuẩn 23.5% theo Lương vị trí ($L_1$). Cán bộ có quyền chọn mức đóng BHXH thực tế thấp hơn. 
+              Quỹ xác định định mức bảo hiểm chuẩn 23.5% theo Lương vị trí (L1). Cán bộ có quyền chọn mức đóng BHXH thực tế thấp hơn. 
               Phần chênh lệch 23.5% Quỹ không phải nộp cho cơ quan BHXH được chuyển trả thẳng vào thu nhập của người lao động.
               <div className="mt-1 font-semibold text-emerald-800">
                 👉 Tổng chi phí Quỹ bảo toàn 100%, không phát sinh vượt ngân sách!
@@ -1057,9 +1292,10 @@ export function SimulationModule({ data, onSaveScenario }) {
             </div>
 
             <div>
-              <div className="text-xs font-semibold text-slate-700 mb-2">Áp dụng chính sách cho toàn cơ quan:</div>
+              <div className="text-xs font-semibold text-slate-700 mb-2">Áp dụng chính sách nhanh cho toàn cơ quan:</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                 <button
+                  type="button"
                   onClick={() => handleApplyBulkBhxh('STANDARD')}
                   className={`p-3 rounded-xl border text-left transition-all ${
                     bulkBhxhOption === 'STANDARD'
@@ -1072,6 +1308,7 @@ export function SimulationModule({ data, onSaveScenario }) {
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => handleApplyBulkBhxh('MIN_ZONE')}
                   className={`p-3 rounded-xl border text-left transition-all ${
                     bulkBhxhOption === 'MIN_ZONE'
@@ -1087,7 +1324,7 @@ export function SimulationModule({ data, onSaveScenario }) {
 
             <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center text-xs">
               <span className="font-medium text-slate-600">Tổng tiền thừa Quỹ hoàn trả cho NLĐ:</span>
-              <span className="font-mono font-bold text-emerald-700 text-sm">
+              <span className="font-numeric font-bold text-emerald-700 text-sm">
                 +{formatCurrency(macroMetrics.tongTienThuaBhxhThangMoPhong)}/tháng
               </span>
             </div>
@@ -1101,77 +1338,153 @@ export function SimulationModule({ data, onSaveScenario }) {
             </h3>
 
             {/* Ăn ca */}
-            <div>
-              <div className="flex justify-between text-xs mb-1">
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center text-xs">
                 <span className="font-semibold text-slate-700">Tiền Ăn Giữa Ca (Ăn trưa):</span>
-                <span className="font-mono font-bold text-slate-800">{formatCurrency(anTrua)}</span>
+                <span className="font-numeric font-bold text-slate-900">{formatCurrency(anTrua)}</span>
               </div>
-              <input
-                type="range"
-                min="730000"
-                max="1500000"
-                step="50000"
-                value={anTrua}
-                onChange={(e) => setAnTrua(Number(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setAnTrua(prev => Math.max(500000, prev - 50000))}
+                  className="btn-step px-2.5 py-1.5 text-xs"
+                >
+                  - 50k
+                </button>
+                <div className="relative flex-1">
+                  <input
+                    type="number"
+                    step="50000"
+                    min="500000"
+                    max="2000000"
+                    value={anTrua}
+                    onChange={(e) => setAnTrua(Number(e.target.value) || 0)}
+                    className="w-full money-input text-xs py-1.5 pr-8"
+                  />
+                  <span className="absolute right-2.5 top-2 text-xs text-slate-400 font-semibold pointer-events-none">₫</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAnTrua(prev => Math.min(2000000, prev + 50000))}
+                  className="btn-step px-2.5 py-1.5 text-xs text-brand-navy font-bold"
+                >
+                  + 50k
+                </button>
+              </div>
               <div className="text-[10px] text-slate-400">
                 Trần miễn thuế TNCN: 730.000 ₫/tháng (Phần vượt chịu thuế TNCN; Không đóng BHXH)
               </div>
             </div>
 
             {/* Xăng xe */}
-            <div>
-              <div className="flex justify-between text-xs mb-1">
+            <div className="space-y-1.5 pt-2 border-t border-slate-100">
+              <div className="flex justify-between items-center text-xs">
                 <span className="font-semibold text-slate-700">Khoán Xăng Xe Công Tác (Cơ bản):</span>
-                <span className="font-mono font-bold text-slate-800">{formatCurrency(xangXe)}</span>
+                <span className="font-numeric font-bold text-slate-900">{formatCurrency(xangXe)}</span>
               </div>
-              <input
-                type="range"
-                min="300000"
-                max="1500000"
-                step="50000"
-                value={xangXe}
-                onChange={(e) => setXangXe(Number(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setXangXe(prev => Math.max(200000, prev - 50000))}
+                  className="btn-step px-2.5 py-1.5 text-xs"
+                >
+                  - 50k
+                </button>
+                <div className="relative flex-1">
+                  <input
+                    type="number"
+                    step="50000"
+                    min="200000"
+                    max="2000000"
+                    value={xangXe}
+                    onChange={(e) => setXangXe(Number(e.target.value) || 0)}
+                    className="w-full money-input text-xs py-1.5 pr-8"
+                  />
+                  <span className="absolute right-2.5 top-2 text-xs text-slate-400 font-semibold pointer-events-none">₫</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setXangXe(prev => Math.min(2000000, prev + 50000))}
+                  className="btn-step px-2.5 py-1.5 text-xs text-brand-navy font-bold"
+                >
+                  + 50k
+                </button>
+              </div>
               <div className="text-[10px] text-slate-400">
                 Cán bộ Tín dụng tự động nhân hệ số 1.5; Lãnh đạo nhân 1.2
               </div>
             </div>
 
             {/* Điện thoại */}
-            <div>
-              <div className="flex justify-between text-xs mb-1">
+            <div className="space-y-1.5 pt-2 border-t border-slate-100">
+              <div className="flex justify-between items-center text-xs">
                 <span className="font-semibold text-slate-700">Khoán Cước Điện Thoại:</span>
-                <span className="font-mono font-bold text-slate-800">{formatCurrency(dienThoai)}</span>
+                <span className="font-numeric font-bold text-slate-900">{formatCurrency(dienThoai)}</span>
               </div>
-              <input
-                type="range"
-                min="200000"
-                max="1000000"
-                step="50000"
-                value={dienThoai}
-                onChange={(e) => setDienThoai(Number(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setDienThoai(prev => Math.max(100000, prev - 50000))}
+                  className="btn-step px-2.5 py-1.5 text-xs"
+                >
+                  - 50k
+                </button>
+                <div className="relative flex-1">
+                  <input
+                    type="number"
+                    step="50000"
+                    min="100000"
+                    max="1500000"
+                    value={dienThoai}
+                    onChange={(e) => setDienThoai(Number(e.target.value) || 0)}
+                    className="w-full money-input text-xs py-1.5 pr-8"
+                  />
+                  <span className="absolute right-2.5 top-2 text-xs text-slate-400 font-semibold pointer-events-none">₫</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDienThoai(prev => Math.min(1500000, prev + 50000))}
+                  className="btn-step px-2.5 py-1.5 text-xs text-brand-navy font-bold"
+                >
+                  + 50k
+                </button>
+              </div>
             </div>
 
             {/* Trang phục */}
-            <div>
-              <div className="flex justify-between text-xs mb-1">
+            <div className="space-y-1.5 pt-2 border-t border-slate-100">
+              <div className="flex justify-between items-center text-xs">
                 <span className="font-semibold text-slate-700">Khoán Trang Phục Công Tác:</span>
-                <span className="font-mono font-bold text-slate-800">{formatCurrency(trangPhuc)}</span>
+                <span className="font-numeric font-bold text-slate-900">{formatCurrency(trangPhuc)}</span>
               </div>
-              <input
-                type="range"
-                min="200000"
-                max="800000"
-                step="20000"
-                value={trangPhuc}
-                onChange={(e) => setTrangPhuc(Number(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setTrangPhuc(prev => Math.max(100000, prev - 20000))}
+                  className="btn-step px-2.5 py-1.5 text-xs"
+                >
+                  - 20k
+                </button>
+                <div className="relative flex-1">
+                  <input
+                    type="number"
+                    step="20000"
+                    min="100000"
+                    max="1000000"
+                    value={trangPhuc}
+                    onChange={(e) => setTrangPhuc(Number(e.target.value) || 0)}
+                    className="w-full money-input text-xs py-1.5 pr-8"
+                  />
+                  <span className="absolute right-2.5 top-2 text-xs text-slate-400 font-semibold pointer-events-none">₫</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTrangPhuc(prev => Math.min(1000000, prev + 20000))}
+                  className="btn-step px-2.5 py-1.5 text-xs text-brand-navy font-bold"
+                >
+                  + 20k
+                </button>
+              </div>
               <div className="text-[10px] text-slate-400">
                 Trần miễn thuế bằng tiền mặt: 5.000.000 ₫/năm (~416.666 ₫/tháng)
               </div>

@@ -28,7 +28,12 @@ export const MOCK_STAFF_LIST = [
     mst: '8012345601',
     soSoBHXH: '3809123401',
     linkAnhThe: '',
-    ghiChu: 'Cán bộ thẩm định tài sản'
+    ghiChu: 'Cán bộ thẩm định tài sản lâu năm',
+    bac: 3,
+    heSoLuong: 3.10,
+    maViTri: 'P08',
+    phuCapTN: 0,
+    mucDongBhxh: 7750000
   },
   {
     maNV: 'NV02',
@@ -51,7 +56,12 @@ export const MOCK_STAFF_LIST = [
     mst: '8012345602',
     soSoBHXH: '3809123402',
     linkAnhThe: '',
-    ghiChu: 'Kế toán trưởng'
+    ghiChu: 'Kế toán trưởng cơ quan',
+    bac: 2,
+    heSoLuong: 3.90,
+    maViTri: 'P05',
+    phuCapTN: 0,
+    mucDongBhxh: 9750000
   },
   {
     maNV: 'NV03',
@@ -74,7 +84,12 @@ export const MOCK_STAFF_LIST = [
     mst: '8012345603',
     soSoBHXH: '3809123403',
     linkAnhThe: '',
-    ghiChu: 'UV HĐQT - Giám đốc điều hành'
+    ghiChu: 'UV HĐQT - Giám đốc điều hành',
+    bac: 2,
+    heSoLuong: 4.80,
+    maViTri: 'P02',
+    phuCapTN: 800000,
+    mucDongBhxh: 12000000
   },
   {
     maNV: 'NV04',
@@ -97,7 +112,12 @@ export const MOCK_STAFF_LIST = [
     mst: '8012345604',
     soSoBHXH: '3809123404',
     linkAnhThe: '',
-    ghiChu: 'Trưởng ban kiểm soát chuyên trách'
+    ghiChu: 'Trưởng ban kiểm soát chuyên trách',
+    bac: 2,
+    heSoLuong: 4.00,
+    maViTri: 'P04',
+    phuCapTN: 700000,
+    mucDongBhxh: 10000000
   },
   {
     maNV: 'NV05',
@@ -120,7 +140,12 @@ export const MOCK_STAFF_LIST = [
     mst: '8012345605',
     soSoBHXH: '3809123405',
     linkAnhThe: '',
-    ghiChu: 'Cán bộ tín dụng địa bàn'
+    ghiChu: 'Cán bộ tín dụng phụ trách địa bàn',
+    bac: 2,
+    heSoLuong: 2.85,
+    maViTri: 'P08',
+    phuCapTN: 0,
+    mucDongBhxh: 7125000
   },
   {
     maNV: 'NV06',
@@ -143,7 +168,12 @@ export const MOCK_STAFF_LIST = [
     mst: '8012345606',
     soSoBHXH: '3809123406',
     linkAnhThe: '',
-    ghiChu: 'Kiểm soát viên - Kiểm toán nội bộ'
+    ghiChu: 'Kiểm soát viên - Kiểm toán nội bộ',
+    bac: 2,
+    heSoLuong: 3.30,
+    maViTri: 'P07',
+    phuCapTN: 500000,
+    mucDongBhxh: 8250000
   },
   {
     maNV: 'NV07',
@@ -166,7 +196,12 @@ export const MOCK_STAFF_LIST = [
     mst: '8012345607',
     soSoBHXH: '3809123407',
     linkAnhThe: '',
-    ghiChu: 'Chủ tịch Hội đồng quản trị'
+    ghiChu: 'Chủ tịch Hội đồng quản trị',
+    bac: 3,
+    heSoLuong: 5.20,
+    maViTri: 'P01',
+    phuCapTN: 1000000,
+    mucDongBhxh: 13000000
   },
   {
     maNV: 'NV08',
@@ -189,7 +224,12 @@ export const MOCK_STAFF_LIST = [
     mst: '8012345608',
     soSoBHXH: '3809123408',
     linkAnhThe: '',
-    ghiChu: 'Ủy viên Hội đồng quản trị'
+    ghiChu: 'Ủy viên Hội đồng quản trị',
+    bac: 2,
+    heSoLuong: 3.50,
+    maViTri: 'P06',
+    phuCapTN: 500000,
+    mucDongBhxh: 8750000
   },
   {
     maNV: 'NV09',
@@ -212,7 +252,12 @@ export const MOCK_STAFF_LIST = [
     mst: '8012345609',
     soSoBHXH: '3809123409',
     linkAnhThe: '',
-    ghiChu: 'Cán bộ tín dụng'
+    ghiChu: 'Cán bộ tín dụng phát triển dư nợ',
+    bac: 2,
+    heSoLuong: 2.85,
+    maViTri: 'P08',
+    phuCapTN: 0,
+    mucDongBhxh: 7125000
   },
   {
     maNV: 'NV10',
@@ -235,7 +280,12 @@ export const MOCK_STAFF_LIST = [
     mst: '8012345610',
     soSoBHXH: '3809123410',
     linkAnhThe: '',
-    ghiChu: 'Kế toán viên thanh toán'
+    ghiChu: 'Kế toán viên thanh toán và kho quỹ',
+    bac: 2,
+    heSoLuong: 2.65,
+    maViTri: 'P09',
+    phuCapTN: 0,
+    mucDongBhxh: 6625000
   },
   {
     maNV: 'NV11',
@@ -258,7 +308,12 @@ export const MOCK_STAFF_LIST = [
     mst: '8012345611',
     soSoBHXH: '3809123411',
     linkAnhThe: '',
-    ghiChu: 'Thủ quỹ cơ quan'
+    ghiChu: 'Thủ quỹ cơ quan an toàn kho quỹ',
+    bac: 1,
+    heSoLuong: 2.10,
+    maViTri: 'P10',
+    phuCapTN: 0,
+    mucDongBhxh: 5250000
   },
   {
     maNV: 'NV12',
@@ -281,7 +336,12 @@ export const MOCK_STAFF_LIST = [
     mst: '8012345612',
     soSoBHXH: '3809123412',
     linkAnhThe: '',
-    ghiChu: 'Cán bộ tín dụng'
+    ghiChu: 'Cán bộ tín dụng tập sự/chính thức',
+    bac: 1,
+    heSoLuong: 2.60,
+    maViTri: 'P08',
+    phuCapTN: 0,
+    mucDongBhxh: 6500000
   }
 ];
 

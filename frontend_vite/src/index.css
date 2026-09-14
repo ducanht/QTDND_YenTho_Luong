@@ -5,10 +5,123 @@
 @layer base {
   body {
     font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-.tabular-nums {
+/* =========================================================================
+   1. CHUẨN HÓA TYPOGRAPHY NGÂN QUỸ & SỐ LIỆU TÀI CHÍNH (TABULAR NUMS)
+   ========================================================================= */
+.tabular-nums,
+.font-numeric,
+.font-mono {
+  font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" 1, "cv01" 1 !important;
+  letter-spacing: -0.01em;
+}
+
+/* =========================================================================
+   2. BỘ Ô NHẬP LIỆU TÀI CHÍNH DÙNG CHUNG (FINANCIAL INPUTS)
+   ========================================================================= */
+.money-input {
+  font-family: 'Be Vietnam Pro', sans-serif !important;
+  font-variant-numeric: tabular-nums !important;
+  font-weight: 700;
+  text-align: right;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  background-color: #ffffff;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.15s ease-in-out;
+}
+.money-input:focus {
+  border-color: #17365d;
+  box-shadow: 0 0 0 3px rgba(23, 54, 93, 0.12);
+}
+
+.percent-input {
+  font-family: 'Be Vietnam Pro', sans-serif !important;
+  font-variant-numeric: tabular-nums !important;
+  font-weight: 700;
+  text-align: right;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  background-color: #ffffff;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.15s ease-in-out;
+}
+.percent-input:focus {
+  border-color: #17365d;
+  box-shadow: 0 0 0 2px rgba(23, 54, 93, 0.12);
+}
+
+/* =========================================================================
+   3. NÚT ĐIỀU CHỈNH BƯỚC NHẢY (STEP BUTTONS)
+   ========================================================================= */
+.btn-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  background-color: #f1f5f9;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  transition: all 0.1s ease-in-out;
+  cursor: pointer;
+  user-select: none;
+}
+.btn-step:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+.btn-step:active {
+  transform: scale(0.97);
+}
+
+/* =========================================================================
+   4. BẢNG DỮ LIỆU TÀI CHÍNH & SỐ CĂN PHẢI CHUẨN
+   ========================================================================= */
+.table-num {
+  font-family: 'Be Vietnam Pro', sans-serif !important;
+  font-variant-numeric: tabular-nums !important;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* =========================================================================
+   5. KHUNG THẺ TÀI CHÍNH DÙNG CHUNG (CARDS & BADGES)
+   ========================================================================= */
+.card-fin {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+.card-fin:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+}
+
+.badge-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: 9999px;
   font-variant-numeric: tabular-nums;
 }
 
